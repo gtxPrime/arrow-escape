@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'package:flame/game.dart';
-import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/constants.dart';
 import '../../core/app_colors.dart';
-import '../../data/models/arrow.dart';
+import '../../core/constants.dart';
 import '../../data/models/level.dart';
 import 'components/grid_component.dart';
 import 'game_state.dart';
@@ -40,9 +38,16 @@ class ArrowPuzzleGame extends FlameGame {
       onLifeLost: onLifeLost,
     );
 
-    final gridSize = size.x * 0.92;
+    final levelType = AppConstants.levelTypeFor(level.levelNumber);
+    final scale = AppConstants.canvasScaleForType(levelType);
+
+    // Use the smaller dimension to keep the grid square on all screen sizes.
+    // Boss/God levels use more of the available space for a bigger canvas.
+    final minDim = size.x < size.y ? size.x : size.y;
+    final gridSize = minDim * scale;
     final gridX = (size.x - gridSize) / 2;
-    final gridY = (size.y - gridSize) / 2 - 20;
+    // Vertical centering
+    final gridY = (size.y - gridSize) / 2;
 
     gridComponent = GridComponent(
       gameState: gameState,
@@ -56,9 +61,13 @@ class ArrowPuzzleGame extends FlameGame {
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    final gridSize = size.x * 0.92;
+
+    final levelType = AppConstants.levelTypeFor(level.levelNumber);
+    final scale = AppConstants.canvasScaleForType(levelType);
+    final minDim = size.x < size.y ? size.x : size.y;
+    final gridSize = minDim * scale;
     final gridX = (size.x - gridSize) / 2;
-    final gridY = (size.y - gridSize) / 2 - 20;
+    final gridY = (size.y - gridSize) / 2;
 
     if (gridComponent != null) {
       gridComponent!.position = Vector2(gridX, gridY);

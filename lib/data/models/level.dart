@@ -1,5 +1,38 @@
 import 'arrow.dart';
 
+// ─── Mask Shape Enum ──────────────────────────────────────────────────────────
+
+/// The canvas silhouette shape for a level's grid.
+/// Normal levels always use [square].
+/// Boss levels use animal / object shapes.
+/// God levels use dramatic geometric shapes.
+enum MaskShape {
+  // Standard
+  square,
+  circle,
+  // Geometric (god levels)
+  heart,
+  star,
+  diamond,
+  hexagon,
+  blob,
+  // Animals (boss levels)
+  cat,
+  dog,
+  frog,
+  fox,
+  tiger,
+  panda,
+  fish,
+  bird,
+  butterfly,
+  // Objects (boss levels)
+  guitar,
+  tree,
+  house,
+  crown,
+}
+
 // ─── Difficulty Enum ──────────────────────────────────────────────────────────
 
 enum Difficulty {
@@ -38,11 +71,13 @@ enum Difficulty {
 
 class LevelModel {
   final int levelNumber;
-  final int gridSize;          // NxN grid
+  final int gridSize;
   final List<ArrowModel> arrows;
-  final String patternName;    // e.g. 'cat', 'star', 'heart'
+  final String patternName;
   final Difficulty difficulty;
-  final List<String> solutionOrder; // Arrow IDs in correct exit order (for hints)
+  final List<String> solutionOrder;
+  final MaskShape maskShape;
+  final Set<String> mask;
 
   LevelModel({
     required this.levelNumber,
@@ -51,21 +86,42 @@ class LevelModel {
     required this.patternName,
     required this.difficulty,
     this.solutionOrder = const [],
+    this.maskShape = MaskShape.square,
+    this.mask = const {},
   });
 
   int get totalArrows => arrows.length;
 
-  /// Deep copy of level (for game state reset)
-  LevelModel copy() {
-    return LevelModel(
-      levelNumber: levelNumber,
-      gridSize: gridSize,
-      arrows: arrows.map((a) => a.copyWith()).toList(),
-      patternName: patternName,
-      difficulty: difficulty,
-      solutionOrder: List.from(solutionOrder),
-    );
-  }
+  LevelModel copy() => LevelModel(
+    levelNumber: levelNumber,
+    gridSize: gridSize,
+    arrows: arrows.map((a) => a.copyWith()).toList(),
+    patternName: patternName,
+    difficulty: difficulty,
+    solutionOrder: List.from(solutionOrder),
+    maskShape: maskShape,
+    mask: Set.from(mask),
+  );
+
+  LevelModel copyWith({
+    int? levelNumber,
+    int? gridSize,
+    List<ArrowModel>? arrows,
+    String? patternName,
+    Difficulty? difficulty,
+    List<String>? solutionOrder,
+    MaskShape? maskShape,
+    Set<String>? mask,
+  }) => LevelModel(
+    levelNumber: levelNumber ?? this.levelNumber,
+    gridSize: gridSize ?? this.gridSize,
+    arrows: arrows ?? this.arrows,
+    patternName: patternName ?? this.patternName,
+    difficulty: difficulty ?? this.difficulty,
+    solutionOrder: solutionOrder ?? this.solutionOrder,
+    maskShape: maskShape ?? this.maskShape,
+    mask: mask ?? this.mask,
+  );
 
   Map<String, dynamic> toJson() => {
     'levelNumber': levelNumber,
@@ -74,6 +130,8 @@ class LevelModel {
     'patternName': patternName,
     'difficulty': difficulty.index,
     'solutionOrder': solutionOrder,
+    'maskShape': maskShape.index,
+    'mask': mask.toList(),
   };
 
   factory LevelModel.fromJson(Map<String, dynamic> json) => LevelModel(
@@ -85,6 +143,13 @@ class LevelModel {
     patternName: json['patternName'] as String,
     difficulty: Difficulty.values[json['difficulty'] as int],
     solutionOrder: List<String>.from(json['solutionOrder'] as List? ?? []),
+    maskShape: json['maskShape'] != null
+        ? MaskShape.values[(json['maskShape'] as int)
+            .clamp(0, MaskShape.values.length - 1)]
+        : MaskShape.square,
+    mask: json['mask'] != null
+        ? Set<String>.from((json['mask'] as List).cast<String>())
+        : const {},
   );
 }
 
@@ -92,7 +157,7 @@ class LevelModel {
 
 class LevelResult {
   final int levelNumber;
-  final int stars;           // 0–3
+  final int stars;
   final int score;
   final int movesUsed;
   final int livesLost;

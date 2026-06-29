@@ -8,7 +8,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/repositories/progress_repository.dart';
-import '../../data/repositories/level_repository.dart';
 import '../../data/models/level.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -152,7 +151,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFB33939).withOpacity(0.2),
+                    color: const Color(0xFFB33939).withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -166,7 +165,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     style: GoogleFonts.nunito(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
                   ),
                   Text(
@@ -227,7 +226,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4A8C34).withOpacity(0.2),
+                    color: const Color(0xFF4A8C34).withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -241,7 +240,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     style: GoogleFonts.nunito(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
                   ),
                   Text(
@@ -257,11 +256,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(LucideIcons.bug, size: 28, color: Colors.white.withOpacity(0.85)),
+                        Icon(LucideIcons.bug, size: 28, color: Colors.white.withValues(alpha: 0.85)),
                         const SizedBox(width: 4),
                         const Icon(LucideIcons.bug, size: 36, color: Colors.white),
                         const SizedBox(width: 4),
-                        Icon(LucideIcons.bug, size: 28, color: Colors.white.withOpacity(0.85)),
+                        Icon(LucideIcons.bug, size: 28, color: Colors.white.withValues(alpha: 0.85)),
                       ],
                     ),
                   ),
@@ -328,7 +327,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             } else {
               final type = AppConstants.levelTypeFor(lvl);
               if (type == LevelType.god) {
-                bubbleColor = const Color(0xFFB33939).withOpacity(0.8);
+                bubbleColor = const Color(0xFFB33939).withValues(alpha: 0.8);
                 textColor = Colors.white;
               } else if (type == LevelType.boss) {
                 bubbleColor = const Color(0xFF8E44AD); // Purple for Boss
@@ -350,7 +349,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 boxShadow: isCurrent
                     ? [
                         BoxShadow(
-                          color: bubbleColor.withOpacity(0.4),
+                          color: bubbleColor.withValues(alpha: 0.4),
                           blurRadius: 10,
                           spreadRadius: 2,
                         )
@@ -394,7 +393,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFB33939).withOpacity(0.3),
+                color: const Color(0xFFB33939).withValues(alpha: 0.3),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),

@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/app_colors.dart';
-import '../../data/repositories/progress_repository.dart';
 import '../../ads/ad_manager.dart';
 
 /// Full-screen game over overlay (alternative to dialog — used as a route).
@@ -18,7 +17,6 @@ class GameOverScreen extends StatelessWidget {
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final levelNumber = args?['level'] as int? ?? 1;
     final adManager = context.read<AdManager>();
-    final progress = context.read<ProgressRepository>();
 
     return Scaffold(
       body: Container(

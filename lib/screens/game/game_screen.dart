@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
 import 'package:provider/provider.dart';
@@ -211,10 +212,28 @@ class _GameScreenState extends State<GameScreen> {
               Expanded(
                 child: Stack(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      child: GameWidget(game: _game),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final boardSize = min(
+                                constraints.maxWidth, constraints.maxHeight);
+                            return InteractiveViewer(
+                              minScale: 1.0,
+                              maxScale: 3.5,
+                              boundaryMargin: EdgeInsets.zero,
+                              clipBehavior: Clip.hardEdge,
+                              child: SizedBox(
+                                width: boardSize,
+                                height: boardSize,
+                                child: GameWidget(game: _game),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
 
                     // Confetti on level complete

@@ -4,9 +4,9 @@ class AppColors {
   AppColors._();
 
   // Brand
-  static const Color primary = Color(0xFF6E503F);      // Dark brown
-  static const Color primaryLight = Color(0xFF8B7365);
-  static const Color primaryDark = Color(0xFF50392C);
+  static const Color primary = Color(0xFF22252A);      // Dark gray / almost black
+  static const Color primaryLight = Color(0xFF3F444D);
+  static const Color primaryDark = Color(0xFF141619);
   static const Color accent = Color(0xFFB33939);       // Warm red
   static const Color accentGold = Color(0xFFC08255);   // Soft gold
   static const Color accentGreen = Color(0xFF4A7C59);  // Forest green
@@ -18,11 +18,11 @@ class AppColors {
   static const Color surfaceLight = Color(0xFFEFE9DC); // Light surface
   static const Color gridBg = Color(0xFFF7F1E5);      // Grid background
 
-  // Arrow direction colors
-  static const Color arrowUp = Color(0xFF6E503F);
-  static const Color arrowDown = Color(0xFF6E503F);
-  static const Color arrowLeft = Color(0xFF6E503F);
-  static const Color arrowRight = Color(0xFF6E503F);
+  // Arrow direction colors — solid black for maximum legibility
+  static const Color arrowUp    = Color(0xFF1A1A1A);
+  static const Color arrowDown  = Color(0xFF1A1A1A);
+  static const Color arrowLeft  = Color(0xFF1A1A1A);
+  static const Color arrowRight = Color(0xFF1A1A1A);
 
   // Difficulty colors
   static const Color easy = Color(0xFF4A7C59);

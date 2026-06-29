@@ -1,82 +1,132 @@
+import 'dart:collection';
 import '../models/arrow.dart';
 import '../models/level.dart';
 
 /// Backtracking solver that verifies a level is solvable.
-/// Uses BFS/DFS over grid states to find at least one solution.
+/// Uses DFS with backtracking over grid states to find at least one solution.
 /// Returns the solution sequence (list of arrow IDs) or null if unsolvable.
+///
+/// Blocking rule per spec: ONLY the head's immediate next cell matters.
+/// If that cell is empty or outside the mask → the snake can clear.
+/// The body always follows because each segment inherits the vacated cell
+/// of the segment ahead of it — no further raycast needed.
 class LevelSolver {
-  static const int maxStates = 50000; // Safety cap
+  static const int maxStates = 10000; // Safety cap for DFS recursion
 
   /// Returns a valid solution order of arrow IDs, or null if unsolvable.
-  /// This guarantees every generated level has a solution before publishing.
   static List<String>? solve(LevelModel level) {
     final initial = _GridState.fromLevel(level);
-    return _bfs(initial, level.gridSize);
+    final visited = <String>{};
+    final path = <String>[];
+    if (_dfs(initial, level.gridSize, visited, path)) {
+      return path;
+    }
+    return null;
   }
 
-  static List<String>? _bfs(_GridState initial, int gridSize) {
-    if (initial.isEmpty) return []; // Already solved
+  static bool _dfs(_GridState state, int gridSize, Set<String> visited, List<String> path) {
+    if (state.isEmpty) return true;
+    if (visited.length > maxStates) return false;
 
-    final queue = <_SearchNode>[_SearchNode(initial, [])];
-    final visited = <String>{initial.hash};
-    int statesVisited = 0;
+    final hash = state.hash;
+    if (visited.contains(hash)) return false;
+    visited.add(hash);
 
-    while (queue.isNotEmpty) {
-      statesVisited++;
-      if (statesVisited > maxStates) return null; // Give up
-
-      final node = queue.removeAt(0);
-      final state = node.state;
-      final moves = node.moves;
-
-      // Try all arrows
-      for (final arrow in state.arrows.values) {
-        if (arrow.state != ArrowState.idle) continue;
-
-        final result = _tryMove(state, arrow, gridSize);
-        if (result == null) continue; // Blocked
-
-        final newMoves = [...moves, arrow.id];
-
-        if (result.isEmpty) {
-          return newMoves; // Found solution!
-        }
-
-        if (!visited.contains(result.hash)) {
-          visited.add(result.hash);
-          queue.add(_SearchNode(result, newMoves));
-        }
+    // Build occupied cells set once per state for O(1) lookup
+    final occupied = <String>{};
+    for (final a in state.arrows.values) {
+      for (final pt in a.path) {
+        occupied.add('${pt[0]},${pt[1]}');
       }
     }
 
-    return null; // No solution found
+    // Try all arrows in reverse placement order (heavily guides DFS to first-cleared)
+    final arrowList = state.arrows.values.toList();
+    for (int i = arrowList.length - 1; i >= 0; i--) {
+      final arrow = arrowList[i];
+      if (arrow.state == ArrowState.locked) continue;
+
+
+
+      final result = _tryMove(state, arrow, gridSize, occupied);
+      if (result == null) continue; // Blocked
+
+      path.add(arrow.id);
+      if (_dfs(result, gridSize, visited, path)) {
+        return true;
+      }
+      path.removeLast(); // Backtrack
+    }
+
+    return false;
   }
 
-  /// Returns new state if arrow can move, null if blocked.
+  /// Returns new state if arrow can clear, null if blocked.
+  /// Checks if any cell along the exit path of the head is occupied.
   static _GridState? _tryMove(
-      _GridState state, ArrowModel arrow, int gridSize) {
-    final delta = arrow.direction.delta;
-    int newRow = arrow.row + delta[0];
-    int newCol = arrow.col + delta[1];
+      _GridState state, ArrowModel arrow, int gridSize, Set<String> occupied) {
+    final grp = arrow.colorGroup;
+    if (grp != null) {
+      final groupArrows = state.arrows.values.where((a) => a.colorGroup == grp).toList();
+      if (groupArrows.length == 2) {
+        final arrow1 = groupArrows[0];
+        final arrow2 = groupArrows[1];
 
-    // Check if path to edge is clear
-    while (_isInGrid(newRow, newCol, gridSize)) {
-      // Is this cell occupied?
-      if (state.arrows.values.any((a) => a.row == newRow && a.col == newCol)) {
-        return null; // Blocked
+        // Create occupied set excluding both arrows' cells so they don't block each other
+        final occupiedWithoutGroup = Set<String>.from(occupied);
+        for (final pt in arrow1.path) occupiedWithoutGroup.remove('${pt[0]},${pt[1]}');
+        for (final pt in arrow2.path) occupiedWithoutGroup.remove('${pt[0]},${pt[1]}');
+
+        final blocked1 = _isPathBlocked(arrow1, gridSize, occupiedWithoutGroup);
+        final blocked2 = _isPathBlocked(arrow2, gridSize, occupiedWithoutGroup);
+
+        if (blocked1 || blocked2) {
+          return null; // Blocked
+        }
+
+        // Both exit
+        final newArrows = Map<String, ArrowModel>.from(state.arrows);
+        newArrows.remove(arrow1.id);
+        newArrows.remove(arrow2.id);
+
+        final newClearedGroups = Set<int>.from(state.clearedColorGroups)..add(grp);
+        return _GridState(newArrows, newClearedGroups);
       }
-      newRow += delta[0];
-      newCol += delta[1];
     }
 
-    // Arrow exits grid — create new state without this arrow
+    // Standard arrow check
+    final delta = arrow.direction.delta;
+    final head = arrow.path[0];
+    int nr = head[0] + delta[0];
+    int nc = head[1] + delta[1];
+
+    while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+      if (occupied.contains('$nr,$nc')) {
+        return null;
+      }
+      nr += delta[0];
+      nc += delta[1];
+    }
+
     final newArrows = Map<String, ArrowModel>.from(state.arrows);
     newArrows.remove(arrow.id);
-    return _GridState(newArrows);
+    return _GridState(newArrows, state.clearedColorGroups);
   }
 
-  static bool _isInGrid(int row, int col, int size) {
-    return row >= 0 && row < size && col >= 0 && col < size;
+  static bool _isPathBlocked(ArrowModel arrow, int gridSize, Set<String> occupied) {
+    final delta = arrow.direction.delta;
+    final head = arrow.path[0];
+    int nr = head[0] + delta[0];
+    int nc = head[1] + delta[1];
+
+    while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+      if (occupied.contains('$nr,$nc')) {
+        return true;
+      }
+      nr += delta[0];
+      nc += delta[1];
+    }
+    return false;
   }
 }
 
@@ -84,17 +134,18 @@ class LevelSolver {
 
 class _GridState {
   final Map<String, ArrowModel> arrows;
+  final Set<int> clearedColorGroups;
 
-  _GridState(this.arrows);
+  _GridState(this.arrows, [Set<int>? clearedColorGroups])
+      : clearedColorGroups = clearedColorGroups ?? {};
 
   bool get isEmpty => arrows.isEmpty;
 
-  /// Compact hash for visited-state detection
+  /// Compact hash: sorted arrow IDs + cleared color groups
   String get hash {
-    final sorted = arrows.values.toList()..sort((a, b) => a.id.compareTo(b.id));
-    return sorted
-        .map((a) => '${a.row},${a.col},${a.direction.index}')
-        .join('|');
+    final sortedIds = arrows.keys.toList()..sort();
+    final groups = clearedColorGroups.toList()..sort();
+    return '${sortedIds.join('|')};${groups.join(',')}';
   }
 
   factory _GridState.fromLevel(LevelModel level) {
