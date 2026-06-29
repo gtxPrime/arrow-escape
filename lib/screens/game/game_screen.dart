@@ -210,48 +210,50 @@ class _GameScreenState extends State<GameScreen> {
 
               // ── Game Canvas ──────────────────────────────────────────────
               Expanded(
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final boardSize = min(
-                                constraints.maxWidth, constraints.maxHeight);
-                            return InteractiveViewer(
-                              minScale: 1.0,
-                              maxScale: 3.5,
-                              boundaryMargin: EdgeInsets.zero,
-                              clipBehavior: Clip.hardEdge,
-                              child: SizedBox(
-                                width: boardSize,
-                                height: boardSize,
-                                child: GameWidget(game: _game),
-                              ),
-                            );
-                          },
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Measure the real screen area BEFORE entering InteractiveViewer
+                    // (InteractiveViewer gives unbounded constraints to its children,
+                    // so LayoutBuilder must be OUTSIDE to get finite values).
+                    final boardSize = min(
+                        constraints.maxWidth,
+                        constraints.maxHeight - 16);
+                    return Stack(
+                      children: [
+                        // InteractiveViewer now fills the full Expanded area,
+                        // making pinch-zoom work anywhere on screen.
+                        InteractiveViewer(
+                          minScale: 0.8,
+                          maxScale: 4.0,
+                          boundaryMargin: const EdgeInsets.all(60),
+                          clipBehavior: Clip.hardEdge,
+                          child: Center(
+                            child: SizedBox(
+                              width: boardSize,
+                              height: boardSize,
+                              child: GameWidget(game: _game),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
 
-                    // Confetti on level complete
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: ConfettiWidget(
-                        confettiController: _confettiController,
-                        blastDirectionality: BlastDirectionality.explosive,
-                        shouldLoop: false,
-                        colors: const [
-                          AppColors.primary,
-                          AppColors.accentGold,
-                          AppColors.accentGreen,
-                          AppColors.accent,
-                        ],
-                      ),
-                    ),
-                  ],
+                        // Confetti on level complete
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: ConfettiWidget(
+                            confettiController: _confettiController,
+                            blastDirectionality: BlastDirectionality.explosive,
+                            shouldLoop: false,
+                            colors: const [
+                              AppColors.primary,
+                              AppColors.accentGold,
+                              AppColors.accentGreen,
+                              AppColors.accent,
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
 

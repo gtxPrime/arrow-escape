@@ -56,9 +56,12 @@
 
 ## <a id="-features"></a>🚀 Core Features
 
-### 🧩 engaging Gameplay
+### 🧩 Engaging Gameplay
 * 🔄 **Slide Mechanics:** Smooth grid movements with intuitive touch controls.
-* 📈 **Progressive Difficulty:** Levels ranging from simple tutorial-like grids to mind-bending Boss and Super Hard configurations.
+* 📈 **Progressive Difficulty:** Levels ranging from simple tutorial-like grids to mind-bending Boss and Super Hard configurations (up to 500 levels).
+* 🟢🔴🔵 **Deflector Dots (Orphan Dots):** Isolated cells remaining after generation are converted to deflectors. 
+  * Starting levels ($\le 20$) feature neutral (grey) dots that arrows pass straight through.
+  * Higher levels introduce red (clockwise/right) and blue (counter-clockwise/left) deflector dots.
 * 🏆 **Daily Streaks:** Tracks user gameplay consistency and records daily play sessions.
 * 💖 **Lives System:** Keep track of remaining lives with custom visual meters and animated indicators.
 

@@ -14,7 +14,10 @@ class GameState extends ChangeNotifier {
   bool _isComplete = false;
   bool _isGameOver = false;
 
-  // Track which colorGroups have had their key cleared (unlocks colorLock snakes)
+  // Live orphan dot map (dots are removed when consumed by an exiting arrow)
+  late Map<String, OrphanDotType> _orphanDots;
+
+  // Track which colorGroups have had their key cleared
   final Set<int> _clearedColorGroups = {};
 
   // ── Callbacks ─────────────────────────────────────────────────────────────────
@@ -30,6 +33,7 @@ class GameState extends ChangeNotifier {
   }) {
     _currentLevel = level;
     _arrows = level.arrows.map((a) => a.copyWith()).toList();
+    _orphanDots = {for (final od in level.orphanDots) od.key: od.type};
   }
 
   // ── Getters ───────────────────────────────────────────────────────────────────
@@ -41,6 +45,8 @@ class GameState extends ChangeNotifier {
   bool get isGameOver => _isGameOver;
   int get arrowsRemaining => _arrows.length;
   LevelModel get level => _currentLevel;
+  /// Live orphan dots remaining (consumed dots are absent from this map).
+  Map<String, OrphanDotType> get orphanDots => Map.unmodifiable(_orphanDots);
 
   // ── Tap Handler ───────────────────────────────────────────────────────────────
 
@@ -66,26 +72,24 @@ class GameState extends ChangeNotifier {
         final arrow1 = groupArrows[0];
         final arrow2 = groupArrows[1];
 
-        // Check if either arrow is blocked.
-        // Each arrow ignores the other's segments when checking paths.
-        final blocked1 = _isHeadBlocked(arrow1, arrow2.id);
-        final blocked2 = _isHeadBlocked(arrow2, arrow1.id);
+        final exitInfo1 = _computeExitInfo(arrow1, arrow2.id);
+        final exitInfo2 = _computeExitInfo(arrow2, arrow1.id);
 
-        if (blocked1 || blocked2) {
-          // Both are blocked / fail!
+        if (exitInfo1.blocked || exitInfo2.blocked) {
           return _handleGroupBlocked(grp, groupArrows);
         } else {
-          // Both exit successfully!
+          for (final k in {...exitInfo1.consumed, ...exitInfo2.consumed}) {
+            _orphanDots.remove(k);
+          }
           return _handleGroupExited(grp, groupArrows);
         }
       }
     }
 
-    // ── Ice mechanic: first tap cracks, second tap clears ───────────────────
+    // ── Ice mechanic: first tap cracks, second tap clears ────────────────────
     if (arrow.mechanic == SnakeMechanic.iceSegment &&
         arrow.state == ArrowState.idle) {
-      // Check if the head CAN move — only crack if it's not blocked
-      if (_isHeadBlocked(arrow)) {
+      if (_computeExitInfo(arrow).blocked) {
         return _handleBlocked(index, arrow, arrowId);
       }
       // First successful tap: crack
@@ -94,13 +98,16 @@ class GameState extends ChangeNotifier {
       return TapResult.cracked;
     }
 
-    // ── Standard move check ────────────────────────────────────────────────
-    if (_isHeadBlocked(arrow)) {
+    // ── Standard move check ─────────────────────────────────────────
+    final exitInfo = _computeExitInfo(arrow);
+    if (exitInfo.blocked) {
       return _handleBlocked(index, arrow, arrowId);
     }
 
-    // ── Clear: arrow exits ───────────────────────────────────────────────────
+    // ── Clear: arrow exits ──────────────────────────────────────────
     _arrows[index] = arrow.copyWith(state: ArrowState.sliding);
+    // Consume orphan dots along the exit path
+    for (final k in exitInfo.consumed) _orphanDots.remove(k);
     notifyListeners();
 
     final exitDurationMs = 400 + arrow.path.length * 80;
@@ -202,41 +209,63 @@ class GameState extends ChangeNotifier {
     return TapResult.exited;
   }
 
-  /// Checks if any cell along the exit path of the head is occupied.
-  /// Walks from the head's immediate next cell in its heading direction to the edge.
-  /// Allows ignoring a specific arrow ID (e.g. for linked color group partner).
-  bool _isHeadBlocked(ArrowModel arrow, [String? ignoreId]) {
-    final delta = arrow.direction.delta;
-    // path[0] = head (has the arrowhead)
+  /// Checks whether the arrow's exit path is clear (possibly with deflections
+  /// through orphan dots). Returns an [_ExitInfo] with:
+  ///   - [blocked]: true if the path is ultimately blocked
+  ///   - [consumed]: keys of orphan dots that would be traversed
+  _ExitInfo _computeExitInfo(ArrowModel arrow, [String? ignoreId]) {
+    ArrowDirection currentDir = arrow.direction;
     final head = arrow.path[0];
     final gridSize = _currentLevel.gridSize;
+    var d = currentDir.delta;
+    int nr = head[0] + d[0];
+    int nc = head[1] + d[1];
+    final consumed = <String>[];
+    final visited = <String>{};
 
-    int nr = head[0] + delta[0];
-    int nc = head[1] + delta[1];
-
-    // Walk all the way to the grid boundaries in the exit direction
     while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-      // Check if this cell is occupied by any other active (non-sliding) arrow
-      for (final other in _arrows) {
-        if (other.id == arrow.id || (ignoreId != null && other.id == ignoreId)) continue;
-        if (other.state == ArrowState.sliding) continue; // Mid-exit snakes don't block
-        for (final pt in other.path) {
-          if (pt[0] == nr && pt[1] == nc) {
-            return true; // Path is blocked
-          }
-        }
-      }
-      nr += delta[0];
-      nc += delta[1];
-    }
+      final key = '$nr,$nc';
+      if (visited.contains(key)) return _ExitInfo(true, []);
+      visited.add(key);
 
-    return false;
+      if (_orphanDots.containsKey(key)) {
+        consumed.add(key);
+        final dotType = _orphanDots[key]!;
+        if (dotType == OrphanDotType.red) {
+          currentDir = currentDir.turnRight;
+        } else if (dotType == OrphanDotType.blue) {
+          currentDir = currentDir.turnLeft;
+        }
+      } else {
+        bool hit = false;
+        for (final other in _arrows) {
+          if (other.id == arrow.id) continue;
+          if (ignoreId != null && other.id == ignoreId) continue;
+          if (other.state == ArrowState.sliding) continue;
+          for (final pt in other.path) {
+            if (pt[0] == nr && pt[1] == nc) { hit = true; break; }
+          }
+          if (hit) break;
+        }
+        if (hit) return _ExitInfo(true, []);
+      }
+
+      d = currentDir.delta;
+      nr += d[0];
+      nc += d[1];
+    }
+    return _ExitInfo(false, consumed);
   }
+
+  /// Convenience bool wrapper used by block-animation code.
+  bool _isHeadBlocked(ArrowModel arrow, [String? ignoreId]) =>
+      _computeExitInfo(arrow, ignoreId).blocked;
 
   // ── Reset ─────────────────────────────────────────────────────────────────────
 
   void resetLevel() {
     _arrows = _currentLevel.arrows.map((a) => a.copyWith(state: ArrowState.idle)).toList();
+    _orphanDots = {for (final od in _currentLevel.orphanDots) od.key: od.type};
     _lives = AppConstants.maxLives;
     _movesUsed = 0;
     _livesLost = 0;
@@ -258,3 +287,10 @@ class GameState extends ChangeNotifier {
 }
 
 enum TapResult { exited, blocked, locked, cracked, ignored }
+
+/// Exit path analysis result for one arrow.
+class _ExitInfo {
+  final bool blocked;
+  final List<String> consumed; // orphan dot keys consumed along this path
+  const _ExitInfo(this.blocked, [this.consumed = const []]);
+}

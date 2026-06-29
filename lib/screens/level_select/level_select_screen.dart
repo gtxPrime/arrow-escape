@@ -13,7 +13,7 @@ class LevelSelectScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressRepository>();
-    const totalVisible = 200; // Show first 200 levels
+    const totalVisible = 500; // Show first 500 levels
 
     return Scaffold(
       body: Container(

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
-import '../../data/level_generator/mask_generator.dart';
 import '../../data/models/level.dart';
 import '../game_state.dart';
 import 'arrow_component.dart';
@@ -91,18 +90,23 @@ class GridComponent extends PositionComponent {
     // ── Boss / God outer glow ─────────────────────────────────────────────
     if (_levelType == LevelType.god) {
       _glow(canvas, gridPixelSize, _godColor, 26.0, 4.0);
-      _glow(canvas, gridPixelSize, _godColor.withValues(alpha: 0.35), 52.0, 2.0);
+      _glow(
+          canvas, gridPixelSize, _godColor.withValues(alpha: 0.35), 52.0, 2.0);
     } else if (_levelType == LevelType.boss) {
       _glow(canvas, gridPixelSize, _bossColor, 20.0, 2.8);
     }
 
     // ── Dot layer (drawn behind all arrows) ──────────────────────────────
     final baseDot = (cs * 0.045).clamp(0.6, 1.6);
-    final inR   = baseDot;
-    final outR  = inR * 0.55;
+    final inR = baseDot;
+    final outR = inR * 0.55;
 
-    final inPaint  = Paint()..color = const Color(0xFFC8BFB0)..style = PaintingStyle.fill;
-    final outPaint = Paint()..color = const Color(0x1EBBBBBB)..style = PaintingStyle.fill;
+    final inPaint = Paint()
+      ..color = const Color(0xFFC8BFB0)
+      ..style = PaintingStyle.fill;
+    final outPaint = Paint()
+      ..color = const Color(0x1EBBBBBB)
+      ..style = PaintingStyle.fill;
 
     for (int r = 0; r < gridSize; r++) {
       for (int c = 0; c < gridSize; c++) {
@@ -115,7 +119,73 @@ class GridComponent extends PositionComponent {
       }
     }
 
+    // ── Orphan deflector dots (drawn on top of background dots) ────────────
+    final orphanDots = gameState.orphanDots;
+    for (final entry in orphanDots.entries) {
+      final parts = entry.key.split(',');
+      final dotR = int.parse(parts[0]);
+      final dotC = int.parse(parts[1]);
+      _drawOrphanDot(
+          canvas, Offset((dotC + 0.5) * cs, (dotR + 0.5) * cs), entry.value, cs);
+    }
+
     super.render(canvas);
+  }
+
+  static void _drawOrphanDot(
+      Canvas canvas, Offset center, OrphanDotType type, double cs) {
+    final Color baseColor;
+    if (type == OrphanDotType.red) {
+      baseColor = const Color(0xFFFF3333);
+    } else if (type == OrphanDotType.blue) {
+      baseColor = const Color(0xFF3388FF);
+    } else {
+      baseColor = const Color(0xFF888888);
+    }
+
+    // Outer glow ring
+    canvas.drawCircle(
+      center,
+      cs * 0.30,
+      Paint()
+        ..color = baseColor.withOpacity(0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7.0),
+    );
+
+    // Solid dot body
+    canvas.drawCircle(
+      center,
+      cs * 0.19,
+      Paint()
+        ..color = baseColor
+        ..style = PaintingStyle.fill,
+    );
+
+    // Bright specular highlight
+    canvas.drawCircle(
+      center - Offset(cs * 0.055, cs * 0.055),
+      cs * 0.06,
+      Paint()
+        ..color = Colors.white.withOpacity(0.65)
+        ..style = PaintingStyle.fill,
+    );
+
+    // Directional arc: CW (red = right turn), CCW (blue = left turn), none for neutral
+    if (type != OrphanDotType.neutral) {
+      final r = cs * 0.09;
+      final arcPaint = Paint()
+        ..color = Colors.white.withOpacity(0.85)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = cs * 0.038
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        Rect.fromCenter(center: center, width: r * 2, height: r * 2),
+        -pi / 2,
+        type == OrphanDotType.red ? (3 * pi / 4) : -(3 * pi / 4),
+        false,
+        arcPaint,
+      );
+    }
   }
 
   void _drawPerimeter(Canvas canvas, int gridSize, double cs) {
@@ -133,12 +203,12 @@ class GridComponent extends PositionComponent {
       // Draw edge on each side that faces outside the mask
       final edges = [
         [-1, 0, x, y, x + cs, y],
-        [ 1, 0, x, y + cs, x + cs, y + cs],
-        [ 0,-1, x, y, x, y + cs],
-        [ 0, 1, x + cs, y, x + cs, y + cs],
+        [1, 0, x, y + cs, x + cs, y + cs],
+        [0, -1, x, y, x, y + cs],
+        [0, 1, x + cs, y, x + cs, y + cs],
       ];
       for (final e in edges) {
-        if (!_mask.contains('${r+e[0]},${c+e[1]}')) {
+        if (!_mask.contains('${r + e[0]},${c + e[1]}')) {
           canvas.drawLine(
             Offset(e[2].toDouble(), e[3].toDouble()),
             Offset(e[4].toDouble(), e[5].toDouble()),
@@ -149,7 +219,8 @@ class GridComponent extends PositionComponent {
     }
   }
 
-  void _glow(Canvas canvas, double size, Color color, double blur, double width) {
+  void _glow(
+      Canvas canvas, double size, Color color, double blur, double width) {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromLTWH(-4, -4, size + 8, size + 8), const Radius.circular(16)),
@@ -162,7 +233,7 @@ class GridComponent extends PositionComponent {
   }
 
   static const Color _bossColor = Color(0xFFFF7A00);
-  static const Color _godColor  = Color(0xFFAA55FF);
+  static const Color _godColor = Color(0xFFAA55FF);
 
   // ── Update ────────────────────────────────────────────────────────────────
 
@@ -170,7 +241,8 @@ class GridComponent extends PositionComponent {
   void update(double dt) {
     super.update(dt);
     final current = gameState.arrows.map((a) => a.id).toSet();
-    final gone = _arrowComponents.keys.where((id) => !current.contains(id)).toList();
+    final gone =
+        _arrowComponents.keys.where((id) => !current.contains(id)).toList();
     for (final id in gone) {
       _arrowComponents[id]?.removeFromParent();
       _arrowComponents.remove(id);

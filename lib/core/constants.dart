@@ -51,26 +51,21 @@ class AppConstants {
   static const int streakMilestone3 = 100;
 
   /// Grid size for a given level number.
-  /// Starts at 10×10 and grows to 40×40 over many levels.
-  ///
-  /// Rough milestones:
-  ///   Level  1  → 10×10
-  ///   Level 50  → 13×13
-  ///   Level 100 → 16×16
-  ///   Level 200 → 22×22
-  ///   Level 300 → 28×28
-  ///   Level 500 → 40×40 (capped)
+  ///   Normal :  10×10 at level 4, grows to 30×30 around level 180.
+  ///   Boss/God: fixed 30×30.
   static int gridSizeForLevel(int level) {
     if (level <= tutorialLevels) {
       final raw = (10 + level * 0.06).round();
       return raw.clamp(10, 40);
     }
     final type = levelTypeFor(level);
-    if (type == LevelType.normal) {
+    // Boss / God → fixed 30×30
+    if (type == LevelType.boss || type == LevelType.god) {
       return 30;
     }
-    final raw = (10 + level * 0.06).round();
-    return raw.clamp(10, 40);
+    // Normal: ramp 10×10 (level 4) → 30×30 (level ~177)
+    final raw = (10 + (level - tutorialLevels) * 0.115).round();
+    return raw.clamp(10, 30);
   }
 
   /// Returns the level type: tutorial, god, boss, or normal.

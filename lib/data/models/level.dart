@@ -1,5 +1,34 @@
 import 'arrow.dart';
 
+// ─── Orphan Dot ───────────────────────────────────────────────────────────────
+
+/// A single isolated grid cell that could not be covered by any arrow.
+/// Acts as a deflector in the exit path:
+///   • red  → turns the crossing arrow 90° clockwise  (right)
+///   • blue → turns the crossing arrow 90° counter-clockwise (left)
+/// Consumed (removed) on first use.
+enum OrphanDotType { red, blue, neutral }
+
+class OrphanDot {
+  final int row, col;
+  final OrphanDotType type;
+  const OrphanDot({required this.row, required this.col, required this.type});
+
+  String get key => '$row,$col';
+
+  Map<String, dynamic> toJson() => {
+    'row': row,
+    'col': col,
+    'type': type.index,
+  };
+
+  factory OrphanDot.fromJson(Map<String, dynamic> json) => OrphanDot(
+    row: json['row'] as int,
+    col: json['col'] as int,
+    type: OrphanDotType.values[json['type'] as int],
+  );
+}
+
 // ─── Mask Shape Enum ──────────────────────────────────────────────────────────
 
 /// The canvas silhouette shape for a level's grid.
@@ -78,6 +107,7 @@ class LevelModel {
   final List<String> solutionOrder;
   final MaskShape maskShape;
   final Set<String> mask;
+  final List<OrphanDot> orphanDots;
 
   LevelModel({
     required this.levelNumber,
@@ -88,6 +118,7 @@ class LevelModel {
     this.solutionOrder = const [],
     this.maskShape = MaskShape.square,
     this.mask = const {},
+    this.orphanDots = const [],
   });
 
   int get totalArrows => arrows.length;
@@ -101,6 +132,7 @@ class LevelModel {
     solutionOrder: List.from(solutionOrder),
     maskShape: maskShape,
     mask: Set.from(mask),
+    orphanDots: List.from(orphanDots),
   );
 
   LevelModel copyWith({
@@ -112,6 +144,7 @@ class LevelModel {
     List<String>? solutionOrder,
     MaskShape? maskShape,
     Set<String>? mask,
+    List<OrphanDot>? orphanDots,
   }) => LevelModel(
     levelNumber: levelNumber ?? this.levelNumber,
     gridSize: gridSize ?? this.gridSize,
@@ -121,6 +154,7 @@ class LevelModel {
     solutionOrder: solutionOrder ?? this.solutionOrder,
     maskShape: maskShape ?? this.maskShape,
     mask: mask ?? this.mask,
+    orphanDots: orphanDots ?? this.orphanDots,
   );
 
   Map<String, dynamic> toJson() => {
@@ -132,6 +166,7 @@ class LevelModel {
     'solutionOrder': solutionOrder,
     'maskShape': maskShape.index,
     'mask': mask.toList(),
+    'orphanDots': orphanDots.map((d) => d.toJson()).toList(),
   };
 
   factory LevelModel.fromJson(Map<String, dynamic> json) => LevelModel(
@@ -150,6 +185,11 @@ class LevelModel {
     mask: json['mask'] != null
         ? Set<String>.from((json['mask'] as List).cast<String>())
         : const {},
+    orphanDots: json['orphanDots'] != null
+        ? (json['orphanDots'] as List)
+            .map((d) => OrphanDot.fromJson(d as Map<String, dynamic>))
+            .toList()
+        : const [],
   );
 }
 

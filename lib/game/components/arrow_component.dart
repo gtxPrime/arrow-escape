@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/models/arrow.dart';
+import '../../data/models/level.dart';
 import '../game_state.dart';
 
 /// Renders a multi-cell arrow that winds through the grid.
@@ -29,10 +30,12 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
   double _maxBlockSlide = 0.0;
   double _slideOffset = 0.0;
 
-  // ── Exit state ────────────────────────────────────────────────────────────
+  // ── Exit state ──────────────────────────────────────────────────────────────────
   bool _isExiting = false;
   double _exitProgress = 0.0;
-  double _exitDuration = 0.35; // computed per-arrow based on path length
+  double _exitDuration = 0.35;
+  /// Pre-built deflected exit track (farthest → head), null = straight exit
+  List<Offset>? _deflectedExtension;
 
   // ── Color palette for colorLock / colorKey groups ─────────────────────────
   static const List<Color> _groupColors = [
@@ -108,10 +111,60 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
   // ── Exit: head-first pull-through ────────────────────────────────────────
 
   void _startExitAnimation() {
-    // Duration scales with path length
     _exitDuration = 0.4 + arrowModel.path.length * 0.08;
     _exitProgress = 0.0;
     _isExiting = true;
+    _deflectedExtension = _buildDeflectedExtension();
+  }
+
+  /// Pre-computes the full exit track for arrows that pass through orphan dots.
+  /// Returns a list of Offsets from FARTHEST point → first-step-from-head,
+  /// or null if the exit is a plain straight line.
+  List<Offset>? _buildDeflectedExtension() {
+    final orphanDots = gameState.orphanDots;
+    if (orphanDots.isEmpty) return null;
+
+    ArrowDirection currentDir = arrowModel.direction;
+    final head = arrowModel.path[0];
+    final gridSize = gameState.level.gridSize;
+    final pts = <Offset>[];
+    var d = currentDir.delta;
+    int nr = head[0] + d[0];
+    int nc = head[1] + d[1];
+    final visited = <String>{};
+    bool hasDeflection = false;
+
+    while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+      final key = '$nr,$nc';
+      if (visited.contains(key)) break;
+      visited.add(key);
+      pts.add(Offset((nc + 0.5) * cellSize, (nr + 0.5) * cellSize));
+
+      if (orphanDots.containsKey(key)) {
+        final dotType = orphanDots[key]!;
+        if (dotType == OrphanDotType.red) {
+          hasDeflection = true;
+          currentDir = currentDir.turnRight;
+        } else if (dotType == OrphanDotType.blue) {
+          hasDeflection = true;
+          currentDir = currentDir.turnLeft;
+        }
+      }
+
+      d = currentDir.delta;
+      nr += d[0];
+      nc += d[1];
+    }
+
+    if (!hasDeflection) return null;
+
+    // Pad a few off-screen cells in the final direction so the tail fully exits
+    for (int i = 0; i <= 5; i++) {
+      pts.add(Offset((nc + d[1] * i + 0.5) * cellSize,
+                     (nr + d[0] * i + 0.5) * cellSize));
+    }
+
+    return pts.reversed.toList(); // farthest → closest to head
   }
 
   // ── Block: direction-aware shake ──────────────────────────────────────────
@@ -235,12 +288,20 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     // ── 2. Build the extended track for exit animation ────────────────────
     final delta = arrowModel.direction.delta;
     final headPx = pathPx.first;
-    final extCount = gameState.level.gridSize + 2;
 
     final track = <Offset>[];
-    for (int i = extCount; i >= 1; i--) {
-      track.add(
-          headPx + Offset(delta[1] * i * cellSize, delta[0] * i * cellSize));
+    final int extCount;
+    if (_deflectedExtension != null) {
+      // Deflected exit path: pre-built reversed list (farthest → closest to head)
+      track.addAll(_deflectedExtension!);
+      extCount = _deflectedExtension!.length;
+    } else {
+      // Default straight extension
+      extCount = gameState.level.gridSize + 2;
+      for (int i = extCount; i >= 1; i--) {
+        track.add(
+            headPx + Offset(delta[1] * i * cellSize, delta[0] * i * cellSize));
+      }
     }
     track.addAll(pathPx);
 

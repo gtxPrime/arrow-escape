@@ -11,7 +11,7 @@ import '../models/level.dart';
 /// The body always follows because each segment inherits the vacated cell
 /// of the segment ahead of it — no further raycast needed.
 class LevelSolver {
-  static const int maxStates = 10000; // Safety cap for DFS recursion
+  static const int maxStates = 1500; // Safety cap for DFS recursion
 
   /// Returns a valid solution order of arrow IDs, or null if unsolvable.
   static List<String>? solve(LevelModel level) {
@@ -62,7 +62,7 @@ class LevelSolver {
   }
 
   /// Returns new state if arrow can clear, null if blocked.
-  /// Checks if any cell along the exit path of the head is occupied.
+  /// Simulates deflection through any orphan dots in the exit path.
   static _GridState? _tryMove(
       _GridState state, ArrowModel arrow, int gridSize, Set<String> occupied) {
     final grp = arrow.colorGroup;
@@ -77,40 +77,71 @@ class LevelSolver {
         for (final pt in arrow1.path) occupiedWithoutGroup.remove('${pt[0]},${pt[1]}');
         for (final pt in arrow2.path) occupiedWithoutGroup.remove('${pt[0]},${pt[1]}');
 
-        final blocked1 = _isPathBlocked(arrow1, gridSize, occupiedWithoutGroup);
-        final blocked2 = _isPathBlocked(arrow2, gridSize, occupiedWithoutGroup);
+        final result1 = _simulateExit(arrow1, gridSize, occupiedWithoutGroup, state.orphanDots);
+        final result2 = _simulateExit(arrow2, gridSize, occupiedWithoutGroup, state.orphanDots);
 
-        if (blocked1 || blocked2) {
-          return null; // Blocked
-        }
+        if (result1 == null || result2 == null) return null;
 
-        // Both exit
-        final newArrows = Map<String, ArrowModel>.from(state.arrows);
-        newArrows.remove(arrow1.id);
-        newArrows.remove(arrow2.id);
+        final newArrows = Map<String, ArrowModel>.from(state.arrows)
+          ..remove(arrow1.id)
+          ..remove(arrow2.id);
 
         final newClearedGroups = Set<int>.from(state.clearedColorGroups)..add(grp);
-        return _GridState(newArrows, newClearedGroups);
+        final newOrphanDots = Map<String, OrphanDotType>.from(state.orphanDots);
+        for (final k in [...result1.consumed, ...result2.consumed]) {
+          newOrphanDots.remove(k);
+        }
+        return _GridState(newArrows, newClearedGroups, newOrphanDots);
       }
     }
 
-    // Standard arrow check
-    final delta = arrow.direction.delta;
+    // Standard single arrow
+    final result = _simulateExit(arrow, gridSize, occupied, state.orphanDots);
+    if (result == null) return null;
+
+    final newArrows = Map<String, ArrowModel>.from(state.arrows)
+      ..remove(arrow.id);
+    final newOrphanDots = Map<String, OrphanDotType>.from(state.orphanDots);
+    for (final k in result.consumed) newOrphanDots.remove(k);
+    return _GridState(newArrows, state.clearedColorGroups, newOrphanDots);
+  }
+
+  /// Simulates the exit path for one arrow.
+  /// Returns an [_ExitResult] (with consumed dot keys) on success, or null if blocked.
+  static _ExitResult? _simulateExit(
+      ArrowModel arrow, int gridSize, Set<String> occupied,
+      Map<String, OrphanDotType> orphanDots) {
+    final myPathSet = arrow.path.map((p) => '${p[0]},${p[1]}').toSet();
+    ArrowDirection currentDir = arrow.direction;
     final head = arrow.path[0];
-    int nr = head[0] + delta[0];
-    int nc = head[1] + delta[1];
+    var d = currentDir.delta;
+    int nr = head[0] + d[0];
+    int nc = head[1] + d[1];
+    final consumed = <String>[];
+    final visited = <String>{};
 
     while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-      if (occupied.contains('$nr,$nc')) {
-        return null;
-      }
-      nr += delta[0];
-      nc += delta[1];
-    }
+      final key = '$nr,$nc';
+      if (visited.contains(key)) return null; // infinite loop
+      visited.add(key);
 
-    final newArrows = Map<String, ArrowModel>.from(state.arrows);
-    newArrows.remove(arrow.id);
-    return _GridState(newArrows, state.clearedColorGroups);
+      if (orphanDots.containsKey(key)) {
+        consumed.add(key);
+        final dotType = orphanDots[key]!;
+        if (dotType == OrphanDotType.red) {
+          currentDir = currentDir.turnRight;
+        } else if (dotType == OrphanDotType.blue) {
+          currentDir = currentDir.turnLeft;
+        }
+      } else if (occupied.contains(key) && !myPathSet.contains(key)) {
+        return null; // blocked by real arrow
+      }
+
+      d = currentDir.delta;
+      nr += d[0];
+      nc += d[1];
+    }
+    return _ExitResult(consumed);
   }
 
   static bool _isPathBlocked(ArrowModel arrow, int gridSize, Set<String> occupied) {
@@ -130,22 +161,30 @@ class LevelSolver {
   }
 }
 
-// ─── Internal state for BFS ───────────────────────────────────────────────────
+// ─── Internal state for DFS ───────────────────────────────────────────────────────────────
+
+class _ExitResult {
+  final List<String> consumed; // orphan dot keys consumed along exit path
+  _ExitResult(this.consumed);
+}
 
 class _GridState {
   final Map<String, ArrowModel> arrows;
   final Set<int> clearedColorGroups;
+  final Map<String, OrphanDotType> orphanDots;
 
-  _GridState(this.arrows, [Set<int>? clearedColorGroups])
-      : clearedColorGroups = clearedColorGroups ?? {};
+  _GridState(this.arrows, [Set<int>? clearedColorGroups, Map<String, OrphanDotType>? orphanDots])
+      : clearedColorGroups = clearedColorGroups ?? {},
+        orphanDots = orphanDots ?? {};
 
   bool get isEmpty => arrows.isEmpty;
 
-  /// Compact hash: sorted arrow IDs + cleared color groups
+  /// Hash includes remaining orphan dots so states with different dots are distinct
   String get hash {
     final sortedIds = arrows.keys.toList()..sort();
     final groups = clearedColorGroups.toList()..sort();
-    return '${sortedIds.join('|')};${groups.join(',')}';
+    final dots = orphanDots.keys.toList()..sort();
+    return '${sortedIds.join('|')};${groups.join(',')};${dots.join('+')}';
   }
 
   factory _GridState.fromLevel(LevelModel level) {
@@ -153,7 +192,8 @@ class _GridState {
     for (final arrow in level.arrows) {
       map[arrow.id] = arrow.copyWith(state: ArrowState.idle);
     }
-    return _GridState(map);
+    final orphanMap = {for (final od in level.orphanDots) od.key: od.type};
+    return _GridState(map, {}, orphanMap);
   }
 }
 

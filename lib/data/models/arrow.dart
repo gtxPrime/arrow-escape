@@ -47,6 +47,26 @@ enum ArrowDirection {
     }
   }
 
+  /// 90° clockwise turn — used by red orphan dots
+  ArrowDirection get turnRight {
+    switch (this) {
+      case ArrowDirection.up:    return ArrowDirection.right;
+      case ArrowDirection.right: return ArrowDirection.down;
+      case ArrowDirection.down:  return ArrowDirection.left;
+      case ArrowDirection.left:  return ArrowDirection.up;
+    }
+  }
+
+  /// 90° counter-clockwise turn — used by blue orphan dots
+  ArrowDirection get turnLeft {
+    switch (this) {
+      case ArrowDirection.up:    return ArrowDirection.left;
+      case ArrowDirection.left:  return ArrowDirection.down;
+      case ArrowDirection.down:  return ArrowDirection.right;
+      case ArrowDirection.right: return ArrowDirection.up;
+    }
+  }
+
   static ArrowDirection random() {
     final rng = Random();
     return ArrowDirection.values[rng.nextInt(4)];

@@ -66,16 +66,27 @@ class LevelGenerator {
   }) {
     final arrows = <ArrowModel>[];
     final occupied = <String>{};
+    final occupiedPacked = <int>{};
     int counter = 0;
+
+    final maskCells = mask.map((k) {
+      final parts = k.split(',');
+      return [int.parse(parts[0]), int.parse(parts[1])];
+    }).toList();
+
+    final maskPacked = <int>{};
+    for (final cell in maskCells) {
+      maskPacked.add(cell[0] * 1000 + cell[1]);
+    }
 
     final bool fillEntireGrid = type != LevelType.tutorial;
     final targetCount = fillEntireGrid ? mask.length : params.arrowCount;
 
     int placementFailures = 0;
-    while ((fillEntireGrid ? occupied.length : arrows.length) < targetCount &&
+    while ((fillEntireGrid ? occupiedPacked.length : arrows.length) < targetCount &&
         placementFailures < 150) {
 
-      final candidates = _exitCandidates(mask, occupied, gridSize);
+      final candidates = _exitCandidates(maskCells, occupiedPacked, gridSize);
       if (candidates.isEmpty) break;
 
       final centerRow = gridSize / 2;
@@ -93,23 +104,24 @@ class LevelGenerator {
       int minBlocked = 9999;
 
       for (final cand in candidates.take(25)) {
-        final len = occupied.length >= mask.length * 0.8 ? 2 : _pickLength(params, type, rng);
+        final len = occupiedPacked.length >= maskPacked.length * 0.8 ? 2 : _pickLength(params, type, rng);
         final path = _growPath(
           startRow: cand.row,
           startCol: cand.col,
           exitDir: cand.dir,
-          mask: mask,
-          occupied: occupied,
+          maskPacked: maskPacked,
+          occupiedPacked: occupiedPacked,
           targetLen: len,
           rng: rng,
           gridSize: gridSize,
         );
         if (path != null) {
-          final bool runLookAhead = occupied.length >= mask.length * 0.7;
+          final bool runLookAhead = gridSize < 30 && occupiedPacked.length >= maskPacked.length * 0.7;
           final blockedCount = runLookAhead
               ? _countBlockedEmptyCells(
-                  mask: mask,
-                  currentOccupied: occupied,
+                  maskCells: maskCells,
+                  maskPacked: maskPacked,
+                  currentOccupiedPacked: occupiedPacked,
                   newPath: path,
                   gridSize: gridSize,
                 )
@@ -141,7 +153,10 @@ class LevelGenerator {
           path: bestPath,
           mechanic: SnakeMechanic.standard,
         ));
-        for (final pt in bestPath) occupied.add('${pt[0]},${pt[1]}');
+        for (final pt in bestPath) {
+          occupied.add('${pt[0]},${pt[1]}');
+          occupiedPacked.add(pt[0] * 1000 + pt[1]);
+        }
         placed = true;
       } else {
         break;
@@ -229,43 +244,59 @@ class LevelGenerator {
           ));
           occupied.add(cellKey);
           occupied.add(neighborKey);
+          occupiedPacked.add(headRow * 1000 + headCol);
+          occupiedPacked.add(tailRow * 1000 + tailCol);
           remaining.remove(cellKey);
           remaining.remove(neighborKey);
         } else {
-          // Absolute fallback (should be extremely rare due to isolation prevention):
-          // Point to closest edge as length 1
-          final distUp = r;
-          final distDown = (gridSize - 1) - r;
-          final distLeft = c;
-          final distRight = (gridSize - 1) - c;
-          final minDist = [distUp, distDown, distLeft, distRight].reduce(min);
-          ArrowDirection fallbackDir;
-          if (minDist == distUp) {
-            fallbackDir = ArrowDirection.up;
-          } else if (minDist == distDown) {
-            fallbackDir = ArrowDirection.down;
-          } else if (minDist == distLeft) {
-            fallbackDir = ArrowDirection.left;
-          } else {
-            fallbackDir = ArrowDirection.right;
-          }
-
-          arrows.add(ArrowModel(
-            id: 'a_${levelNumber}_${counter++}',
-            row: r,
-            col: c,
-            direction: fallbackDir,
-            isPartOfPattern: true,
-            path: [[r, c]],
-            mechanic: SnakeMechanic.standard,
-          ));
-          occupied.add(cellKey);
+          // Skip placing length-1 arrow, leaving the cell in remaining/unoccupied
           remaining.remove(cellKey);
         }
       }
+
+      // Try to absorb remaining orphans into tails of adjacent arrows
+      _absorbOrphans(arrows, occupied, mask);
     }
 
     if (arrows.isEmpty) return null;
+
+    final emptyCount = mask.length - occupied.length;
+    final maxOrphans = (mask.length * 0.02).ceil().clamp(3, 20);
+    if (emptyCount > maxOrphans) {
+      return null;
+    }
+
+    final orphanDots = <OrphanDot>[];
+    if (emptyCount > 0) {
+      final emptyKeys = mask.where((k) => !occupied.contains(k)).toList();
+      for (final orphanKey in emptyKeys) {
+        final parts = orphanKey.split(',');
+        final r = int.parse(parts[0]), c = int.parse(parts[1]);
+        
+        final OrphanDotType dotType;
+        if (levelNumber <= 20) {
+          // Starting levels: empty orphan dots only (neutral)
+          dotType = OrphanDotType.neutral;
+        } else {
+          // Higher levels: can be neutral or colored (red/blue)
+          final roll = rng.nextDouble();
+          if (roll < 0.35) {
+            dotType = OrphanDotType.neutral;
+          } else if (roll < 0.67) {
+            dotType = OrphanDotType.red;
+          } else {
+            dotType = OrphanDotType.blue;
+          }
+        }
+
+        orphanDots.add(OrphanDot(
+          row: r,
+          col: c,
+          type: dotType,
+        ));
+        occupied.add(orphanKey); // counts as filled for solvability order
+      }
+    }
 
     // Apply mechanic mix (colorLock/colorKey pairs) for non-tutorial levels
     if (type != LevelType.tutorial && levelNumber >= 4) {
@@ -285,11 +316,12 @@ class LevelGenerator {
       difficulty: _difficultyFor(levelNumber, type),
       maskShape: maskShape,
       mask: mask,
+      orphanDots: orphanDots,
     );
 
-    // For small grids, verify + possibly improve with BFS solver.
-    // For large grids, trust the construction guarantee.
-    if (gridSize <= 15) {
+    // For small grids (like tutorial levels), verify + possibly improve with BFS solver.
+    // For larger grids, trust the construction guarantee.
+    if (gridSize <= 15 && arrows.length <= 15) {
       final bfsSolution = LevelSolver.solve(level);
       if (bfsSolution == null) return null;
       return level.copyWith(solutionOrder: bfsSolution);
@@ -303,12 +335,11 @@ class LevelGenerator {
   /// Returns all (row, col, dir) triples where an arrow head can be placed:
   /// the cell is in the mask and unoccupied, AND the entire path in [dir] from the head
   /// to the edge is completely unoccupied (empty) at the moment of placement.
-  static List<_Cand> _exitCandidates(Set<String> mask, Set<String> occupied, int gridSize) {
+  static List<_Cand> _exitCandidates(List<List<int>> maskCells, Set<int> occupiedPacked, int gridSize) {
     final out = <_Cand>[];
-    for (final key in mask) {
-      if (occupied.contains(key)) continue;
-      final parts = key.split(',');
-      final r = int.parse(parts[0]), c = int.parse(parts[1]);
+    for (final cell in maskCells) {
+      final r = cell[0], c = cell[1];
+      if (occupiedPacked.contains(r * 1000 + c)) continue;
       for (final dir in ArrowDirection.values) {
         final d = dir.delta;
         int nr = r + d[0];
@@ -316,7 +347,7 @@ class LevelGenerator {
         bool pathValid = true;
         // Walk to the edge of the physical grid — must be completely unoccupied (empty)
         while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-          if (occupied.contains('$nr,$nc')) {
+          if (occupiedPacked.contains(nr * 1000 + nc)) {
             pathValid = false;
             break;
           }
@@ -341,13 +372,13 @@ class LevelGenerator {
     required int startRow,
     required int startCol,
     required ArrowDirection exitDir,
-    required Set<String> mask,
-    required Set<String> occupied,
+    required Set<int> maskPacked,
+    required Set<int> occupiedPacked,
     required int targetLen,
     required Random rng,
     required int gridSize,
   }) {
-    final exitPath = _getExitPath(startRow, startCol, exitDir, gridSize);
+    final exitPath = _getExitPathPacked(startRow, startCol, exitDir, gridSize);
     final path = <List<int>>[[startRow, startCol]];
     int cr = startRow, cc = startCol;
     var growDir = exitDir.opposite; // grow AWAY from exit direction
@@ -359,10 +390,10 @@ class LevelGenerator {
         if (d == growDir.opposite) continue; // no U-turn
         final nd = d.delta;
         final nr = cr + nd[0], nc = cc + nd[1];
-        final nk = '$nr,$nc';
-        if (mask.contains(nk) &&
-            !occupied.contains(nk) &&
-            !exitPath.contains(nk) &&
+        final np = nr * 1000 + nc;
+        if (maskPacked.contains(np) &&
+            !occupiedPacked.contains(np) &&
+            !exitPath.contains(np) &&
             !path.any((p) => p[0] == nr && p[1] == nc)) {
           valid.add(d);
         }
@@ -383,15 +414,15 @@ class LevelGenerator {
       if (step == 1) {
         chosen = growDir;
       } else if (mustTurn && turns.isNotEmpty) {
-        chosen = _packedPick(turns, cr, cc, occupied, rng);
+        chosen = _packedPick(turns, cr, cc, occupiedPacked, rng);
       } else if (valid.length == 1) {
         chosen = valid[0];
       } else if (rng.nextDouble() < 0.65 && turns.isNotEmpty) {
-        chosen = _packedPick(turns, cr, cc, occupied, rng);
+        chosen = _packedPick(turns, cr, cc, occupiedPacked, rng);
       } else if (straights.isNotEmpty) {
         chosen = straights[0];
       } else {
-        chosen = _packedPick(turns, cr, cc, occupied, rng);
+        chosen = _packedPick(turns, cr, cc, occupiedPacked, rng);
       }
 
       straight = chosen == growDir ? straight + 1 : 0;
@@ -407,7 +438,7 @@ class LevelGenerator {
   /// Among [dirs], pick the one whose target cell has the most occupied
   /// orthogonal neighbours (the "packing" preference for circuit-board look).
   static ArrowDirection _packedPick(List<ArrowDirection> dirs, int cr, int cc,
-      Set<String> occupied, Random rng) {
+      Set<int> occupiedPacked, Random rng) {
     if (dirs.length == 1) return dirs[0];
     int best = -1;
     final bestDirs = <ArrowDirection>[];
@@ -416,7 +447,7 @@ class LevelGenerator {
       final nr = cr + nd[0], nc = cc + nd[1];
       int score = 0;
       for (final nb in [[-1,0],[1,0],[0,-1],[0,1]]) {
-        if (occupied.contains('${nr+nb[0]},${nc+nb[1]}')) score++;
+        if (occupiedPacked.contains((nr + nb[0]) * 1000 + (nc + nb[1]))) score++;
       }
       if (score > best) { best = score; bestDirs.clear(); bestDirs.add(d); }
       else if (score == best) bestDirs.add(d);
@@ -427,12 +458,22 @@ class LevelGenerator {
   // ── Arrow length picker ───────────────────────────────────────────────────
 
   static int _pickLength(_Params p, LevelType type, Random rng) {
-    if (type == LevelType.tutorial) return 1 + rng.nextInt(3);
+    if (type == LevelType.tutorial) {
+      // Tutorial: 2–4 cells only
+      return 2 + rng.nextInt(3);
+    }
     final roll = rng.nextDouble();
-    // Mix short (2-4) + medium (avg band) + long snakes for visual variety
-    if (roll < 0.22) return 2 + rng.nextInt(3);            // short
-    if (roll < 0.72) return p.avgLen - 1 + rng.nextInt(3); // mid
-    return p.avgLen + 2 + rng.nextInt(p.avgLen ~/ 2 + 2); // long
+    if (roll < 0.55) {
+      // 55% → medium: 3 to max(6, p.avgLen)
+      final medMax = max(6, p.avgLen);
+      return 3 + rng.nextInt(medMax - 3 + 1);
+    } else if (roll < 0.85) {
+      // 30% → long: avgLen+2 upward
+      return p.avgLen + 2 + rng.nextInt(p.avgLen ~/ 2 + 2);
+    } else {
+      // 15% → 2-cell fill
+      return 2;
+    }
   }
 
   // ── Mechanic mix ──────────────────────────────────────────────────────────
@@ -519,6 +560,19 @@ class LevelGenerator {
     return path;
   }
 
+  static Set<int> _getExitPathPacked(int startRow, int startCol, ArrowDirection exitDir, int gridSize) {
+    final path = <int>{};
+    final d = exitDir.delta;
+    int nr = startRow + d[0];
+    int nc = startCol + d[1];
+    while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+      path.add(nr * 1000 + nc);
+      nr += d[0];
+      nc += d[1];
+    }
+    return path;
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   static MaskShape _shapeFor(LevelType type, Random rng) {
@@ -598,34 +652,34 @@ class LevelGenerator {
   }
 
   static int _countBlockedEmptyCells({
-    required Set<String> mask,
-    required Set<String> currentOccupied,
+    required List<List<int>> maskCells,
+    required Set<int> maskPacked,
+    required Set<int> currentOccupiedPacked,
     required List<List<int>> newPath,
     required int gridSize,
   }) {
-    final tempOccupied = Set<String>.from(currentOccupied);
+    final tempOccupied = Set<int>.from(currentOccupiedPacked);
     for (final pt in newPath) {
-      tempOccupied.add('${pt[0]},${pt[1]}');
+      tempOccupied.add(pt[0] * 1000 + pt[1]);
     }
 
     final rowsToCheck = newPath.map((pt) => pt[0]).toSet();
     final colsToCheck = newPath.map((pt) => pt[1]).toSet();
-    final adjacentKeys = <String>{};
+    final adjacentKeys = <int>{};
     for (final pt in newPath) {
       for (final offset in [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-        adjacentKeys.add('${pt[0] + offset[0]},${pt[1] + offset[1]}');
+        adjacentKeys.add((pt[0] + offset[0]) * 1000 + (pt[1] + offset[1]));
       }
     }
 
     int blocked = 0;
-    for (final cellKey in mask) {
-      if (tempOccupied.contains(cellKey)) continue;
-
-      final parts = cellKey.split(',');
-      final r = int.parse(parts[0]), c = int.parse(parts[1]);
+    for (final cell in maskCells) {
+      final r = cell[0], c = cell[1];
+      final packed = r * 1000 + c;
+      if (tempOccupied.contains(packed)) continue;
 
       // Optimization: Only check empty cells that are adjacent to or share row/col with the new path
-      final isNear = rowsToCheck.contains(r) || colsToCheck.contains(c) || adjacentKeys.contains(cellKey);
+      final isNear = rowsToCheck.contains(r) || colsToCheck.contains(c) || adjacentKeys.contains(packed);
       if (!isNear) continue;
 
       // Check if this empty cell is isolated (0 empty neighbors)
@@ -633,8 +687,8 @@ class LevelGenerator {
       for (final nb in [[-1,0],[1,0],[0,-1],[0,1]]) {
         final nr = r + nb[0];
         final nc = c + nb[1];
-        final nk = '$nr,$nc';
-        if (mask.contains(nk) && !tempOccupied.contains(nk)) {
+        final np = nr * 1000 + nc;
+        if (maskPacked.contains(np) && !tempOccupied.contains(np)) {
           emptyNeighbors++;
         }
       }
@@ -651,8 +705,8 @@ class LevelGenerator {
         // The cell straight behind (r,c) must be inside the mask and empty so the head can grow backwards
         final backRow = r - d[0];
         final backCol = c - d[1];
-        final backKey = '$backRow,$backCol';
-        if (!mask.contains(backKey) || tempOccupied.contains(backKey)) {
+        final backPacked = backRow * 1000 + backCol;
+        if (!maskPacked.contains(backPacked) || tempOccupied.contains(backPacked)) {
           continue;
         }
 
@@ -661,7 +715,7 @@ class LevelGenerator {
         bool pathClear = true;
 
         while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-          if (tempOccupied.contains('$nr,$nc')) {
+          if (tempOccupied.contains(nr * 1000 + nc)) {
             pathClear = false;
             break;
           }
@@ -680,6 +734,26 @@ class LevelGenerator {
       }
     }
     return blocked;
+  }
+
+  static void _absorbOrphans(List<ArrowModel> arrows, Set<String> occupied, Set<String> mask) {
+    final orphans = mask.where((k) => !occupied.contains(k)).toList();
+    for (final cellKey in orphans) {
+      final parts = cellKey.split(',');
+      final r = int.parse(parts[0]), c = int.parse(parts[1]);
+
+      for (int i = 0; i < arrows.length; i++) {
+        final arrow = arrows[i];
+        final tail = arrow.path.last;
+        final dist = (tail[0] - r).abs() + (tail[1] - c).abs();
+        if (dist == 1) {
+          final newPath = List<List<int>>.from(arrow.path)..add([r, c]);
+          arrows[i] = arrow.copyWith(path: newPath);
+          occupied.add(cellKey);
+          break;
+        }
+      }
+    }
   }
 
   static int _countPathObstacles(int r, int c, ArrowDirection dir, Set<String> occupied, int gridSize) {

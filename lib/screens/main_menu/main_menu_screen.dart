@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/repositories/progress_repository.dart';
+import '../../data/repositories/level_repository.dart';
 import '../../data/models/level.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -21,10 +22,24 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   void initState() {
     super.initState();
-    // Record daily play for streak
+    // Record daily play + pre-warm current level in background after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       context.read<ProgressRepository>().recordDailyPlay();
+      _preWarmLevels();
     });
+  }
+
+  /// Pre-generate the current level and next 3 in background isolates so that
+  /// tapping Play opens the game screen instantly with no UI-thread jank.
+  void _preWarmLevels() {
+    final progress = context.read<ProgressRepository>();
+    final levelRepo = context.read<LevelRepository>();
+    final currentLevel = progress.currentLevel;
+    // Pre-warm current + next 3 levels without blocking the UI
+    for (int i = 0; i < 4; i++) {
+      levelRepo.preGenerateAsync(currentLevel + i);
+    }
   }
 
   String _getDifficultyLabel(int levelNum) {
