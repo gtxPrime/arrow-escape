@@ -11,22 +11,22 @@ import '../models/level.dart';
 /// The body always follows because each segment inherits the vacated cell
 /// of the segment ahead of it — no further raycast needed.
 class LevelSolver {
-  static const int maxStates = 1500; // Safety cap for DFS recursion
+  static const int maxStates = 5000; // Safety cap for DFS recursion
 
   /// Returns a valid solution order of arrow IDs, or null if unsolvable.
-  static List<String>? solve(LevelModel level) {
+  static List<String>? solve(LevelModel level, [int maxStatesLimit = maxStates]) {
     final initial = _GridState.fromLevel(level);
     final visited = <String>{};
     final path = <String>[];
-    if (_dfs(initial, level.gridSize, visited, path)) {
+    if (_dfs(initial, level.gridSize, visited, path, maxStatesLimit)) {
       return path;
     }
     return null;
   }
 
-  static bool _dfs(_GridState state, int gridSize, Set<String> visited, List<String> path) {
+  static bool _dfs(_GridState state, int gridSize, Set<String> visited, List<String> path, int maxStatesLimit) {
     if (state.isEmpty) return true;
-    if (visited.length > maxStates) return false;
+    if (visited.length > maxStatesLimit) return false;
 
     final hash = state.hash;
     if (visited.contains(hash)) return false;
@@ -52,7 +52,7 @@ class LevelSolver {
       if (result == null) continue; // Blocked
 
       path.add(arrow.id);
-      if (_dfs(result, gridSize, visited, path)) {
+      if (_dfs(result, gridSize, visited, path, maxStatesLimit)) {
         return true;
       }
       path.removeLast(); // Backtrack
@@ -128,10 +128,14 @@ class LevelSolver {
       if (orphanDots.containsKey(key)) {
         consumed.add(key);
         final dotType = orphanDots[key]!;
-        if (dotType == OrphanDotType.red) {
-          currentDir = currentDir.turnRight;
-        } else if (dotType == OrphanDotType.blue) {
-          currentDir = currentDir.turnLeft;
+        if (dotType == OrphanDotType.up) {
+          currentDir = ArrowDirection.up;
+        } else if (dotType == OrphanDotType.down) {
+          currentDir = ArrowDirection.down;
+        } else if (dotType == OrphanDotType.left) {
+          currentDir = ArrowDirection.left;
+        } else if (dotType == OrphanDotType.right) {
+          currentDir = ArrowDirection.right;
         }
       } else if (occupied.contains(key) && !myPathSet.contains(key)) {
         return null; // blocked by real arrow

@@ -20,6 +20,9 @@ class GameState extends ChangeNotifier {
   // Track which colorGroups have had their key cleared
   final Set<int> _clearedColorGroups = {};
 
+  // Track consumed orphan dots per arrow ID during exit animation
+  final Map<String, List<OrphanDot>> _consumedDotsByArrow = {};
+
   // ── Callbacks ─────────────────────────────────────────────────────────────────
   final void Function() onLevelComplete;
   final void Function() onGameOver;
@@ -47,6 +50,29 @@ class GameState extends ChangeNotifier {
   LevelModel get level => _currentLevel;
   /// Live orphan dots remaining (consumed dots are absent from this map).
   Map<String, OrphanDotType> get orphanDots => Map.unmodifiable(_orphanDots);
+
+  List<OrphanDot> getConsumedDotsForArrow(String arrowId) {
+    return _consumedDotsByArrow[arrowId] ?? [];
+  }
+
+  void _recordConsumedDots(String arrowId, List<String> consumedKeys) {
+    final dots = <OrphanDot>[];
+    for (final key in consumedKeys) {
+      final match = _currentLevel.orphanDots.firstWhere(
+        (od) => od.key == key,
+        orElse: () {
+          final parts = key.split(',');
+          return OrphanDot(
+            row: int.parse(parts[0]),
+            col: int.parse(parts[1]),
+            type: OrphanDotType.neutral,
+          );
+        },
+      );
+      dots.add(match);
+    }
+    _consumedDotsByArrow[arrowId] = dots;
+  }
 
   // ── Tap Handler ───────────────────────────────────────────────────────────────
 
@@ -78,6 +104,8 @@ class GameState extends ChangeNotifier {
         if (exitInfo1.blocked || exitInfo2.blocked) {
           return _handleGroupBlocked(grp, groupArrows);
         } else {
+          _recordConsumedDots(arrow1.id, exitInfo1.consumed);
+          _recordConsumedDots(arrow2.id, exitInfo2.consumed);
           for (final k in {...exitInfo1.consumed, ...exitInfo2.consumed}) {
             _orphanDots.remove(k);
           }
@@ -106,6 +134,7 @@ class GameState extends ChangeNotifier {
 
     // ── Clear: arrow exits ──────────────────────────────────────────
     _arrows[index] = arrow.copyWith(state: ArrowState.sliding);
+    _recordConsumedDots(arrowId, exitInfo.consumed);
     // Consume orphan dots along the exit path
     for (final k in exitInfo.consumed) _orphanDots.remove(k);
     notifyListeners();
@@ -113,6 +142,7 @@ class GameState extends ChangeNotifier {
     final exitDurationMs = 400 + arrow.path.length * 80;
     Future.delayed(Duration(milliseconds: exitDurationMs), () {
       _arrows.removeWhere((a) => a.id == arrowId);
+      _consumedDotsByArrow.remove(arrowId);
 
       if (_arrows.isEmpty) {
         _isComplete = true;
@@ -198,6 +228,7 @@ class GameState extends ChangeNotifier {
     Future.delayed(Duration(milliseconds: exitDurationMs), () {
       for (final arrow in groupArrows) {
         _arrows.removeWhere((a) => a.id == arrow.id);
+        _consumedDotsByArrow.remove(arrow.id);
       }
       if (_arrows.isEmpty) {
         _isComplete = true;
@@ -231,10 +262,14 @@ class GameState extends ChangeNotifier {
       if (_orphanDots.containsKey(key)) {
         consumed.add(key);
         final dotType = _orphanDots[key]!;
-        if (dotType == OrphanDotType.red) {
-          currentDir = currentDir.turnRight;
-        } else if (dotType == OrphanDotType.blue) {
-          currentDir = currentDir.turnLeft;
+        if (dotType == OrphanDotType.up) {
+          currentDir = ArrowDirection.up;
+        } else if (dotType == OrphanDotType.down) {
+          currentDir = ArrowDirection.down;
+        } else if (dotType == OrphanDotType.left) {
+          currentDir = ArrowDirection.left;
+        } else if (dotType == OrphanDotType.right) {
+          currentDir = ArrowDirection.right;
         }
       } else {
         bool hit = false;
@@ -266,6 +301,7 @@ class GameState extends ChangeNotifier {
   void resetLevel() {
     _arrows = _currentLevel.arrows.map((a) => a.copyWith(state: ArrowState.idle)).toList();
     _orphanDots = {for (final od in _currentLevel.orphanDots) od.key: od.type};
+    _consumedDotsByArrow.clear();
     _lives = AppConstants.maxLives;
     _movesUsed = 0;
     _livesLost = 0;

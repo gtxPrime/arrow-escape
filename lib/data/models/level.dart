@@ -3,11 +3,9 @@ import 'arrow.dart';
 // ─── Orphan Dot ───────────────────────────────────────────────────────────────
 
 /// A single isolated grid cell that could not be covered by any arrow.
-/// Acts as a deflector in the exit path:
-///   • red  → turns the crossing arrow 90° clockwise  (right)
-///   • blue → turns the crossing arrow 90° counter-clockwise (left)
+/// Acts as a redirect deflector in the exit path.
 /// Consumed (removed) on first use.
-enum OrphanDotType { red, blue, neutral }
+enum OrphanDotType { up, down, left, right, neutral }
 
 class OrphanDot {
   final int row, col;

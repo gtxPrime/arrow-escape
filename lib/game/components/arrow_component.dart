@@ -121,7 +121,10 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
   /// Returns a list of Offsets from FARTHEST point → first-step-from-head,
   /// or null if the exit is a plain straight line.
   List<Offset>? _buildDeflectedExtension() {
-    final orphanDots = gameState.orphanDots;
+    final orphanDots = Map<String, OrphanDotType>.from(gameState.orphanDots);
+    for (final dot in gameState.getConsumedDotsForArrow(arrowModel.id)) {
+      orphanDots[dot.key] = dot.type;
+    }
     if (orphanDots.isEmpty) return null;
 
     ArrowDirection currentDir = arrowModel.direction;
@@ -142,12 +145,18 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
 
       if (orphanDots.containsKey(key)) {
         final dotType = orphanDots[key]!;
-        if (dotType == OrphanDotType.red) {
+        if (dotType == OrphanDotType.up) {
           hasDeflection = true;
-          currentDir = currentDir.turnRight;
-        } else if (dotType == OrphanDotType.blue) {
+          currentDir = ArrowDirection.up;
+        } else if (dotType == OrphanDotType.down) {
           hasDeflection = true;
-          currentDir = currentDir.turnLeft;
+          currentDir = ArrowDirection.down;
+        } else if (dotType == OrphanDotType.left) {
+          hasDeflection = true;
+          currentDir = ArrowDirection.left;
+        } else if (dotType == OrphanDotType.right) {
+          hasDeflection = true;
+          currentDir = ArrowDirection.right;
         }
       }
 
@@ -337,16 +346,7 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
 
     canvas.save();
 
-    // A) If ice segment, draw frosty blue background under the head cell
-    if (arrowModel.mechanic == SnakeMechanic.iceSegment && pts.isNotEmpty) {
-      canvas.drawCircle(
-        pts.first,
-        cellSize * 0.28,
-        Paint()
-          ..color = const Color(0x6690CAF9)
-          ..style = PaintingStyle.fill,
-      );
-    }
+
 
     final bodyPath = Path()..moveTo(pts.first.dx, pts.first.dy);
     for (int i = 1; i < pts.length; i++) bodyPath.lineTo(pts[i].dx, pts[i].dy);
@@ -363,12 +363,7 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     // ── 7. Draw arrowhead at the head end (pts.first) ─────────────────────
     _drawHead(canvas, pts, mainColor, sw);
 
-    // ── 8. Overlays ───────────────────────────────────────────────────────
-    if (arrowModel.mechanic == SnakeMechanic.iceSegment &&
-        arrowModel.state == ArrowState.cracked &&
-        pts.isNotEmpty) {
-      _drawCrackOverlay(canvas, pts.first);
-    }
+
 
     canvas.restore();
   }

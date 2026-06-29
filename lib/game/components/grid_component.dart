@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/models/level.dart';
+import '../../data/models/arrow.dart';
 import '../game_state.dart';
 import 'arrow_component.dart';
 
@@ -135,55 +136,81 @@ class GridComponent extends PositionComponent {
   static void _drawOrphanDot(
       Canvas canvas, Offset center, OrphanDotType type, double cs) {
     final Color baseColor;
-    if (type == OrphanDotType.red) {
-      baseColor = const Color(0xFFFF3333);
-    } else if (type == OrphanDotType.blue) {
-      baseColor = const Color(0xFF3388FF);
-    } else {
+    if (type == OrphanDotType.neutral) {
       baseColor = const Color(0xFF888888);
+    } else {
+      baseColor = const Color(0xFFFFAA00); // Gold/orange redirect plate
     }
 
-    // Outer glow ring
+    // Solid dot body (plate) - enlarged to be highly visible
     canvas.drawCircle(
       center,
-      cs * 0.30,
-      Paint()
-        ..color = baseColor.withOpacity(0.28)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7.0),
-    );
-
-    // Solid dot body
-    canvas.drawCircle(
-      center,
-      cs * 0.19,
+      cs * 0.36, // Much larger plate (72% of cell size!)
       Paint()
         ..color = baseColor
         ..style = PaintingStyle.fill,
     );
 
-    // Bright specular highlight
+    // Darker outline for contrast
     canvas.drawCircle(
-      center - Offset(cs * 0.055, cs * 0.055),
-      cs * 0.06,
+      center,
+      cs * 0.36,
       Paint()
-        ..color = Colors.white.withOpacity(0.65)
-        ..style = PaintingStyle.fill,
+        ..color = Colors.black.withOpacity(0.18)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = cs * 0.045,
     );
 
-    // Directional arc: CW (red = right turn), CCW (blue = left turn), none for neutral
+    // Drawing the arrow in the middle of the gold plate
     if (type != OrphanDotType.neutral) {
-      final r = cs * 0.09;
-      final arcPaint = Paint()
-        ..color = Colors.white.withOpacity(0.85)
+      final ArrowDirection dir;
+      switch (type) {
+        case OrphanDotType.up:    dir = ArrowDirection.up; break;
+        case OrphanDotType.down:  dir = ArrowDirection.down; break;
+        case OrphanDotType.left:  dir = ArrowDirection.left; break;
+        case OrphanDotType.right: dir = ArrowDirection.right; break;
+        default: return;
+      }
+
+      final double angle = dir.rotationRadians; // Right is 0 rad
+
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(angle);
+
+      final linePaint = Paint()
+        ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = cs * 0.038
+        ..strokeWidth = cs * 0.075 // Thick lines
         ..strokeCap = StrokeCap.round;
-      canvas.drawArc(
-        Rect.fromCenter(center: center, width: r * 2, height: r * 2),
-        -pi / 2,
-        type == OrphanDotType.red ? (3 * pi / 4) : -(3 * pi / 4),
-        false,
-        arcPaint,
+
+      // Draw the arrow shaft in the middle
+      canvas.drawLine(Offset(-cs * 0.22, 0), Offset(cs * 0.06, 0), linePaint);
+
+      // Draw a large centered arrowhead pointing right
+      final arrowheadPath = Path()
+        ..moveTo(cs * 0.28, 0)           // Tip of the arrow
+        ..lineTo(cs * 0.04, -cs * 0.18)  // Back corner top
+        ..lineTo(cs * 0.10, 0)           // Recess center point
+        ..lineTo(cs * 0.04, cs * 0.18)   // Back corner bottom
+        ..close();
+
+      canvas.drawPath(
+        arrowheadPath,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill,
+      );
+
+      canvas.restore();
+    } else {
+      // Draw a small solid white dot in the center of neutral dots for a clean focal point
+      canvas.drawCircle(
+        center,
+        cs * 0.075,
+        Paint()
+          ..color = Colors.white.withOpacity(0.85)
+          ..style = PaintingStyle.fill,
       );
     }
   }
