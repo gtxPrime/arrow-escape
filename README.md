@@ -49,32 +49,32 @@
 
 ---
 
-## <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/info.svg" width="20" height="20" align="center" /> About Arrow Out
+## <img src="https://img.shields.io/badge/-About-FF5500?style=flat-square&logo=info&logoColor=white" align="center" /> About Arrow Out
 
 > [!NOTE]
 > **Arrow Out** is a beautifully designed, highly interactive grid-based puzzle game. Players navigate challenges by sliding arrows out of the grid, encountering progressively harder difficulties (from Easy up to Boss & Super Hard levels). Developed using the powerful Flame game engine for Flutter, it offers responsive animations, particle effects, and dynamic transitions.
 
 ---
 
-## <a id="-features"></a><img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sparkles.svg" width="20" height="20" align="center" /> Core Features
+## <a id="-features"></a><img src="https://img.shields.io/badge/-Features-9C27B0?style=flat-square&logo=sparkles&logoColor=white" align="center" /> Core Features
 
-### <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/gamepad-2.svg" width="18" height="18" align="center" /> Engaging Gameplay
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/move-horizontal.svg" width="14" height="14" align="center" /> **Slide Mechanics:** Smooth grid movements with intuitive touch controls.
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/trending-up.svg" width="14" height="14" align="center" /> **Progressive Difficulty:** Levels ranging from simple tutorial-like grids to mind-bending Boss and Super Hard configurations (up to 500 levels).
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/compass.svg" width="14" height="14" align="center" /> **Deflector Dots (Orphan Dots):** Isolated cells remaining after generation are converted to deflectors. 
+### <img src="https://img.shields.io/badge/-Gameplay-43A047?style=flat-square&logo=gamepad&logoColor=white" align="center" /> Engaging Gameplay
+* ✦ **Slide Mechanics:** Smooth grid movements with intuitive touch controls.
+* ✦ **Progressive Difficulty:** Levels ranging from simple tutorial-like grids to mind-bending Boss and Super Hard configurations (up to 500 levels).
+* ✦ **Deflector Dots (Orphan Dots):** Isolated cells remaining after generation are converted to deflectors. 
   * Starting levels ($\le 20$) feature neutral (grey) dots that arrows pass straight through.
   * Higher levels introduce red (clockwise/right) and blue (counter-clockwise/left) deflector dots.
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/calendar-days.svg" width="14" height="14" align="center" /> **Daily Streaks:** Tracks user gameplay consistency and records daily play sessions.
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/heart.svg" width="14" height="14" align="center" /> **Lives System:** Keep track of remaining lives with custom visual meters and animated indicators.
+* ✦ **Daily Streaks:** Tracks user gameplay consistency and records daily play sessions.
+* ✦ **Lives System:** Keep track of remaining lives with custom visual meters and animated indicators.
 
-### <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/palette.svg" width="18" height="18" align="center" /> Visual & Sound Effects
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sparkles.svg" width="14" height="14" align="center" /> **Juicy Animations:** Utilizes `flutter_animate`, Confetti, and custom Lottie integrations for satisfying level-complete feedback.
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/music.svg" width="14" height="14" align="center" /> **Soundtracks & SFX:** Rich audio feedback powered by `flame_audio` and `audioplayers` for sliding, matching, winning, and losing states.
-* <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/paintbrush.svg" width="14" height="14" align="center" /> **Premium UI:** Designed with HSL-tailored colors, smooth gradients, and custom Nunito typography.
+### <img src="https://img.shields.io/badge/-Juice-E040FB?style=flat-square&logo=sparkles&logoColor=white" align="center" /> Visual & Sound Effects
+* ✦ **Juicy Animations:** Utilizes `flutter_animate`, Confetti, and custom Lottie integrations for satisfying level-complete feedback.
+* ✦ **Soundtracks & SFX:** Rich audio feedback powered by `flame_audio` and `audioplayers` for sliding, matching, winning, and losing states.
+* ✦ **Premium UI:** Designed with HSL-tailored colors, smooth gradients, and custom Nunito typography.
 
 ---
 
-## <a id="-tech-stack"></a><img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/layers.svg" width="20" height="20" align="center" /> Tech Stack
+## <a id="-tech-stack"></a><img src="https://img.shields.io/badge/-Stack-007ACC?style=flat-square&logo=layers&logoColor=white" align="center" /> Tech Stack
 
 - **Framework:** [Flutter](https://flutter.dev/) (SDK `>=3.0.0 <4.0.0`)
 - **Game Engine:** [Flame Engine](https://flame-engine.org/) & [Flame Audio](https://github.com/flame-engine/flame/tree/main/packages/flame_audio)
@@ -83,16 +83,16 @@
 - **Local Storage:** [Shared Preferences](https://pub.dev/packages/shared_preferences)
 - **Typography & Icons:** [Google Fonts](https://pub.dev/packages/google_fonts), [Lucide Icons](https://pub.dev/packages/lucide_icons_flutter)
 
-## <a id="-game-engine"></a><img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/cpu.svg" width="20" height="20" align="center" /> Game Engine & Level Generation
+## <a id="-game-engine"></a><img src="https://img.shields.io/badge/-Engine-4CAF50?style=flat-square&logo=cpu&logoColor=white" align="center" /> Game Engine & Level Generation
 
 The game leverages the **Flame Engine** (a modular Flutter game engine library) to manage high-frequency rendering ticks, touch gestures, physics simulation, and particles.
 
-### <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/settings.svg" width="16" height="16" align="center" /> Game Loop & Engine Flow
+### <img src="https://img.shields.io/badge/-Loop-607D8B?style=flat-square&logo=settings&logoColor=white" align="center" /> Game Loop & Engine Flow
 The game loop runs on a dual-phase execution tick:
 1. **Update Phase (`update(double dt)`)**: Evaluates real-time animations (e.g. arrow slide offsets, rotation angles, particle decay times) and updates the logical coordinate grid in `GameState`.
 2. **Render Phase (`render(Canvas canvas)`)**: Draws grid cells, deflector plates, standard arrows, and particle effects directly onto the double-buffered screen canvas.
 
-### <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/git-commit.svg" width="16" height="16" align="center" /> The Level Generation Pipeline
+### <img src="https://img.shields.io/badge/-Pipeline-E91E63?style=flat-square&logo=git-commit&logoColor=white" align="center" /> The Level Generation Pipeline
 Every level is fully generated programmatically and deterministically from a level number seed:
 
 ```mermaid
@@ -113,14 +113,39 @@ graph TD
 - **Reverse Exit Deflector Routing (Phase 4)**: Unassigned orphan cells are converted to redirect dots. The generator simulates arrow exits in reverse construction order and configures deflection directions that guarantee a safe path to the grid boundaries.
 - **Solver Backtracking DFS Verification**: A custom depth-first search solver parses the generated board. The layout is accepted only if it solves within a dynamic state cap (1000 states for small grids, 2500 states for grids larger than 20x20). Otherwise, it resets the seed and restarts generation.
 
-### <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/navigation.svg" width="16" height="16" align="center" /> Arrow Definition & Components
+### <img src="https://img.shields.io/badge/-Components-3F51B5?style=flat-square&logo=navigation&logoColor=white" align="center" /> Arrow Definition & Components
 Arrows are modeled in `ArrowModel` and rendered by `ArrowComponent`:
 - **Logical Model (`ArrowModel`)**: Defines the ID, head cell coordinate `(row, col)`, exit direction `ArrowDirection` (up, down, left, right), coordinate segment list (`path`), state (idle, sliding, blocked, exited), and color-locked grouping ID.
 - **Visual Component (`ArrowComponent`)**: Standard arrows are drawn with a curved head, distinct segment separators, and a flat tail. They automatically compute slide offsets and orientation rotations dynamically during slide transitions.
 
+### <img src="https://img.shields.io/badge/-Math-FF5722?style=flat-square&logo=maths&logoColor=white" align="center" /> Algorithmic Mechanics
+
+The generator models the puzzle constraints mathematically to guarantee solvable and challenging states:
+
+#### 1. Dynamic Grid Scaling
+The board dimensions grow dynamically as a function of the level number:
+$$\text{Grid Size } (G) = \text{clamp}\Big(10, \,\, 10 + \big\lfloor (L - 3) \times 0.115 \big\rfloor, \,\, 30\Big)$$
+where $L$ represents the level number.
+
+#### 2. Deflector Density (Orphan Bounds)
+The target quantity of deflector dots is computed as a percentage of the total active mask area ($M$) and is capped:
+$$E_{\text{max}} = \text{clamp}\Big(5, \,\, \lceil M \times P \rceil, \,\, 150\Big)$$
+where the density coefficient $P$ scales based on grid dimensions:
+$$P = \begin{cases} 16\% & \text{if } G > 20 \\ 22\% & \text{if } G \le 20 \end{cases}$$
+
+#### 3. Arrow Type Distributions
+The arrow lengths follow a discrete target ratio among standard paths ($\text{Length} \ge 3$):
+- **Medium Arrows** ($3 \le \text{Length} \le 5$): $\approx 65\%$
+- **Long Arrows** ($\text{Length} \ge 6$): $\approx 35\%$
+
+#### 4. Solvability Constraints
+A board state $S = (A, D)$ is solvable if there exists a valid slide sequence $\pi$:
+$$\pi = (a_1, a_2, \dots, a_N) \in \text{Permutations}(A) \quad \text{s.t.} \quad \forall i, \,\, a_i \xrightarrow{\text{slide}} \text{Exit}(G, D_{i-1})$$
+where $D_{i-1}$ represents the remaining deflector dot configurations on the grid after removing $a_1 \dots a_{i-1}$.
+
 ---
 
-## <a id="-project-structure"></a><img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/folder-tree.svg" width="20" height="20" align="center" /> Project Structure
+## <a id="-project-structure"></a><img src="https://img.shields.io/badge/-Structure-FFC107?style=flat-square&logo=folder-tree&logoColor=white" align="center" /> Project Structure
 
 ```
 lib/
@@ -141,7 +166,7 @@ lib/
 
 ---
 
-## <a id="-installation"></a><img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/download.svg" width="20" height="20" align="center" /> Installation
+## <a id="-installation"></a><img src="https://img.shields.io/badge/-Install-E91E63?style=flat-square&logo=download&logoColor=white" align="center" /> Installation
 
 Follow these instructions to run the game locally:
 
@@ -175,7 +200,7 @@ flutter run
 
 ---
 
-## <a id="-monetization"></a><img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/dollar-sign.svg" width="20" height="20" align="center" /> Monetization & Configuration
+## <a id="-monetization"></a><img src="https://img.shields.io/badge/-Revenue-009688?style=flat-square&logo=dollar-sign&logoColor=white" align="center" /> Monetization & Configuration
 
 ### AdMob Integration
 To configure your live ads, update `lib/core/constants.dart`:
