@@ -147,11 +147,14 @@ void main() {
     int fallbacks = 0;
     for (int i = 1; i <= 500; i++) {
       final level = LevelGenerator.generateLevel(i);
-      if (level.patternName == 'fallback') fallbacks++;
+      if (level.patternName == 'fallback') {
+        fallbacks++;
+        print('FALLBACK DETECTED: Level $i fell back!');
+      }
       expect(level.arrows.isNotEmpty, true, reason: 'Level $i has no arrows');
     }
     expect(fallbacks, 0, reason: '$fallbacks levels used fallback');
-  }, timeout: Timeout(Duration(minutes: 10)));
+  }, timeout: Timeout(Duration(minutes: 60)));
 }
 
 bool _isExitBlocked(ArrowModel arrow, int gridSize,

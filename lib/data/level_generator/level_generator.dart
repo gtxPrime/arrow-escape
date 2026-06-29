@@ -44,7 +44,8 @@ class LevelGenerator {
     final params = _paramsFor(levelNumber, type, gridSize, mask);
 
     LevelModel? level;
-    for (int attempt = 0; attempt < 30 && level == null; attempt++) {
+    final int maxAttempts = (type == LevelType.god || type == LevelType.boss || gridSize > 20) ? 120 : 50;
+    for (int attempt = 0; attempt < maxAttempts && level == null; attempt++) {
       level = _attempt(
         levelNumber: levelNumber,
         gridSize: gridSize,
@@ -361,8 +362,8 @@ class LevelGenerator {
     if (arrows.isEmpty) return null;
 
     final emptyCount = mask.length - occupied.length;
-    final double maxOrphansPct = (type == LevelType.god || type == LevelType.boss) ? 0.14 : 0.08;
-    final maxOrphans = (mask.length * maxOrphansPct).ceil().clamp(5, 90);
+    final double maxOrphansPct = (gridSize > 20) ? 0.16 : 0.22;
+    final maxOrphans = (mask.length * maxOrphansPct).ceil().clamp(5, 150);
     if (fillEntireGrid && emptyCount > maxOrphans) {
       return null;
     }
