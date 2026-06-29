@@ -519,7 +519,8 @@ class LevelGenerator {
     );
 
     // Verify solvability with solver
-    final bfsSolution = LevelSolver.solve(level, 600);
+    final solverCap = gridSize > 20 ? 2500 : 1000;
+    final bfsSolution = LevelSolver.solve(level, solverCap);
     if (bfsSolution == null) {
       return null;
     }
