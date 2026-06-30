@@ -15,6 +15,7 @@ import '../../data/repositories/progress_repository.dart';
 import '../../data/repositories/level_repository.dart';
 import '../../ads/ad_manager.dart';
 import '../../game/arrow_puzzle_game.dart';
+import '../../game/game_state.dart';
 import '../../widgets/lives_bar.dart';
 import '../../widgets/wavy_progress_bar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
