@@ -324,11 +324,17 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
 
-              // ── Banner Ad ────────────────────────────────────────────────
+              // ── Banner Ad (centered and sized to avoid layout warnings) ──
               if (adManager.bannerAd != null)
-                SizedBox(
+                Container(
+                  alignment: Alignment.center,
+                  width: double.infinity,
                   height: 50,
-                  child: AdWidget(ad: adManager.bannerAd!),
+                  child: SizedBox(
+                    width: 320,
+                    height: 50,
+                    child: AdWidget(ad: adManager.bannerAd!),
+                  ),
                 ),
             ],
           ),
@@ -362,96 +368,77 @@ class _TopBar extends StatelessWidget {
     return Container(
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Stack(
-        alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Center aligned Level Info & Progress Bar
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              if (levelType.isSpecial)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      levelType == LevelType.god
-                          ? LucideIcons.flame
-                          : LucideIcons.zap,
-                      color: levelType == LevelType.god
-                          ? AppColors.accent
-                          : AppColors.accentOrange,
-                      size: 11,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      levelType.label.toUpperCase(),
-                      style: GoogleFonts.nunito(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: levelType == LevelType.god
-                            ? AppColors.accent
-                            : AppColors.accentOrange,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ],
+          // Left Side (Back Button aligned left, fixed width to balance the right side)
+          SizedBox(
+            width: 140,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                onTap: onBack,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(LucideIcons.arrowLeft,
+                      color: AppColors.textPrimary, size: 18),
                 ),
-              Text(
-                'Level ${level.levelNumber}',
-                style: GoogleFonts.nunito(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 5),
-              // Level progress bar with horizontal wavy liquid animation
-              WavyProgressBar(
-                progress: progress,
-                width: 100,
-                height: 8,
-              ),
-            ],
-          ),
-
-          // Left aligned Back button
-          Align(
-            alignment: Alignment.centerLeft,
-            child: GestureDetector(
-              onTap: onBack,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(LucideIcons.arrowLeft,
-                    color: AppColors.textPrimary, size: 18),
               ),
             ),
           ),
 
-          // Right aligned LivesBar & Settings
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+          // Center Side (Level Label & Progress Bar)
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                LivesBar(lives: lives, maxLives: AppConstants.maxLives),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: onSettings,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(LucideIcons.settings,
-                        color: AppColors.textPrimary, size: 18),
+                if (levelType.isSpecial)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        levelType == LevelType.god
+                            ? LucideIcons.flame
+                            : LucideIcons.zap,
+                        color: levelType == LevelType.god
+                            ? AppColors.accent
+                            : AppColors.accentOrange,
+                        size: 11,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        levelType.label.toUpperCase(),
+                        style: GoogleFonts.nunito(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: levelType == LevelType.god
+                              ? AppColors.accent
+                              : AppColors.accentOrange,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
                   ),
+                Text(
+                  'Level ${level.levelNumber}',
+                  style: GoogleFonts.nunito(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                // Level progress bar with horizontal wavy liquid animation
+                WavyProgressBar(
+                  progress: progress,
+                  width: 100,
+                  height: 8,
                 ),
               ],
             ),
@@ -684,22 +671,25 @@ class _DialogButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Text(label,
-                style: GoogleFonts.nunito(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white)),
-          ],
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(label,
+                  style: GoogleFonts.nunito(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white)),
+            ],
+          ),
         ),
       ),
     );
