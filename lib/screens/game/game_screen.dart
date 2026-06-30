@@ -1149,9 +1149,236 @@ class _DialogSettingsTile extends StatelessWidget {
   }
 }
 
-// ── Premium level loading screen ──────────────────────────────────────────────
-/// Shown while the level is being generated in a background isolate.
-/// Users see animated arrows and a loading indicator instead of a frozen UI.
+// ── Themed level loading screens ─────────────────────────────────────────────
+
+// Loading message banks per level type
+const _bossLoadingMessages = [
+  'Cooking devil sauce… 😈',
+  'Summoning the beast…',
+  'Sharpening the claws… 🔥',
+  'Brewing chaos in a cauldron…',
+  'Waking the dungeon keeper…',
+  'Forging traps from darkness…',
+  'Stirring the dark arts… 🕯️',
+  'Luring the monster out…',
+  'Preparing your punishment…',
+  'Cranking up the difficulty… 💀',
+];
+
+const _godLoadingMessages = [
+  'Consulting the ancient scrolls… 📜',
+  'Aligning the stars… ✨',
+  'Channelling cosmic energy…',
+  'Weaving reality into knots… 🌌',
+  'Asking the oracle for a riddle…',
+  'Distilling the essence of madness…',
+  'Folding space and time… 🌀',
+  'Summoning the elder puzzle gods…',
+  'Rewriting the laws of physics…',
+  'Manifesting pure enlightenment… 🔮',
+];
+
+const _normalLoadingMessages = [
+  'Generating puzzle…',
+  'Placing arrows…',
+  'Shuffling the grid…',
+  'Building your challenge…',
+  'Crafting the layout…',
+];
+
+/// Typewriter widget — types out one character at a time, then pauses,
+/// then cycles to the next message in the list.
+class _TypewriterMessages extends StatefulWidget {
+  final List<String> messages;
+  final Color color;
+  final double fontSize;
+
+  const _TypewriterMessages({
+    required this.messages,
+    required this.color,
+    this.fontSize = 14,
+  });
+
+  @override
+  State<_TypewriterMessages> createState() => _TypewriterMessagesState();
+}
+
+class _TypewriterMessagesState extends State<_TypewriterMessages> {
+  int _msgIndex = 0;
+  int _charCount = 0;
+  bool _deleting = false;
+  static const _typeSpeed = Duration(milliseconds: 55);
+  static const _deleteSpeed = Duration(milliseconds: 25);
+  static const _pauseAfterType = Duration(milliseconds: 1800);
+  static const _pauseAfterDelete = Duration(milliseconds: 300);
+
+  @override
+  void initState() {
+    super.initState();
+    _tick();
+  }
+
+  void _tick() async {
+    if (!mounted) return;
+    final msg = widget.messages[_msgIndex];
+
+    if (!_deleting) {
+      if (_charCount < msg.length) {
+        await Future.delayed(_typeSpeed);
+        if (!mounted) return;
+        setState(() => _charCount++);
+        _tick();
+      } else {
+        // Fully typed — pause then start deleting
+        await Future.delayed(_pauseAfterType);
+        if (!mounted) return;
+        setState(() => _deleting = true);
+        _tick();
+      }
+    } else {
+      if (_charCount > 0) {
+        await Future.delayed(_deleteSpeed);
+        if (!mounted) return;
+        setState(() => _charCount--);
+        _tick();
+      } else {
+        // Fully deleted — pause then move to next message
+        await Future.delayed(_pauseAfterDelete);
+        if (!mounted) return;
+        setState(() {
+          _deleting = false;
+          _msgIndex = (_msgIndex + 1) % widget.messages.length;
+        });
+        _tick();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final msg = widget.messages[_msgIndex];
+    final display = msg.substring(0, _charCount.clamp(0, msg.length));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          display,
+          style: GoogleFonts.nunito(
+            fontSize: widget.fontSize,
+            fontWeight: FontWeight.w700,
+            color: widget.color,
+            letterSpacing: 0.5,
+          ),
+        ),
+        // Blinking cursor
+        _BlinkingCursor(color: widget.color),
+      ],
+    );
+  }
+}
+
+class _BlinkingCursor extends StatefulWidget {
+  final Color color;
+  const _BlinkingCursor({required this.color});
+
+  @override
+  State<_BlinkingCursor> createState() => _BlinkingCursorState();
+}
+
+class _BlinkingCursorState extends State<_BlinkingCursor>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 530),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) => Opacity(
+        opacity: _ctrl.value > 0.5 ? 1.0 : 0.0,
+        child: Container(
+          margin: const EdgeInsets.only(left: 2),
+          width: 2,
+          height: 16,
+          color: widget.color,
+        ),
+      ),
+    );
+  }
+}
+
+/// Bouncing colored dots.
+class _BouncingDots extends StatefulWidget {
+  final Color color;
+  const _BouncingDots({this.color = AppColors.primary});
+
+  @override
+  State<_BouncingDots> createState() => _BouncingDotsState();
+}
+
+class _BouncingDotsState extends State<_BouncingDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (i) {
+        return AnimatedBuilder(
+          animation: _ctrl,
+          builder: (_, __) {
+            final phase = (_ctrl.value + i * 0.33) % 1.0;
+            final t = (1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0);
+            return Transform.translate(
+              offset: Offset(0, -8.0 * t),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 5),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: widget.color.withValues(alpha: 0.5 + 0.5 * t),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            );
+          },
+        );
+      }),
+    );
+  }
+}
+
+// ── Normal level loading screen ───────────────────────────────────────────────
 class _LevelLoadingScreen extends StatefulWidget {
   final int levelNumber;
   const _LevelLoadingScreen({required this.levelNumber});
@@ -1164,6 +1391,8 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pulse;
+
+  LevelType get _levelType => AppConstants.levelTypeFor(widget.levelNumber);
 
   @override
   void initState() {
@@ -1183,6 +1412,13 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final type = _levelType;
+    if (type == LevelType.boss) return _BossLoadingScreen(levelNumber: widget.levelNumber);
+    if (type == LevelType.god)  return _GodLoadingScreen(levelNumber: widget.levelNumber);
+    return _buildNormalScreen();
+  }
+
+  Widget _buildNormalScreen() {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
@@ -1190,7 +1426,6 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Pulsing arrow cluster
               AnimatedBuilder(
                 animation: _pulse,
                 builder: (_, __) => Transform.scale(
@@ -1208,8 +1443,6 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
                 ),
               ),
               const SizedBox(height: 28),
-
-              // Level number
               Text(
                 'LEVEL ${widget.levelNumber}',
                 style: GoogleFonts.nunito(
@@ -1219,19 +1452,12 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
                   letterSpacing: 3,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Generating puzzle…',
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.2,
-                ),
+              const SizedBox(height: 16),
+              _TypewriterMessages(
+                messages: _normalLoadingMessages,
+                color: AppColors.textSecondary,
               ),
               const SizedBox(height: 32),
-
-              // Animated dots
               _BouncingDots(),
             ],
           ),
@@ -1242,74 +1468,240 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
 
   Widget _miniArrow(String symbol, Color color) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 48, height: 48,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
-        boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 10),
-        ],
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 10)],
       ),
-      child: Center(
-        child: Text(symbol, style: TextStyle(fontSize: 24, color: color)),
-      ),
+      child: Center(child: Text(symbol, style: TextStyle(fontSize: 24, color: color))),
     );
   }
 }
 
-/// Three bouncing dots loader used inside the loading screen.
-class _BouncingDots extends StatefulWidget {
+// ── Boss level loading screen ─────────────────────────────────────────────────
+class _BossLoadingScreen extends StatefulWidget {
+  final int levelNumber;
+  const _BossLoadingScreen({required this.levelNumber});
   @override
-  State<_BouncingDots> createState() => _BouncingDotsState();
+  State<_BossLoadingScreen> createState() => _BossLoadingScreenState();
 }
 
-class _BouncingDotsState extends State<_BouncingDots>
+class _BossLoadingScreenState extends State<_BossLoadingScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
+  late Animation<double> _flame;
+  static const _bossRed  = Color(0xFFCC2200);
+  static const _bossGlow = Color(0xFFFF4422);
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+    _flame = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
   }
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (i) {
-        return AnimatedBuilder(
-          animation: _ctrl,
-          builder: (_, __) {
-            final phase = (_ctrl.value + i * 0.33) % 1.0;
-            final offset = -8.0 * (1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0);
-            return Transform.translate(
-              offset: Offset(0, offset),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 5),
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.6 + 0.4 * (1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0)),
-                  shape: BoxShape.circle,
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1A0500), Color(0xFF2D0A00), Color(0xFF0D0D0D)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Skull / flame emoji pulsing
+              AnimatedBuilder(
+                animation: _flame,
+                builder: (_, __) => Transform.scale(
+                  scale: 0.9 + 0.15 * _flame.value,
+                  child: Text('💀', style: TextStyle(fontSize: 72 + 8 * _flame.value)),
                 ),
               ),
-            );
-          },
-        );
-      }),
+              const SizedBox(height: 20),
+
+              // BOSS badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _bossRed.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _bossRed, width: 1.5),
+                ),
+                child: Text(
+                  '⚔  BOSS  ⚔',
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: _bossGlow,
+                    letterSpacing: 4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Level number — blood red
+              AnimatedBuilder(
+                animation: _flame,
+                builder: (_, __) => Text(
+                  'LEVEL ${widget.levelNumber}',
+                  style: GoogleFonts.nunito(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: Color.lerp(_bossRed, _bossGlow, _flame.value),
+                    letterSpacing: 3,
+                    shadows: [Shadow(color: _bossGlow.withValues(alpha: 0.6 + 0.4 * _flame.value), blurRadius: 20)],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Typewriter evil messages
+              _TypewriterMessages(
+                messages: _bossLoadingMessages,
+                color: _bossGlow.withValues(alpha: 0.85),
+                fontSize: 15,
+              ),
+              const SizedBox(height: 36),
+              _BouncingDots(color: _bossRed),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
+
+// ── God level loading screen ──────────────────────────────────────────────────
+class _GodLoadingScreen extends StatefulWidget {
+  final int levelNumber;
+  const _GodLoadingScreen({required this.levelNumber});
+  @override
+  State<_GodLoadingScreen> createState() => _GodLoadingScreenState();
+}
+
+class _GodLoadingScreenState extends State<_GodLoadingScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _glow;
+  static const _godPurple = Color(0xFF7B2FBE);
+  static const _godGlow   = Color(0xFFD78EFF);
+  static const _godGold   = Color(0xFFFFD700);
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600))
+      ..repeat(reverse: true);
+    _glow = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0D0020), Color(0xFF1A0040), Color(0xFF050510)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Stars rotating around a central orb
+              AnimatedBuilder(
+                animation: _glow,
+                builder: (_, __) => Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Outer glow
+                    Container(
+                      width: 100 + 12 * _glow.value,
+                      height: 100 + 12 * _glow.value,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: _godPurple.withValues(alpha: 0.3 + 0.3 * _glow.value),
+                            blurRadius: 40 + 20 * _glow.value,
+                            spreadRadius: 10,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text('🔮', style: TextStyle(fontSize: 72 + 8 * _glow.value)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // GOD badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _godPurple.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _godGlow.withValues(alpha: 0.6), width: 1.5),
+                ),
+                child: Text(
+                  '✦  GOD MODE  ✦',
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: _godGold,
+                    letterSpacing: 4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Level number — cosmic purple
+              AnimatedBuilder(
+                animation: _glow,
+                builder: (_, __) => Text(
+                  'LEVEL ${widget.levelNumber}',
+                  style: GoogleFonts.nunito(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: Color.lerp(_godPurple, _godGlow, _glow.value),
+                    letterSpacing: 3,
+                    shadows: [Shadow(color: _godGlow.withValues(alpha: 0.5 + 0.4 * _glow.value), blurRadius: 24)],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Typewriter cosmic messages
+              _TypewriterMessages(
+                messages: _godLoadingMessages,
+                color: _godGlow.withValues(alpha: 0.85),
+                fontSize: 15,
+              ),
+              const SizedBox(height: 36),
+              _BouncingDots(color: _godPurple),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 

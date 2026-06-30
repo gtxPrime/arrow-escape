@@ -69,18 +69,27 @@ class AppConstants {
   }
 
   /// Returns the level type: tutorial, god, boss, or normal.
+  ///
+  /// Post-tutorial pattern repeats every 7 levels:
+  ///   [N, N, N, Boss, N, N, God]
+  ///   pos 1-3 → Normal
+  ///   pos 4   → Boss
+  ///   pos 5-6 → Normal
+  ///   pos 7   → God
   static LevelType levelTypeFor(int level) {
     if (level <= tutorialLevels) return LevelType.tutorial;
-    if (level % godLevelEvery  == 0) return LevelType.god;
-    if (level % bossLevelEvery == 0) return LevelType.boss;
+    // position within the 7-level cycle (1-indexed)
+    final pos = ((level - tutorialLevels - 1) % 7) + 1;
+    if (pos == 7) return LevelType.god;
+    if (pos == 4) return LevelType.boss;
     return LevelType.normal;
   }
 
   /// Clean standalone helper: true when n is a boss level.
-  static bool isBossLevel(int n) => n % bossLevelEvery == 0 && !isGodLevel(n);
+  static bool isBossLevel(int n) => levelTypeFor(n) == LevelType.boss;
 
-  /// True for god levels (every 15th, overrides boss).
-  static bool isGodLevel(int n) => n % godLevelEvery == 0;
+  /// True for god levels.
+  static bool isGodLevel(int n) => levelTypeFor(n) == LevelType.god;
 
   /// Canvas scale factor: boss/god levels use more screen space for larger canvases.
   static double canvasScaleForType(LevelType type) {
