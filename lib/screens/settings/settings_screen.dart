@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
+import '../../data/repositories/progress_repository.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final progress = context.watch<ProgressRepository>();
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
@@ -50,29 +54,30 @@ class SettingsScreen extends StatelessWidget {
                         icon: Icons.volume_up_outlined,
                         label: 'Sound Effects',
                         trailing: Switch(
-                          value: true,
-                          onChanged: (_) {},
-                          activeThumbColor: AppColors.primary,
+                          value: progress.soundEnabled,
+                          onChanged: (val) => progress.setSoundEnabled(val),
+                          activeColor: AppColors.primary,
                         ),
                       ),
                       _SettingsTile(
                         icon: Icons.music_note_outlined,
                         label: 'Background Music',
                         trailing: Switch(
-                          value: true,
-                          onChanged: (_) {},
-                          activeThumbColor: AppColors.primary,
+                          value: progress.musicEnabled,
+                          onChanged: (val) => progress.setMusicEnabled(val),
+                          activeColor: AppColors.primary,
                         ),
                       ),
                       _SettingsTile(
                         icon: Icons.vibration_rounded,
                         label: 'Haptic Feedback',
                         trailing: Switch(
-                          value: true,
-                          onChanged: (_) {},
-                          activeThumbColor: AppColors.primary,
+                          value: progress.vibrationEnabled,
+                          onChanged: (val) => progress.setVibrationEnabled(val),
+                          activeColor: AppColors.primary,
                         ),
                       ),
+
                       const Divider(color: AppColors.surfaceLight, height: 32),
                       _SettingsTile(
                         icon: Icons.privacy_tip_outlined,

@@ -81,11 +81,10 @@ class GameOverScreen extends StatelessWidget {
 
                 const SizedBox(height: 48),
 
-                // Continue with ad
                 _ActionButton(
                   icon: LucideIcons.clapperboard,
-                  label: 'Watch Ad & Continue',
-                  subtitle: 'Get 1 life to keep playing',
+                  label: 'Get 1 More Life & Continue',
+                  subtitle: 'Watch an ad to get 1 more life',
                   gradient: AppColors.successGradient,
                   onTap: () {
                     adManager.showRewarded(

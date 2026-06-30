@@ -16,6 +16,7 @@ import '../../data/repositories/level_repository.dart';
 import '../../ads/ad_manager.dart';
 import '../../game/arrow_puzzle_game.dart';
 import '../../widgets/lives_bar.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -31,6 +32,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _showingGameOver = false;
   bool _showingComplete = false;
   int _lives = AppConstants.maxLives;
+  int? _loadedLevelNum;
 
   @override
   void initState() {
@@ -45,11 +47,14 @@ class _GameScreenState extends State<GameScreen> {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final levelNum = args?['level'] as int? ?? 1;
-    final levelRepo = context.read<LevelRepository>();
-    _level = levelRepo.getLevel(levelNum);
-    _initGame();
-    // Pre-generate next levels
-    levelRepo.preGenerate(levelNum + 1, 5);
+    if (_loadedLevelNum != levelNum) {
+      _loadedLevelNum = levelNum;
+      final levelRepo = context.read<LevelRepository>();
+      _level = levelRepo.getLevel(levelNum);
+      _initGame();
+      // Pre-generate next levels
+      levelRepo.preGenerate(levelNum + 1, 5);
+    }
   }
 
   void _initGame() {
@@ -67,14 +72,18 @@ class _GameScreenState extends State<GameScreen> {
   void _onLifeLost() {
     if (!mounted) return;
     setState(() => _lives = _game.gameState.lives);
-    HapticFeedback.heavyImpact();
+    if (context.read<ProgressRepository>().vibrationEnabled) {
+      HapticFeedback.heavyImpact();
+    }
   }
 
   void _onLevelComplete() {
     if (!mounted || _showingComplete) return;
     setState(() => _showingComplete = true);
     _confettiController.play();
-    HapticFeedback.lightImpact();
+    if (context.read<ProgressRepository>().vibrationEnabled) {
+      HapticFeedback.lightImpact();
+    }
 
     final progress = context.read<ProgressRepository>();
     final adManager = context.read<AdManager>();
@@ -104,10 +113,29 @@ class _GameScreenState extends State<GameScreen> {
   void _onGameOver() {
     if (!mounted || _showingGameOver) return;
     setState(() => _showingGameOver = true);
-    HapticFeedback.vibrate();
+    if (context.read<ProgressRepository>().vibrationEnabled) {
+      HapticFeedback.vibrate();
+    }
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) _showGameOverDialog();
     });
+  }
+
+  Future<void> _showSettingsDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => _GameSettingsDialog(
+        onRestart: () {
+          Navigator.pop(context);
+          setState(() {
+            _showingGameOver = false;
+            _game.resetLevel();
+            _lives = AppConstants.maxLives;
+          });
+        },
+      ),
+    );
   }
 
   Future<void> _showLevelCompleteDialog(int stars, int score) async {
@@ -205,7 +233,14 @@ class _GameScreenState extends State<GameScreen> {
                 level: _level,
                 levelType: levelType,
                 lives: _lives,
-                onBack: () => Navigator.pushReplacementNamed(context, '/menu'),
+                onBack: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.pushReplacementNamed(context, '/menu');
+                  }
+                },
+                onSettings: _showSettingsDialog,
               ),
 
               // ── Game Canvas ──────────────────────────────────────────────
@@ -215,9 +250,8 @@ class _GameScreenState extends State<GameScreen> {
                     // Measure the real screen area BEFORE entering InteractiveViewer
                     // (InteractiveViewer gives unbounded constraints to its children,
                     // so LayoutBuilder must be OUTSIDE to get finite values).
-                    final boardSize = min(
-                        constraints.maxWidth,
-                        constraints.maxHeight - 16);
+                    final boardSize =
+                        min(constraints.maxWidth, constraints.maxHeight - 16);
                     return Stack(
                       children: [
                         // InteractiveViewer now fills the full Expanded area,
@@ -278,12 +312,14 @@ class _TopBar extends StatelessWidget {
   final LevelType levelType;
   final int lives;
   final VoidCallback onBack;
+  final VoidCallback onSettings;
 
   const _TopBar({
     required this.level,
     required this.levelType,
     required this.lives,
     required this.onBack,
+    required this.onSettings,
   });
 
   @override
@@ -301,7 +337,7 @@ class _TopBar extends StatelessWidget {
                 color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
+              child: const Icon(LucideIcons.arrowLeft,
                   color: AppColors.textPrimary, size: 18),
             ),
           ),
@@ -313,15 +349,30 @@ class _TopBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (levelType.isSpecial)
-                  Text(levelType.label,
-                      style: GoogleFonts.nunito(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        levelType == LevelType.god
+                            ? LucideIcons.flame
+                            : LucideIcons.zap,
                         color: levelType == LevelType.god
                             ? AppColors.accent
                             : AppColors.accentOrange,
-                        letterSpacing: 1.5,
-                      )),
+                        size: 12,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(levelType.label,
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: levelType == LevelType.god
+                                ? AppColors.accent
+                                : AppColors.accentOrange,
+                            letterSpacing: 1.5,
+                          )),
+                    ],
+                  ),
                 Text('Level ${level.levelNumber}',
                     style: GoogleFonts.nunito(
                       fontSize: 20,
@@ -341,6 +392,21 @@ class _TopBar extends StatelessWidget {
 
           // Lives
           LivesBar(lives: lives, maxLives: AppConstants.maxLives),
+          const SizedBox(width: 10),
+
+          // Settings
+          GestureDetector(
+            onTap: onSettings,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(LucideIcons.settings,
+                  color: AppColors.textPrimary, size: 18),
+            ),
+          ),
         ],
       ),
     );
@@ -514,15 +580,15 @@ class _GameOverDialog extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary)),
             const SizedBox(height: 8),
-            Text('Watch an ad to continue',
+            Text('Watch an ad to get 1 more life and continue',
                 style: GoogleFonts.nunito(
                     fontSize: 13, color: AppColors.textSecondary)),
             const SizedBox(height: 28),
 
             // Continue with ad
             _DialogButton(
-              label: '🎬 Watch Ad to Continue',
-              icon: Icons.play_circle_outline,
+              label: 'Get 1 More Life & Continue',
+              icon: LucideIcons.clapperboard,
               gradient: AppColors.successGradient,
               onTap: onContinue,
             ),
@@ -586,6 +652,143 @@ class _DialogButton extends StatelessWidget {
                     color: Colors.white)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GameSettingsDialog extends StatelessWidget {
+  final VoidCallback onRestart;
+
+  const _GameSettingsDialog({required this.onRestart});
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = context.watch<ProgressRepository>();
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.surfaceLight),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Settings',
+              style: GoogleFonts.nunito(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Sound Toggle
+            _DialogSettingsTile(
+              icon: LucideIcons.volume2,
+              label: 'Sound Effects',
+              value: progress.soundEnabled,
+              onChanged: (val) => progress.setSoundEnabled(val),
+            ),
+
+            // Music Toggle
+            _DialogSettingsTile(
+              icon: LucideIcons.music,
+              label: 'Background Music',
+              value: progress.musicEnabled,
+              onChanged: (val) => progress.setMusicEnabled(val),
+            ),
+
+            // Vibration Toggle
+            _DialogSettingsTile(
+              icon: LucideIcons.vibrate,
+              label: 'Vibration',
+              value: progress.vibrationEnabled,
+              onChanged: (val) => progress.setVibrationEnabled(val),
+            ),
+
+            const SizedBox(height: 16),
+            const Divider(color: AppColors.surfaceLight, height: 1),
+            const SizedBox(height: 20),
+
+            // Restart Button
+            _DialogButton(
+              label: 'Restart Level',
+              icon: LucideIcons.rotateCcw,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF252545), Color(0xFF1A1A2E)],
+              ),
+              onTap: onRestart,
+            ),
+            const SizedBox(height: 10),
+
+            // Close / Resume Button
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Resume Game',
+                style: GoogleFonts.nunito(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogSettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _DialogSettingsTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.textSecondary, size: 20),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppColors.primary,
+          ),
+        ],
       ),
     );
   }

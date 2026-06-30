@@ -102,8 +102,8 @@ enum LevelType {
     switch (this) {
       case LevelType.tutorial: return 'Tutorial';
       case LevelType.normal:   return '';
-      case LevelType.boss:     return '⚡ Boss';
-      case LevelType.god:      return '🔥 God';
+      case LevelType.boss:     return 'Boss';
+      case LevelType.god:      return 'God';
     }
   }
 

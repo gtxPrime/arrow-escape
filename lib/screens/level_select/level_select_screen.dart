@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
@@ -152,11 +154,11 @@ class _LevelCell extends StatelessWidget {
           children: [
             // Level type badge
             if (levelType == LevelType.god)
-              const Text('🔥', style: TextStyle(fontSize: 10))
+              const Icon(LucideIcons.flame, color: AppColors.accent, size: 12)
             else if (levelType == LevelType.boss)
-              const Text('⚡', style: TextStyle(fontSize: 10))
+              const Icon(LucideIcons.zap, color: AppColors.accentOrange, size: 12)
             else if (levelType == LevelType.tutorial)
-              const Text('📖', style: TextStyle(fontSize: 10)),
+              const Icon(LucideIcons.bookOpen, color: AppColors.accentGreen, size: 12),
 
             // Lock or number
             if (!isUnlocked)

@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import '../models/level.dart';
 import '../../core/constants.dart';
+import '../../core/audio_manager.dart';
 
 class ProgressRepository extends ChangeNotifier {
   final SharedPreferences _prefs;
@@ -22,6 +23,11 @@ class ProgressRepository extends ChangeNotifier {
   // Level results
   final Map<int, LevelResult> _levelResults = {};
 
+  // Settings
+  bool _soundEnabled = true;
+  bool _musicEnabled = true;
+  bool _vibrationEnabled = true;
+
   // ── Getters ──────────────────────────────────────────────────────────────────
   int get lives => _lives;
   int get maxLives => AppConstants.maxLives;
@@ -33,6 +39,10 @@ class ProgressRepository extends ChangeNotifier {
   DateTime? get lastPlayedDate => _lastPlayedDate;
   bool get hasLives => _lives > 0;
   bool get livesAreFull => _lives >= AppConstants.maxLives;
+
+  bool get soundEnabled => _soundEnabled;
+  bool get musicEnabled => _musicEnabled;
+  bool get vibrationEnabled => _vibrationEnabled;
 
   int getStarsForLevel(int level) => _levelResults[level]?.stars ?? 0;
   bool isLevelUnlocked(int level) => level <= _highestUnlockedLevel;
@@ -52,6 +62,14 @@ class ProgressRepository extends ChangeNotifier {
     _coins = _prefs.getInt('coins') ?? 0;
     _streakDays = _prefs.getInt('streakDays') ?? 0;
 
+    _soundEnabled = _prefs.getBool('soundEnabled') ?? true;
+    _musicEnabled = _prefs.getBool('musicEnabled') ?? true;
+    _vibrationEnabled = _prefs.getBool('vibrationEnabled') ?? true;
+
+    // Synchronize to AudioManager
+    AudioManager.instance.setSoundEnabled(_soundEnabled);
+    AudioManager.instance.setMusicEnabled(_musicEnabled);
+
     final lastPlayedStr = _prefs.getString('lastPlayedDate');
     if (lastPlayedStr != null) {
       _lastPlayedDate = DateTime.tryParse(lastPlayedStr);
@@ -63,7 +81,8 @@ class ProgressRepository extends ChangeNotifier {
       for (final entry in map.entries) {
         final level = int.tryParse(entry.key);
         if (level != null) {
-          _levelResults[level] = LevelResult.fromJson(entry.value as Map<String, dynamic>);
+          _levelResults[level] =
+              LevelResult.fromJson(entry.value as Map<String, dynamic>);
         }
       }
     }
@@ -191,6 +210,27 @@ class ProgressRepository extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Settings Setters ─────────────────────────────────────────────────────────
+
+  Future<void> setSoundEnabled(bool value) async {
+    _soundEnabled = value;
+    AudioManager.instance.setSoundEnabled(value);
+    await _prefs.setBool('soundEnabled', value);
+    notifyListeners();
+  }
+
+  Future<void> setMusicEnabled(bool value) async {
+    _musicEnabled = value;
+    AudioManager.instance.setMusicEnabled(value);
+    await _prefs.setBool('musicEnabled', value);
+    notifyListeners();
+  }
+
+  Future<void> setVibrationEnabled(bool value) async {
+    _vibrationEnabled = value;
+    await _prefs.setBool('vibrationEnabled', value);
+    notifyListeners();
+  }
 
   // ── Star rating calculator ────────────────────────────────────────────────────
   static int calculateStars(int livesLost, int totalArrows, int movesUsed) {
