@@ -37,6 +37,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _showingComplete = false;
   int _lives = AppConstants.maxLives;
   int? _loadedLevelNum;
+  bool _isLoadingLevel = false; // true while level is being generated async
 
   @override
   void initState() {
@@ -53,17 +54,49 @@ class _GameScreenState extends State<GameScreen> {
     final levelNum = args?['level'] as int? ?? 1;
     if (_loadedLevelNum != levelNum) {
       _loadedLevelNum = levelNum;
-      final levelRepo = context.read<LevelRepository>();
+      _loadLevelAsync(levelNum);
+    }
+  }
+
+  Future<void> _loadLevelAsync(int levelNum) async {
+    final levelRepo = context.read<LevelRepository>();
+
+    // If level is already cached, load it instantly with no spinner.
+    if (levelRepo.isCached(levelNum)) {
       _level = levelRepo.getLevel(levelNum);
       _initGame();
-      // Pre-generate next levels
-      levelRepo.preGenerate(levelNum + 1, 5);
-
-      // Trigger start dialog for tutorial levels
+      // Pre-warm next levels off the UI thread
+      levelRepo.preGenerateRangeAsync(levelNum + 1, 5);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _showTutorialDialogIfNeeded(levelNum);
       });
+      return;
+    }
+
+    // Level not cached — show loading overlay and generate in background isolate
+    if (mounted) setState(() => _isLoadingLevel = true);
+
+    try {
+      final level = await levelRepo.getLevelAsync(levelNum);
+      if (!mounted) return;
+      _level = level;
+      _initGame();
+      setState(() => _isLoadingLevel = false);
+
+      // Pre-warm next levels off the UI thread
+      levelRepo.preGenerateRangeAsync(levelNum + 1, 5);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showTutorialDialogIfNeeded(levelNum);
+      });
+    } catch (_) {
+      // Fallback: generate synchronously if async fails
+      if (!mounted) return;
+      _level = levelRepo.getLevel(levelNum);
+      _initGame();
+      if (mounted) setState(() => _isLoadingLevel = false);
     }
   }
 
@@ -248,6 +281,14 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show a premium loading screen while the level is being generated
+    // in the background isolate — no freeze, no blank screen.
+    if (_isLoadingLevel || !_isLevelReady) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final levelNum = args?['level'] as int? ?? 1;
+      return _LevelLoadingScreen(levelNumber: levelNum);
+    }
+
     final levelType = AppConstants.levelTypeFor(_level.levelNumber);
     final adManager = context.read<AdManager>();
 
@@ -351,6 +392,8 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
+
+  bool get _isLevelReady => _gameState != null;
 
   void _showTutorialDialogIfNeeded(int levelNum) {
     if (levelNum == 2) {
@@ -1105,3 +1148,168 @@ class _DialogSettingsTile extends StatelessWidget {
     );
   }
 }
+
+// ── Premium level loading screen ──────────────────────────────────────────────
+/// Shown while the level is being generated in a background isolate.
+/// Users see animated arrows and a loading indicator instead of a frozen UI.
+class _LevelLoadingScreen extends StatefulWidget {
+  final int levelNumber;
+  const _LevelLoadingScreen({required this.levelNumber});
+
+  @override
+  State<_LevelLoadingScreen> createState() => _LevelLoadingScreenState();
+}
+
+class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+    _pulse = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Pulsing arrow cluster
+              AnimatedBuilder(
+                animation: _pulse,
+                builder: (_, __) => Transform.scale(
+                  scale: 0.88 + 0.12 * _pulse.value,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _miniArrow('←', AppColors.arrowLeft),
+                      const SizedBox(width: 8),
+                      _miniArrow('↑', AppColors.arrowUp),
+                      const SizedBox(width: 8),
+                      _miniArrow('→', AppColors.arrowRight),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Level number
+              Text(
+                'LEVEL ${widget.levelNumber}',
+                style: GoogleFonts.nunito(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: 3,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Generating puzzle…',
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Animated dots
+              _BouncingDots(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _miniArrow(String symbol, Color color) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 10),
+        ],
+      ),
+      child: Center(
+        child: Text(symbol, style: TextStyle(fontSize: 24, color: color)),
+      ),
+    );
+  }
+}
+
+/// Three bouncing dots loader used inside the loading screen.
+class _BouncingDots extends StatefulWidget {
+  @override
+  State<_BouncingDots> createState() => _BouncingDotsState();
+}
+
+class _BouncingDotsState extends State<_BouncingDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (i) {
+        return AnimatedBuilder(
+          animation: _ctrl,
+          builder: (_, __) {
+            final phase = (_ctrl.value + i * 0.33) % 1.0;
+            final offset = -8.0 * (1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0);
+            return Transform.translate(
+              offset: Offset(0, offset),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 5),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.6 + 0.4 * (1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0)),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            );
+          },
+        );
+      }),
+    );
+  }
+}
+

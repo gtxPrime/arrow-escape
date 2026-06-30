@@ -19,6 +19,8 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
+  bool _isNavigating = false; // prevents double-tap and shows instant feedback
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +38,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final progress = context.read<ProgressRepository>();
     final levelRepo = context.read<LevelRepository>();
     final currentLevel = progress.currentLevel;
-    // Pre-warm current + next 3 levels without blocking the UI
+    // Pre-warm current + next 3 levels in background isolates (non-blocking)
     for (int i = 0; i < 4; i++) {
       levelRepo.preGenerateAsync(currentLevel + i);
     }
@@ -245,24 +247,34 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: GestureDetector(
-        onTap: () => Navigator.pushNamed(
-          context,
-          '/game',
-          arguments: {'level': progress.currentLevel},
-        ),
-        child: Container(
+        onTap: _isNavigating
+            ? null
+            : () async {
+                if (!mounted) return;
+                setState(() => _isNavigating = true);
+                await Navigator.pushNamed(
+                  context,
+                  '/game',
+                  arguments: {'level': progress.currentLevel},
+                );
+                if (mounted) setState(() => _isNavigating = false);
+              },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE74C3C), Color(0xFFC0392B)], // Premium active red gradient
+            gradient: LinearGradient(
+              colors: _isNavigating
+                  ? [const Color(0xFF8B1A1A), const Color(0xFF6E1515)]
+                  : [const Color(0xFFE74C3C), const Color(0xFFC0392B)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFC0392B).withValues(alpha: 0.35),
+                color: const Color(0xFFC0392B).withValues(alpha: _isNavigating ? 0.15 : 0.35),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),
@@ -271,18 +283,28 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 32,
-              ),
+              if (_isNavigating)
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              else
+                const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'PLAY NOW',
+                    _isNavigating ? 'LOADING…' : 'PLAY NOW',
                     style: GoogleFonts.nunito(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,

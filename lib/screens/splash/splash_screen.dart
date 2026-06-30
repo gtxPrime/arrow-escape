@@ -12,9 +12,22 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  late AnimationController _progressController;
+
   @override
   void initState() {
     super.initState();
+
+    // Animate the progress bar over the full splash duration
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    );
+
+    // Drive the bar with an ease-in-out curve for a natural feel
+    _progressController.forward();
+
+    // Navigate when done
     _navigateAfterDelay();
   }
 
@@ -26,6 +39,12 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -34,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Animated arrows flying in from edges
+              // Arrow icons
               _ArrowsBackground(),
               const SizedBox(height: 32),
 
@@ -57,10 +76,78 @@ class _SplashScreenState extends State<SplashScreen>
                   .fadeIn(duration: 600.ms)
                   .slideY(begin: 0.3, end: 0),
 
-              const SizedBox(height: 60),
+              const SizedBox(height: 52),
 
-              // Loading dots
-              _LoadingDots().animate(delay: 1200.ms).fadeIn(duration: 400.ms),
+              // ── Animated progress bar ─────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 56),
+                child: Column(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _progressController,
+                      builder: (context, _) {
+                        // Ease the fill for a more natural loading feel
+                        final progress = CurvedAnimation(
+                          parent: _progressController,
+                          curve: Curves.easeInOut,
+                        ).value;
+
+                        return Column(
+                          children: [
+                            // Progress bar track
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                height: 4,
+                                width: double.infinity,
+                                color: AppColors.primary.withValues(alpha: 0.15),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: FractionallySizedBox(
+                                    widthFactor: progress,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.primary.withValues(alpha: 0.7),
+                                            AppColors.primary,
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary.withValues(alpha: 0.4),
+                                            blurRadius: 6,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            // Status label that changes with progress
+                            Text(
+                              progress < 0.5
+                                  ? 'Loading assets…'
+                                  : progress < 0.9
+                                      ? 'Generating levels…'
+                                      : 'Almost ready…',
+                              style: GoogleFonts.nunito(
+                                fontSize: 12,
+                                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ).animate(delay: 800.ms).fadeIn(duration: 500.ms),
             ],
           ),
         ),
@@ -145,55 +232,4 @@ class _ArrowIcon extends StatelessWidget {
 class _ArrowsBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const SizedBox.shrink();
-}
-
-class _LoadingDots extends StatefulWidget {
-  @override
-  State<_LoadingDots> createState() => _LoadingDotsState();
-}
-
-class _LoadingDotsState extends State<_LoadingDots>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (i) {
-        return AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) {
-            final phase = (_controller.value + i * 0.33) % 1.0;
-            final scale =
-                0.5 + 0.5 * (1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0);
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: 8 * scale,
-              height: 8 * scale,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.5 + 0.5 * scale),
-                shape: BoxShape.circle,
-              ),
-            );
-          },
-        );
-      }),
-    );
-  }
 }
