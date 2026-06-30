@@ -4,8 +4,13 @@ import '../core/app_colors.dart';
 
 class BlendedMazeBackground extends StatelessWidget {
   final double height;
+  final double progress;
 
-  const BlendedMazeBackground({super.key, this.height = 360});
+  const BlendedMazeBackground({
+    super.key,
+    this.height = 360,
+    this.progress = 1.0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +31,10 @@ class BlendedMazeBackground extends StatelessWidget {
         width: double.infinity,
         height: height,
         child: CustomPaint(
-          painter: MazeBackgroundPainter(baseColor: AppColors.textSecondary),
+          painter: MazeBackgroundPainter(
+            baseColor: AppColors.textSecondary,
+            progress: progress,
+          ),
         ),
       ),
     );
@@ -35,8 +43,12 @@ class BlendedMazeBackground extends StatelessWidget {
 
 class MazeBackgroundPainter extends CustomPainter {
   final Color baseColor;
+  final double progress;
 
-  MazeBackgroundPainter({required this.baseColor});
+  MazeBackgroundPainter({
+    required this.baseColor,
+    this.progress = 1.0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -59,8 +71,8 @@ class MazeBackgroundPainter extends CustomPainter {
       }
     }
 
-    // Draw tangled paths of arrow lines in theme colors
-    final int numArrows = 12;
+    // Draw tangled paths of arrow lines in theme colors (increased density to 24)
+    final int numArrows = 24;
     final colors = [
       AppColors.accentGold,
       AppColors.accentOrange,
@@ -73,7 +85,7 @@ class MazeBackgroundPainter extends CustomPainter {
       final strokeWidth = 3.5 + rng.nextDouble() * 2.0;
 
       final arrowPaint = Paint()
-        ..color = color.withValues(alpha: 0.20)
+        ..color = color.withValues(alpha: 0.14) // Softer alpha for higher density grid
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round
@@ -112,40 +124,49 @@ class MazeBackgroundPainter extends CustomPainter {
         }
       }
 
-      // Draw the path body
-      canvas.drawPath(path, arrowPaint);
+      // Render animated path and animated arrowhead
+      for (final pathMetric in path.computeMetrics()) {
+        final double currentLength = pathMetric.length * progress;
+        if (currentLength > 0.0) {
+          final extract = pathMetric.extractPath(0.0, currentLength);
+          canvas.drawPath(extract, arrowPaint);
 
-      // Draw the caret arrowhead at the tip
-      final double headSize = spacing * 0.32;
-      final Offset endDir;
-      switch (lastDir) {
-        case 0: endDir = const Offset(1, 0); break;
-        case 1: endDir = const Offset(0, 1); break;
-        case 2: endDir = const Offset(-1, 0); break;
-        default: endDir = const Offset(0, -1); break;
+          // Draw the caret arrowhead at the animated tip position
+          final tangent = pathMetric.getTangentForOffset(currentLength);
+          if (tangent != null) {
+            final double headSize = spacing * 0.32;
+            final tip = tangent.position;
+            final angle = tangent.angle;
+
+            final dx = cos(angle);
+            final dy = sin(angle);
+            final endDir = Offset(dx, dy);
+
+            final base = tip - endDir * headSize;
+            final px = -endDir.dy, py = endDir.dx; // Perpendicular vector
+
+            final caretPath = Path()
+              ..moveTo(base.dx + px * headSize * 0.75, base.dy + py * headSize * 0.75)
+              ..lineTo(tip.dx, tip.dy)
+              ..lineTo(base.dx - px * headSize * 0.75, base.dy - py * headSize * 0.75);
+
+            canvas.drawPath(
+              caretPath,
+              Paint()
+                ..color = color.withValues(alpha: 0.14)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = strokeWidth
+                ..strokeCap = StrokeCap.round
+                ..strokeJoin = StrokeJoin.round,
+            );
+          }
+        }
       }
-
-      final tip = currentOffset + endDir * headSize * 0.5;
-      final base = currentOffset - endDir * headSize;
-      final px = -endDir.dy, py = endDir.dx; // Perpendicular vector
-
-      final caretPath = Path()
-        ..moveTo(base.dx + px * headSize * 0.75, base.dy + py * headSize * 0.75)
-        ..lineTo(tip.dx, tip.dy)
-        ..lineTo(base.dx - px * headSize * 0.75, base.dy - py * headSize * 0.75);
-
-      canvas.drawPath(
-        caretPath,
-        Paint()
-          ..color = color.withValues(alpha: 0.20)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
-      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant MazeBackgroundPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.baseColor != baseColor;
+  }
 }

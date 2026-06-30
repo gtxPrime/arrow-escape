@@ -11,8 +11,6 @@ import '../../core/constants.dart';
 import '../../data/repositories/progress_repository.dart';
 import '../../data/repositories/level_repository.dart';
 import '../../data/models/level.dart';
-import '../../data/models/arrow.dart';
-import '../../widgets/arrow_line.dart';
 import '../../widgets/maze_background.dart';
 import '../../ads/ad_manager.dart';
 
@@ -148,25 +146,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
               const Spacer(flex: 2),
 
-              // ── Center Title "ARROW OUT" with Premium Floating Icons ──
+              // ── Center Title "ARROW OUT" ──
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ArrowLine(direction: ArrowDirection.left, color: AppColors.accentGold, size: 52, strokeWidth: 6)
-                          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                          .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut),
-                      ArrowLine(direction: ArrowDirection.up, color: AppColors.accentOrange, size: 52, strokeWidth: 6)
-                          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                          .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut, delay: 200.ms),
-                      ArrowLine(direction: ArrowDirection.right, color: AppColors.accentGreen, size: 52, strokeWidth: 6)
-                          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                          .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut, delay: 400.ms),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
                   Text(
                     'ARROW OUT',
                     style: GoogleFonts.nunito(
@@ -303,6 +286,32 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   Widget _buildBigPlayButton(
       BuildContext context, ProgressRepository progress) {
     final diffLabel = _getDifficultyLabel(progress.currentLevel);
+    final difficulty = Difficulty.forLevel(progress.currentLevel);
+
+    final Color baseColor;
+    switch (difficulty) {
+      case Difficulty.tutorial:
+      case Difficulty.easy:
+        baseColor = AppColors.easy;
+        break;
+      case Difficulty.medium:
+        baseColor = AppColors.medium;
+        break;
+      case Difficulty.hard:
+        baseColor = AppColors.hard;
+        break;
+      case Difficulty.expert:
+        baseColor = AppColors.expert;
+        break;
+      case Difficulty.master:
+      case Difficulty.legend:
+        baseColor = AppColors.master;
+        break;
+    }
+
+    final Color darkerColor = Color.lerp(baseColor, Colors.black, 0.25) ?? baseColor;
+    final Color color1 = _isNavigating ? Color.lerp(baseColor, Colors.black, 0.45)! : baseColor;
+    final Color color2 = _isNavigating ? Color.lerp(darkerColor, Colors.black, 0.45)! : darkerColor;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -325,16 +334,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: _isNavigating
-                  ? [const Color(0xFF8B1A1A), const Color(0xFF6E1515)]
-                  : [const Color(0xFFE74C3C), const Color(0xFFC0392B)],
+              colors: [color1, color2],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFC0392B).withValues(alpha: _isNavigating ? 0.15 : 0.35),
+                color: color2.withValues(alpha: _isNavigating ? 0.15 : 0.35),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),

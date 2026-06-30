@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../widgets/arrow_line.dart';
 import '../../widgets/maze_background.dart';
-import '../../data/models/arrow.dart';
 import '../../core/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -54,11 +52,19 @@ class _SplashScreenState extends State<SplashScreen>
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
         child: Stack(
           children: [
-            const Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: BlendedMazeBackground(height: 380),
+            AnimatedBuilder(
+              animation: _progressController,
+              builder: (context, child) {
+                return Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: BlendedMazeBackground(
+                    height: 380,
+                    progress: _progressController.value,
+                  ),
+                );
+              },
             ),
             Center(
               child: Column(
@@ -171,22 +177,6 @@ class _SplashScreenState extends State<SplashScreen>
   Widget _buildLogo() {
     return Column(
       children: [
-        // Arrow icon cluster with smooth floating animation
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ArrowLine(direction: ArrowDirection.left, color: AppColors.accentGold, size: 52, strokeWidth: 6)
-                .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut),
-            ArrowLine(direction: ArrowDirection.up, color: AppColors.accentOrange, size: 52, strokeWidth: 6)
-                .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut, delay: 200.ms),
-            ArrowLine(direction: ArrowDirection.right, color: AppColors.accentGreen, size: 52, strokeWidth: 6)
-                .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut, delay: 400.ms),
-          ],
-        ),
-        const SizedBox(height: 16),
         Text(
           'ARROW OUT',
           style: GoogleFonts.nunito(
