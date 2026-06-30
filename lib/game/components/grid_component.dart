@@ -126,8 +126,8 @@ class GridComponent extends PositionComponent {
       final parts = entry.key.split(',');
       final dotR = int.parse(parts[0]);
       final dotC = int.parse(parts[1]);
-      _drawOrphanDot(
-          canvas, Offset((dotC + 0.5) * cs, (dotR + 0.5) * cs), entry.value, cs);
+      _drawOrphanDot(canvas, Offset((dotC + 0.5) * cs, (dotR + 0.5) * cs),
+          entry.value, cs);
     }
 
     super.render(canvas);
@@ -156,7 +156,7 @@ class GridComponent extends PositionComponent {
       center,
       cs * 0.36,
       Paint()
-        ..color = Colors.black.withOpacity(0.18)
+        ..color = Colors.black.withValues(alpha: 0.18)
         ..style = PaintingStyle.stroke
         ..strokeWidth = cs * 0.045,
     );
@@ -165,11 +165,20 @@ class GridComponent extends PositionComponent {
     if (type != OrphanDotType.neutral) {
       final ArrowDirection dir;
       switch (type) {
-        case OrphanDotType.up:    dir = ArrowDirection.up; break;
-        case OrphanDotType.down:  dir = ArrowDirection.down; break;
-        case OrphanDotType.left:  dir = ArrowDirection.left; break;
-        case OrphanDotType.right: dir = ArrowDirection.right; break;
-        default: return;
+        case OrphanDotType.up:
+          dir = ArrowDirection.up;
+          break;
+        case OrphanDotType.down:
+          dir = ArrowDirection.down;
+          break;
+        case OrphanDotType.left:
+          dir = ArrowDirection.left;
+          break;
+        case OrphanDotType.right:
+          dir = ArrowDirection.right;
+          break;
+        default:
+          return;
       }
 
       final double angle = dir.rotationRadians; // Right is 0 rad
@@ -189,10 +198,10 @@ class GridComponent extends PositionComponent {
 
       // Draw a large centered arrowhead pointing right
       final arrowheadPath = Path()
-        ..moveTo(cs * 0.28, 0)           // Tip of the arrow
-        ..lineTo(cs * 0.04, -cs * 0.18)  // Back corner top
-        ..lineTo(cs * 0.10, 0)           // Recess center point
-        ..lineTo(cs * 0.04, cs * 0.18)   // Back corner bottom
+        ..moveTo(cs * 0.28, 0) // Tip of the arrow
+        ..lineTo(cs * 0.04, -cs * 0.18) // Back corner top
+        ..lineTo(cs * 0.10, 0) // Recess center point
+        ..lineTo(cs * 0.04, cs * 0.18) // Back corner bottom
         ..close();
 
       canvas.drawPath(
@@ -209,7 +218,7 @@ class GridComponent extends PositionComponent {
         center,
         cs * 0.075,
         Paint()
-          ..color = Colors.white.withOpacity(0.85)
+          ..color = Colors.white.withValues(alpha: 0.85)
           ..style = PaintingStyle.fill,
       );
     }

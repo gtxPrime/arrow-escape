@@ -333,7 +333,10 @@ class _GameScreenState extends State<GameScreen> {
                   child: SizedBox(
                     width: 320,
                     height: 50,
-                    child: AdWidget(ad: adManager.bannerAd!),
+                    child: AdWidget(
+                      key: UniqueKey(),
+                      ad: adManager.bannerAd!,
+                    ),
                   ),
                 ),
             ],
@@ -397,32 +400,43 @@ class _TopBar extends StatelessWidget {
                 if (levelType.isSpecial)
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          levelType == LevelType.god
-                              ? LucideIcons.flame
-                              : LucideIcons.zap,
-                          color: levelType == LevelType.god
-                              ? AppColors.accent
-                              : AppColors.accentOrange,
-                          size: 11,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          levelType.label.toUpperCase(),
-                          style: GoogleFonts.nunito(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
+                    child: Container(
+                      margin: const EdgeInsets.bottom(4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (levelType == LevelType.god
+                                ? AppColors.accent
+                                : AppColors.accentOrange)
+                            .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            levelType == LevelType.god
+                                ? LucideIcons.flame
+                                : LucideIcons.zap,
                             color: levelType == LevelType.god
                                 ? AppColors.accent
                                 : AppColors.accentOrange,
-                            letterSpacing: 1.5,
+                            size: 10,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            levelType.label.toUpperCase(),
+                            style: GoogleFonts.nunito(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: levelType == LevelType.god
+                                  ? AppColors.accent
+                                  : AppColors.accentOrange,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 FittedBox(
@@ -633,10 +647,12 @@ class _GameOverDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('💔', style: TextStyle(fontSize: 52))
-                .animate()
-                .shake(duration: 500.ms),
-            const SizedBox(height: 8),
+             Icon(
+               LucideIcons.heartOff,
+               color: AppColors.accent,
+               size: 52,
+             ).animate().shake(duration: 500.ms),
+             const SizedBox(height: 12),
             Text('Out of Lives!',
                 style: GoogleFonts.nunito(
                     fontSize: 26,

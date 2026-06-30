@@ -111,9 +111,9 @@ class _WavyProgressBarPainter extends CustomPainter {
       Radius.circular(height / 2),
     );
 
-    // Draw background track (light surface color)
+    // Draw background track (using a contrasted muted gray-beige)
     final bgPaint = Paint()
-      ..color = AppColors.surfaceLight
+      ..color = const Color(0xFFDDD5C3)
       ..style = PaintingStyle.fill;
     canvas.drawRRect(rrect, bgPaint);
 
@@ -133,7 +133,7 @@ class _WavyProgressBarPainter extends CustomPainter {
 
     // Wave properties for the vertical front edge (dampened to 0 at 100% progress for a flat, solid finish)
     final waveAmplitude = height * 0.12 * (1.0 - progress);
-    const waveFrequency = 1.0;          // 1 full cycle along the height
+    const waveFrequency = 1.0; // 1 full cycle along the height
 
     final xStart = fillWidth + sin(-animationValue * 2 * pi) * waveAmplitude;
     wavePath.moveTo(0, 0);

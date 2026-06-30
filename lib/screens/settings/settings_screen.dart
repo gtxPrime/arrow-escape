@@ -56,7 +56,7 @@ class SettingsScreen extends StatelessWidget {
                         trailing: Switch(
                           value: progress.soundEnabled,
                           onChanged: (val) => progress.setSoundEnabled(val),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                       ),
                       _SettingsTile(
@@ -65,7 +65,7 @@ class SettingsScreen extends StatelessWidget {
                         trailing: Switch(
                           value: progress.musicEnabled,
                           onChanged: (val) => progress.setMusicEnabled(val),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                       ),
                       _SettingsTile(
@@ -74,10 +74,9 @@ class SettingsScreen extends StatelessWidget {
                         trailing: Switch(
                           value: progress.vibrationEnabled,
                           onChanged: (val) => progress.setVibrationEnabled(val),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                       ),
-
                       const Divider(color: AppColors.surfaceLight, height: 32),
                       _SettingsTile(
                         icon: Icons.privacy_tip_outlined,

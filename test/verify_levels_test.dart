@@ -3,7 +3,6 @@ import 'package:arrow_puzzle/data/level_generator/level_generator.dart';
 import 'package:arrow_puzzle/data/level_generator/solver.dart';
 import 'package:arrow_puzzle/data/models/arrow.dart';
 import 'package:arrow_puzzle/data/models/level.dart';
-import 'package:arrow_puzzle/core/constants.dart';
 
 void main() {
   // ── Quick smoke test: first 50 levels ──
@@ -11,7 +10,8 @@ void main() {
     for (int i = 1; i <= 50; i++) {
       final level = LevelGenerator.generateLevel(i);
       expect(level.arrows.isNotEmpty, true, reason: 'Level $i has no arrows');
-      expect(level.patternName, isNot('fallback'), reason: 'Level $i fell back');
+      expect(level.patternName, isNot('fallback'),
+          reason: 'Level $i fell back');
     }
   });
 
@@ -44,19 +44,25 @@ void main() {
         int nc = head[1] + d[1];
         final visited = <String>{};
 
-        while (nr >= 0 && nr < level.gridSize && nc >= 0 && nc < level.gridSize) {
+        while (
+            nr >= 0 && nr < level.gridSize && nc >= 0 && nc < level.gridSize) {
           final key = '$nr,$nc';
           expect(visited.contains(key), false,
-              reason: 'Level $i arrow ${arrow.id} has infinite deflection loop at $key');
+              reason:
+                  'Level $i arrow ${arrow.id} has infinite deflection loop at $key');
           if (visited.contains(key)) break;
           visited.add(key);
 
           if (orphanMap.containsKey(key)) {
             final dotType = orphanMap[key]!;
-            if (dotType == OrphanDotType.up) currentDir = ArrowDirection.up;
-            else if (dotType == OrphanDotType.down) currentDir = ArrowDirection.down;
-            else if (dotType == OrphanDotType.left) currentDir = ArrowDirection.left;
-            else if (dotType == OrphanDotType.right) currentDir = ArrowDirection.right;
+            if (dotType == OrphanDotType.up)
+              currentDir = ArrowDirection.up;
+            else if (dotType == OrphanDotType.down)
+              currentDir = ArrowDirection.down;
+            else if (dotType == OrphanDotType.left)
+              currentDir = ArrowDirection.left;
+            else if (dotType == OrphanDotType.right)
+              currentDir = ArrowDirection.right;
           } else if (arrowOccupied.contains(key)) {
             break;
           }
@@ -93,7 +99,8 @@ void main() {
 
       for (final entry in colorGroups.entries) {
         expect(entry.value.length, 2,
-            reason: 'Level $i color group ${entry.key} has ${entry.value.length} arrows');
+            reason:
+                'Level $i color group ${entry.key} has ${entry.value.length} arrows');
         final a1 = entry.value[0];
         final a2 = entry.value[1];
 
@@ -105,8 +112,10 @@ void main() {
         for (final pt in a2.path) allOccupied.remove('${pt[0]},${pt[1]}');
 
         final orphanMap = {for (final od in level.orphanDots) od.key: od.type};
-        final a1Blocked = _isExitBlocked(a1, level.gridSize, allOccupied, orphanMap);
-        final a2Blocked = _isExitBlocked(a2, level.gridSize, allOccupied, orphanMap);
+        final a1Blocked =
+            _isExitBlocked(a1, level.gridSize, allOccupied, orphanMap);
+        final a2Blocked =
+            _isExitBlocked(a2, level.gridSize, allOccupied, orphanMap);
 
         expect(a1Blocked || a2Blocked, false,
             reason: 'Level $i color group ${entry.key}: mutual blocking');
@@ -123,7 +132,8 @@ void main() {
       final level = LevelGenerator.generateLevel(i);
       for (final arrow in level.arrows) {
         final len = arrow.path.length;
-        if (len >= 6) longCount++;
+        if (len >= 6)
+          longCount++;
         else if (len >= 3) medCount++;
       }
     }
@@ -157,8 +167,8 @@ void main() {
   }, timeout: Timeout(Duration(minutes: 60)));
 }
 
-bool _isExitBlocked(ArrowModel arrow, int gridSize,
-    Set<String> occupied, Map<String, OrphanDotType> orphanDots) {
+bool _isExitBlocked(ArrowModel arrow, int gridSize, Set<String> occupied,
+    Map<String, OrphanDotType> orphanDots) {
   ArrowDirection currentDir = arrow.direction;
   final head = arrow.path[0];
   var d = currentDir.delta;
@@ -173,10 +183,14 @@ bool _isExitBlocked(ArrowModel arrow, int gridSize,
 
     if (orphanDots.containsKey(key)) {
       final dotType = orphanDots[key]!;
-      if (dotType == OrphanDotType.up) currentDir = ArrowDirection.up;
-      else if (dotType == OrphanDotType.down) currentDir = ArrowDirection.down;
-      else if (dotType == OrphanDotType.left) currentDir = ArrowDirection.left;
-      else if (dotType == OrphanDotType.right) currentDir = ArrowDirection.right;
+      if (dotType == OrphanDotType.up)
+        currentDir = ArrowDirection.up;
+      else if (dotType == OrphanDotType.down)
+        currentDir = ArrowDirection.down;
+      else if (dotType == OrphanDotType.left)
+        currentDir = ArrowDirection.left;
+      else if (dotType == OrphanDotType.right)
+        currentDir = ArrowDirection.right;
     } else if (occupied.contains(key)) {
       return true;
     }
@@ -192,7 +206,12 @@ bool _pathFormsCycle(List<List<int>> path) {
   if (path.length < 4) return false;
   for (int i = 0; i < path.length; i++) {
     final r = path[i][0], c = path[i][1];
-    for (final nb in [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+    for (final nb in [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1]
+    ]) {
       final nr = r + nb[0], nc = c + nb[1];
       for (int j = 0; j < path.length; j++) {
         if (path[j][0] == nr && path[j][1] == nc && (i - j).abs() > 1) {
