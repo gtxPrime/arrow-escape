@@ -1153,29 +1153,29 @@ class _DialogSettingsTile extends StatelessWidget {
 
 // Loading message banks per level type
 const _bossLoadingMessages = [
-  'Cooking devil sauce… 😈',
+  'Cooking devil sauce…',
   'Summoning the beast…',
-  'Sharpening the claws… 🔥',
+  'Sharpening the claws…',
   'Brewing chaos in a cauldron…',
   'Waking the dungeon keeper…',
   'Forging traps from darkness…',
-  'Stirring the dark arts… 🕯️',
+  'Stirring the dark arts…',
   'Luring the monster out…',
   'Preparing your punishment…',
-  'Cranking up the difficulty… 💀',
+  'Cranking up the difficulty…',
 ];
 
 const _godLoadingMessages = [
-  'Consulting the ancient scrolls… 📜',
-  'Aligning the stars… ✨',
+  'Consulting the ancient scrolls…',
+  'Aligning the stars…',
   'Channelling cosmic energy…',
-  'Weaving reality into knots… 🌌',
+  'Weaving reality into knots…',
   'Asking the oracle for a riddle…',
   'Distilling the essence of madness…',
-  'Folding space and time… 🌀',
+  'Folding space and time…',
   'Summoning the elder puzzle gods…',
   'Rewriting the laws of physics…',
-  'Manifesting pure enlightenment… 🔮',
+  'Manifesting pure enlightenment…',
 ];
 
 const _normalLoadingMessages = [
@@ -1521,12 +1521,16 @@ class _BossLoadingScreenState extends State<_BossLoadingScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Skull / flame emoji pulsing
+              // Skull icon pulsing
               AnimatedBuilder(
                 animation: _flame,
                 builder: (_, __) => Transform.scale(
                   scale: 0.9 + 0.15 * _flame.value,
-                  child: Text('💀', style: TextStyle(fontSize: 72 + 8 * _flame.value)),
+                  child: Icon(
+                    LucideIcons.skull,
+                    size: 72 + 8 * _flame.value,
+                    color: Color.lerp(_bossRed, _bossGlow, _flame.value),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -1539,14 +1543,23 @@ class _BossLoadingScreenState extends State<_BossLoadingScreen>
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: _bossRed, width: 1.5),
                 ),
-                child: Text(
-                  '⚔  BOSS  ⚔',
-                  style: GoogleFonts.nunito(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: _bossGlow,
-                    letterSpacing: 4,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(LucideIcons.swords, color: _bossGlow, size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      'BOSS',
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: _bossGlow,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(LucideIcons.swords, color: _bossGlow, size: 16),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -1625,7 +1638,7 @@ class _GodLoadingScreenState extends State<_GodLoadingScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Stars rotating around a central orb
+              // Sparks / Star icon pulsing
               AnimatedBuilder(
                 animation: _glow,
                 builder: (_, __) => Stack(
@@ -1646,7 +1659,11 @@ class _GodLoadingScreenState extends State<_GodLoadingScreen>
                         ],
                       ),
                     ),
-                    Text('🔮', style: TextStyle(fontSize: 72 + 8 * _glow.value)),
+                    Icon(
+                      LucideIcons.sparkles,
+                      size: 72 + 8 * _glow.value,
+                      color: Color.lerp(_godPurple, _godGlow, _glow.value),
+                    ),
                   ],
                 ),
               ),
@@ -1660,14 +1677,23 @@ class _GodLoadingScreenState extends State<_GodLoadingScreen>
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: _godGlow.withValues(alpha: 0.6), width: 1.5),
                 ),
-                child: Text(
-                  '✦  GOD MODE  ✦',
-                  style: GoogleFonts.nunito(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: _godGold,
-                    letterSpacing: 4,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(LucideIcons.sparkles, color: _godGold, size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      'GOD MODE',
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: _godGold,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(LucideIcons.sparkles, color: _godGold, size: 16),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
