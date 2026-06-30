@@ -53,7 +53,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressRepository>();
-    final dateStr = DateFormat('MMM d').format(DateTime.now());
 
     return Scaffold(
       body: Container(
@@ -68,12 +67,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Droplets counter
+                    // Coins counter (replaced water drops with coins icon)
                     Row(
                       children: [
                         const Icon(
-                          LucideIcons.droplets,
-                          color: Color(0xFF3498DB),
+                          LucideIcons.coins,
+                          color: Color(0xFFF1C40F), // Premium gold coin color
                           size: 22,
                         ),
                         const SizedBox(width: 6),
@@ -87,38 +86,57 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         ),
                       ],
                     ),
-                    // Settings icon
-                    GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/settings'),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(12),
+
+                    // Top Bar Actions
+                    Row(
+                      children: [
+                        // Level Select grid icon
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/levels'),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              LucideIcons.layoutGrid,
+                              color: AppColors.textPrimary,
+                              size: 22,
+                            ),
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.settings_outlined,
-                          color: AppColors.textPrimary,
-                          size: 22,
+                        const SizedBox(width: 10),
+
+                        // Settings icon
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/settings'),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.settings_outlined,
+                              color: AppColors.textPrimary,
+                              size: 22,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 10),
-
-              // ── Challenge & Event Cards ───────────────────────────────────
-              _buildCards(dateStr),
-
-              const Spacer(),
+              const Spacer(flex: 2),
 
               // ── Center Title "Amaze GO!" ───────────────────────────────────
               Text(
                 'Amaze GO!',
                 style: GoogleFonts.nunito(
-                  fontSize: 42,
+                  fontSize: 46,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textPrimary,
                   letterSpacing: 1.5,
@@ -129,183 +147,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   duration: 500.ms,
                   curve: Curves.elasticOut),
 
-              const Spacer(),
+              const Spacer(flex: 2),
 
               // ── Level Slider / Timeline ───────────────────────────────────
               _buildLevelTimeline(progress.currentLevel),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 36),
 
               // ── Big Play Button ───────────────────────────────────────────
               _buildBigPlayButton(context, progress),
 
-              const SizedBox(height: 32),
+              const Spacer(flex: 3),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCards(String dateStr) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          // Daily Challenge Card
-          Expanded(
-            child: Container(
-              height: 190,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFD65C47), Color(0xFFB33939)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFB33939).withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Daily Challenge',
-                    style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white.withValues(alpha: 0.85),
-                    ),
-                  ),
-                  Text(
-                    dateStr,
-                    style: GoogleFonts.nunito(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const Spacer(),
-                  const Center(
-                    child: Icon(
-                      LucideIcons.trophy,
-                      size: 44,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      width: double.infinity,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Start',
-                          style: GoogleFonts.nunito(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFFB33939),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-
-          // Event Card
-          Expanded(
-            child: Container(
-              height: 190,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF82C059), Color(0xFF4A8C34)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4A8C34).withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Event',
-                    style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white.withValues(alpha: 0.85),
-                    ),
-                  ),
-                  Text(
-                    'Spring Battle',
-                    style: GoogleFonts.nunito(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const Spacer(),
-                  Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(LucideIcons.bug, size: 28, color: Colors.white.withValues(alpha: 0.85)),
-                        const SizedBox(width: 4),
-                        const Icon(LucideIcons.bug, size: 36, color: Colors.white),
-                        const SizedBox(width: 4),
-                        Icon(LucideIcons.bug, size: 28, color: Colors.white.withValues(alpha: 0.85)),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      width: double.infinity,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Play',
-                          style: GoogleFonts.nunito(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF4A8C34),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -332,26 +187,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
             Color bubbleColor;
             Color textColor;
-            double size;
+            double size = isCurrent ? 46.0 : 34.0;
+            final type = AppConstants.levelTypeFor(lvl);
 
-            if (isCurrent) {
-              bubbleColor =
-                  const Color(0xFFB33939); // Red highlighting current level
+            if (type == LevelType.god) {
+              bubbleColor = const Color(0xFFB33939); // Red for God levels
               textColor = Colors.white;
-              size = 46.0;
+            } else if (type == LevelType.boss) {
+              bubbleColor = const Color(0xFF8E44AD); // Purple for Boss levels
+              textColor = Colors.white;
             } else {
-              final type = AppConstants.levelTypeFor(lvl);
-              if (type == LevelType.god) {
-                bubbleColor = const Color(0xFFB33939).withValues(alpha: 0.8);
-                textColor = Colors.white;
-              } else if (type == LevelType.boss) {
-                bubbleColor = const Color(0xFF8E44AD); // Purple for Boss
-                textColor = Colors.white;
-              } else {
-                bubbleColor = const Color(0xFFE6DCC8); // Warm beige for normal
-                textColor = const Color(0xFF8B7365);
-              }
-              size = 34.0;
+              bubbleColor = isCurrent ? const Color(0xFFC08255) : const Color(0xFFE6DCC8); // Normal colors (Gold-brown if active current, warm beige otherwise)
+              textColor = isCurrent ? Colors.white : const Color(0xFF8B7365);
             }
 
             return Container(
@@ -361,12 +208,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               decoration: BoxDecoration(
                 color: bubbleColor,
                 shape: BoxShape.circle,
+                border: isCurrent
+                    ? Border.all(color: Colors.white, width: 3)
+                    : null,
                 boxShadow: isCurrent
                     ? [
                         BoxShadow(
                           color: bubbleColor.withValues(alpha: 0.4),
-                          blurRadius: 10,
-                          spreadRadius: 2,
+                          blurRadius: 12,
+                          spreadRadius: 3,
                         )
                       ]
                     : null,
@@ -393,7 +243,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final diffLabel = _getDifficultyLabel(progress.currentLevel);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 32),
       child: GestureDetector(
         onTap: () => Navigator.pushNamed(
           context,
@@ -402,41 +252,64 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
           decoration: BoxDecoration(
-            color: const Color(0xFFB33939),
-            borderRadius: BorderRadius.circular(18),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE74C3C), Color(0xFFC0392B)], // Premium active red gradient
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFB33939).withValues(alpha: 0.3),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
+                color: const Color(0xFFC0392B).withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                diffLabel,
-                style: GoogleFonts.nunito(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
+              const Icon(
+                Icons.play_arrow_rounded,
+                color: Colors.white,
+                size: 32,
               ),
-              Text(
-                'Level ${progress.currentLevel}',
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
-                ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'PLAY NOW',
+                    style: GoogleFonts.nunito(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  Text(
+                    'Level ${progress.currentLevel} • $diffLabel',
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-      ),
+      ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+       .scale(
+         begin: const Offset(1.0, 1.0),
+         end: const Offset(1.02, 1.02),
+         duration: 1.2.seconds,
+         curve: Curves.easeInOut,
+       ),
     );
   }
 }

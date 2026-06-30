@@ -120,11 +120,11 @@ class _LevelCell extends StatelessWidget {
     if (!isUnlocked) return AppColors.surfaceLight;
     switch (levelType) {
       case LevelType.god:
-        return AppColors.accent;
+        return AppColors.accent; // Red
       case LevelType.boss:
-        return AppColors.accentOrange;
+        return const Color(0xFF8E44AD); // Purple for Boss level
       case LevelType.tutorial:
-        return AppColors.accentGreen;
+        return AppColors.accentGreen; // Green
       case LevelType.normal:
         return AppColors.primary.withValues(alpha: 0.4);
     }
@@ -156,7 +156,7 @@ class _LevelCell extends StatelessWidget {
             if (levelType == LevelType.god)
               const Icon(LucideIcons.flame, color: AppColors.accent, size: 12)
             else if (levelType == LevelType.boss)
-              const Icon(LucideIcons.zap, color: AppColors.accentOrange, size: 12)
+              const Icon(LucideIcons.zap, color: Color(0xFF8E44AD), size: 12)
             else if (levelType == LevelType.tutorial)
               const Icon(LucideIcons.bookOpen, color: AppColors.accentGreen, size: 12),
 

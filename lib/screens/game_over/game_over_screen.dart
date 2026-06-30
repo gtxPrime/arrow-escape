@@ -71,8 +71,8 @@ class GameOverScreen extends StatelessWidget {
                             child: Opacity(
                               opacity: 0.22,
                               child: Icon(
-                                LucideIcons.droplet,
-                                color: Color(0xFF3498DB),
+                                Icons.favorite,
+                                color: Color(0xFFFF2D55), // Solid pinkish red heart
                                 size: 32,
                               ),
                             ),

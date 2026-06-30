@@ -369,7 +369,7 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70,
+      height: 95,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Stack(
         fit: StackFit.expand,
@@ -391,7 +391,7 @@ class _TopBar extends StatelessWidget {
             ),
           ),
 
-          // Center Side (Level Label & Progress Bar, perfectly centered)
+          // Center Side (Level Label, Progress Bar & Lives, perfectly centered)
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -401,7 +401,7 @@ class _TopBar extends StatelessWidget {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Container(
-                      margin: const EdgeInsets.bottom(4),
+                      margin: const EdgeInsets.only(bottom: 4),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
@@ -451,37 +451,33 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 5),
-                // Level progress bar with horizontal wavy liquid animation (width adjusted to 80 to prevent overlaps)
+                // Level progress bar with horizontal wavy liquid animation (width adjusted to 130, height to 10.0)
                 WavyProgressBar(
                   progress: progress,
-                  width: 80,
-                  height: 9.0,
+                  width: 130,
+                  height: 10.0,
                 ),
+                const SizedBox(height: 6),
+                // Lives bar centered below the progress bar
+                LivesBar(lives: lives, maxLives: AppConstants.maxLives),
               ],
             ),
           ),
 
-          // Right Side (LivesBar & Settings aligned right)
+          // Right Side (Settings Button aligned right)
           Align(
             alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LivesBar(lives: lives, maxLives: AppConstants.maxLives),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onSettings,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(LucideIcons.settings,
-                        color: AppColors.textPrimary, size: 18),
-                  ),
+            child: GestureDetector(
+              onTap: onSettings,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
+                child: const Icon(LucideIcons.settings,
+                    color: AppColors.textPrimary, size: 18),
+              ),
             ),
           ),
         ],
