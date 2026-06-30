@@ -46,7 +46,7 @@ class LevelGenerator {
     LevelModel? level;
     // Fewer attempts = faster generation. The 4-phase algorithm succeeds
     // on the first or second attempt in >95% of cases.
-    final int maxAttempts = (type == LevelType.god || type == LevelType.boss || gridSize > 20) ? 50 : 25;
+    final int maxAttempts = (type == LevelType.god || type == LevelType.boss || gridSize > 20) ? 80 : 40;
     for (int attempt = 0; attempt < maxAttempts && level == null; attempt++) {
       level = _attempt(
         levelNumber: levelNumber,
@@ -524,9 +524,9 @@ class LevelGenerator {
     );
 
     // Verify solvability with solver.
-    // Small grids: tight cap (400) — construction order is almost always valid.
-    // Large grids: slightly wider cap (1200) for complex deflector paths.
-    final solverCap = gridSize > 20 ? 1200 : 400;
+    // Small grids: tight cap (600) — construction order is almost always valid.
+    // Large grids: slightly wider cap (2000) for complex deflector paths.
+    final solverCap = gridSize > 20 ? 2000 : 600;
     final bfsSolution = LevelSolver.solve(level, solverCap);
     if (bfsSolution == null) {
       return null;
