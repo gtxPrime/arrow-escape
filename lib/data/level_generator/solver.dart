@@ -189,12 +189,24 @@ class _GridState {
 
   bool get isEmpty => arrows.isEmpty;
 
-  /// Hash includes remaining orphan dots so states with different dots are distinct
+  /// Fast hash: XOR of stable per-arrow integer codes + orphan dot count.
+  /// Avoids allocating sorted string lists on every DFS node (hot path).
   String get hash {
-    final sortedIds = arrows.keys.toList()..sort();
-    final groups = clearedColorGroups.toList()..sort();
-    final dots = orphanDots.keys.toList()..sort();
-    return '${sortedIds.join('|')};${groups.join(',')};${dots.join('+')}';
+    // XOR is order-independent so no sort needed
+    int arrowHash = 0;
+    for (final id in arrows.keys) {
+      arrowHash ^= id.hashCode;
+    }
+    int groupHash = 0;
+    for (final g in clearedColorGroups) {
+      groupHash ^= g * 31;
+    }
+    // Include dot count + a cheap content fingerprint
+    int dotHash = orphanDots.length * 997;
+    for (final k in orphanDots.keys) {
+      dotHash ^= k.hashCode;
+    }
+    return '$arrowHash|$groupHash|$dotHash';
   }
 
   factory _GridState.fromLevel(LevelModel level) {
