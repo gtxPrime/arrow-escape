@@ -151,7 +151,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'ARROW OUT',
+                    'Arrow Out',
                     style: GoogleFonts.nunito(
                       fontSize: 44,
                       fontWeight: FontWeight.w900,
@@ -367,16 +367,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               const SizedBox(width: 14),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _isNavigating ? 'LOADING…' : 'PLAY NOW',
+                    _isNavigating ? 'Loading…' : 'Play Now',
                     style: GoogleFonts.nunito(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      letterSpacing: 2.0,
+                      letterSpacing: 1.0,
                     ),
                   ),
                   Text(

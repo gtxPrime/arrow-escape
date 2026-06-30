@@ -178,7 +178,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Column(
       children: [
         Text(
-          'ARROW OUT',
+          'Arrow Out',
           style: GoogleFonts.nunito(
             fontSize: 42,
             fontWeight: FontWeight.w900,

@@ -75,8 +75,8 @@ class MazeBackgroundPainter extends CustomPainter {
     final Set<String> occupiedCells = {};
     String cellKey(int r, int c) => '$r,$c';
 
-    // A clean density of 7 non-overlapping paths
-    final int numArrows = 7;
+    // A clean density of 12 non-overlapping paths
+    final int numArrows = 12;
     final colors = [
       AppColors.accentGold,
       AppColors.accentOrange,
