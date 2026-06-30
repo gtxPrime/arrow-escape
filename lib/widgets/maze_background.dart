@@ -71,8 +71,12 @@ class MazeBackgroundPainter extends CustomPainter {
       }
     }
 
-    // Number of arrow lines (12 is clean and avoids clutter)
-    final int numArrows = 12;
+    // Keep track of occupied cells to prevent paths from ever overlapping
+    final Set<String> occupiedCells = {};
+    String cellKey(int r, int c) => '$r,$c';
+
+    // A clean density of 7 non-overlapping paths
+    final int numArrows = 7;
     final colors = [
       AppColors.accentGold,
       AppColors.accentOrange,
@@ -85,67 +89,82 @@ class MazeBackgroundPainter extends CustomPainter {
       final strokeWidth = 3.5 + rng.nextDouble() * 2.0;
 
       final arrowPaint = Paint()
-        ..color = color.withValues(alpha: 0.18) // Crisp but subtle opacity
+        ..color = color.withValues(alpha: 0.18)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round;
 
-      // Distribute starting columns evenly across the width to avoid overlapping clusters
-      final double colTarget = (i + 0.2 + rng.nextDouble() * 0.6) * (cols / numArrows);
-      final int startCol = colTarget.floor().clamp(0, cols - 1);
-      final int startRow = rng.nextInt((rows * 0.5).ceil().clamp(2, rows));
+      // Find an unoccupied starting cell for this path
+      int startRow = 0;
+      int startCol = 0;
+      bool foundStart = false;
 
-      var current = Offset(startCol * spacing + 19, startRow * spacing + 19);
-      final List<Offset> pathPoints = [current];
+      for (int attempt = 0; attempt < 30; attempt++) {
+        final double colTarget = (i + 0.1 + rng.nextDouble() * 0.8) * (cols / numArrows);
+        final int c = colTarget.floor().clamp(0, cols - 1);
+        final int r = rng.nextInt((rows * 0.6).ceil().clamp(2, rows));
 
-      final length = 3 + rng.nextInt(3); // 3 to 5 segments
-      var lastDir = rng.nextInt(4);
-      var currentOffset = current;
+        if (!occupiedCells.contains(cellKey(r, c))) {
+          startRow = r;
+          startCol = c;
+          foundStart = true;
+          break;
+        }
+      }
 
-      for (int j = 0; j < length; j++) {
+      if (!foundStart) continue;
+
+      final List<Offset> pathPoints = [
+        Offset(startCol * spacing + 19, startRow * spacing + 19)
+      ];
+      occupiedCells.add(cellKey(startRow, startCol));
+
+      final int pathLength = 3 + rng.nextInt(3); // 3 to 5 segments
+      int currentValR = startRow;
+      int currentValC = startCol;
+      int lastDir = rng.nextInt(4);
+
+      for (int j = 0; j < pathLength; j++) {
         final List<int> validDirs = [];
         for (int d = 0; d < 4; d++) {
-          // Avoid going directly backwards (reversing direction)
+          // Avoid reversing direction immediately
           if ((d - lastDir).abs() == 2) continue;
 
-          final Offset delta;
+          int nextR = currentValR;
+          int nextC = currentValC;
           switch (d) {
-            case 0: delta = Offset(spacing, 0); break;  // Right
-            case 1: delta = Offset(0, spacing); break;  // Down
-            case 2: delta = Offset(-spacing, 0); break; // Left
-            default: delta = Offset(0, -spacing); break; // Up
+            case 0: nextC++; break; // Right
+            case 1: nextR++; break; // Down
+            case 2: nextC--; break; // Left
+            default: nextR--; break; // Up
           }
 
-          final next = currentOffset + delta;
-          // Keep paths bounded within canvas padding
-          if (next.dx >= 15 && next.dx <= size.width - 15 &&
-              next.dy >= 15 && next.dy <= size.height - 15) {
-            validDirs.add(d);
+          if (nextC >= 0 && nextC < cols && nextR >= 0 && nextR < rows) {
+            if (!occupiedCells.contains(cellKey(nextR, nextC))) {
+              validDirs.add(d);
+            }
           }
         }
 
         if (validDirs.isEmpty) break;
 
-        // Prefer going down or sideways to simulate falling/clean structures
-        if (validDirs.contains(1) && rng.nextDouble() < 0.6) {
+        // Choose next direction, biasing slightly towards down
+        if (validDirs.contains(1) && rng.nextDouble() < 0.5) {
           lastDir = 1;
         } else {
           lastDir = validDirs[rng.nextInt(validDirs.length)];
         }
 
-        final Offset delta;
         switch (lastDir) {
-          case 0: delta = Offset(spacing, 0); break;
-          case 1: delta = Offset(0, spacing); break;
-          case 2: delta = Offset(-spacing, 0); break;
-          default: delta = Offset(0, -spacing); break;
+          case 0: currentValC++; break;
+          case 1: currentValR++; break;
+          case 2: currentValC--; break;
+          default: currentValR--; break;
         }
 
-        currentOffset += delta;
-        if (!pathPoints.contains(currentOffset)) {
-          pathPoints.add(currentOffset);
-        }
+        pathPoints.add(Offset(currentValC * spacing + 19, currentValR * spacing + 19));
+        occupiedCells.add(cellKey(currentValR, currentValC));
       }
 
       if (pathPoints.length < 2) continue;
@@ -161,7 +180,7 @@ class MazeBackgroundPainter extends CustomPainter {
       }
       canvas.drawPath(path, arrowPaint);
 
-      // Draw arrowhead at the animated tip pointing exactly in forward direction
+      // Draw arrowhead at the leading tip pointing exactly in the direction of traversal
       final tip = animatedPoints.last;
       final prev = animatedPoints[animatedPoints.length - 2];
       final dv = tip - prev;
