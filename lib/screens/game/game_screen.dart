@@ -19,6 +19,7 @@ import '../../game/arrow_puzzle_game.dart';
 import '../../game/game_state.dart';
 import '../../widgets/lives_bar.dart';
 import '../../widgets/wavy_progress_bar.dart';
+import '../../widgets/arrow_line.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class GameScreen extends StatefulWidget {
@@ -1448,11 +1449,11 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _miniArrow('←', AppColors.arrowLeft),
+                      ArrowLine(direction: ArrowDirection.left, color: AppColors.arrowLeft, size: 48, strokeWidth: 5.5),
                       const SizedBox(width: 8),
-                      _miniArrow('↑', AppColors.arrowUp),
+                      ArrowLine(direction: ArrowDirection.up, color: AppColors.arrowUp, size: 48, strokeWidth: 5.5),
                       const SizedBox(width: 8),
-                      _miniArrow('→', AppColors.arrowRight),
+                      ArrowLine(direction: ArrowDirection.right, color: AppColors.arrowRight, size: 48, strokeWidth: 5.5),
                     ],
                   ),
                 ),
@@ -1478,19 +1479,6 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _miniArrow(String symbol, Color color) {
-    return Container(
-      width: 48, height: 48,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 10)],
-      ),
-      child: Center(child: Text(symbol, style: TextStyle(fontSize: 24, color: color))),
     );
   }
 }

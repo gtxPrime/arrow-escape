@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../widgets/arrow_line.dart';
+import '../../data/models/arrow.dart';
 import '../../core/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -163,13 +164,13 @@ class _SplashScreenState extends State<SplashScreen>
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _ArrowIcon(iconData: LucideIcons.arrowLeft, color: AppColors.arrowLeft, delay: 0)
+            ArrowLine(direction: ArrowDirection.left, color: AppColors.arrowLeft, size: 52, strokeWidth: 6)
                 .animate(onPlay: (controller) => controller.repeat(reverse: true))
                 .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut),
-            _ArrowIcon(iconData: LucideIcons.arrowUp, color: AppColors.arrowUp, delay: 100)
+            ArrowLine(direction: ArrowDirection.up, color: AppColors.arrowUp, size: 52, strokeWidth: 6)
                 .animate(onPlay: (controller) => controller.repeat(reverse: true))
                 .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut, delay: 200.ms),
-            _ArrowIcon(iconData: LucideIcons.arrowRight, color: AppColors.arrowRight, delay: 200)
+            ArrowLine(direction: ArrowDirection.right, color: AppColors.arrowRight, size: 52, strokeWidth: 6)
                 .animate(onPlay: (controller) => controller.repeat(reverse: true))
                 .slideY(begin: 0, end: -0.15, duration: 1200.ms, curve: Curves.easeInOut, delay: 400.ms),
           ],
@@ -195,45 +196,6 @@ class _SplashScreenState extends State<SplashScreen>
             .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
       ],
     );
-  }
-}
-
-class _ArrowIcon extends StatelessWidget {
-  final IconData iconData;
-  final Color color;
-  final int delay;
-
-  const _ArrowIcon(
-      {required this.iconData, required this.color, required this.delay});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 52,
-      height: 52,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
-        boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 12)
-        ],
-      ),
-      child: Center(
-        child: Icon(
-          iconData,
-          color: color,
-          size: 28,
-        ),
-      ),
-    )
-        .animate(delay: Duration(milliseconds: delay))
-        .fadeIn(duration: 400.ms)
-        .scale(
-            begin: const Offset(0, 0),
-            end: const Offset(1, 1),
-            curve: Curves.elasticOut);
   }
 }
 
