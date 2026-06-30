@@ -10,6 +10,7 @@ import 'package:confetti/confetti.dart';
 
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
+import '../../data/models/arrow.dart';
 import '../../data/models/level.dart';
 import '../../data/repositories/progress_repository.dart';
 import '../../data/repositories/level_repository.dart';
@@ -248,8 +249,11 @@ class _GameScreenState extends State<GameScreen> {
 
     // Calculate level progress
     final totalArrows = _level.arrows.length;
-    final remainingArrows = _gameState?.arrows.length ?? totalArrows;
-    final clearedArrows = totalArrows - remainingArrows;
+    final activeArrows = _gameState?.arrows
+            .where((a) => a.state != ArrowState.sliding)
+            .length ??
+        totalArrows;
+    final clearedArrows = totalArrows - activeArrows;
     final progressVal = totalArrows > 0
         ? (clearedArrows / totalArrows).clamp(0.0, 1.0)
         : 0.0;
