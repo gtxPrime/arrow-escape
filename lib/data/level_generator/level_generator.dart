@@ -372,14 +372,8 @@ class LevelGenerator {
     if (arrows.isEmpty) return null;
 
     final emptyCount = mask.length - occupied.length;
-    final int maxOrphans;
-    if (type == LevelType.normal && levelNumber <= 20) {
-      // Early normal levels: we want very few or 0 orphan dots
-      maxOrphans = (gridSize <= 5) ? 0 : 1;
-    } else {
-      final double maxOrphansPct = (gridSize > 20) ? 0.16 : 0.22;
-      maxOrphans = (mask.length * maxOrphansPct).ceil().clamp(5, 150);
-    }
+    final double maxOrphansPct = (gridSize > 20) ? 0.16 : 0.22;
+    final maxOrphans = (mask.length * maxOrphansPct).ceil().clamp(5, 150);
 
     if (fillEntireGrid && emptyCount > maxOrphans) {
       return null;
@@ -887,26 +881,30 @@ class LevelGenerator {
       orphanMap[od.key] = od.type;
     }
 
-    // Collect standard arrow indices.
-    // Sort by descending edge-distance of their head so that inner arrows
-    // (far from the grid edge) are preferred as pair candidates.
-    final stdIndices = <int>[];
+    // Collect standard arrow indices that are in the inner side of the canvas (not on the border: edgeDistance > 0).
+    var stdIndices = <int>[];
     for (int i = 0; i < arrows.length; i++) {
       if (arrows[i].mechanic == SnakeMechanic.standard) {
-        stdIndices.add(i);
+        final dist = _edgeDistance(arrows[i].row, arrows[i].col, gridSize);
+        if (dist > 0) {
+          stdIndices.add(i);
+        }
       }
     }
 
-    // Shuffle first for randomness among equal-distance arrows,
-    // then do a stable sort by inner-ness (descending edge-distance).
+    // If we have too few inner standard arrows (e.g., in small grids), fall back to all standard arrows
+    if (stdIndices.length < pairs * 2) {
+      stdIndices = <int>[];
+      for (int i = 0; i < arrows.length; i++) {
+        if (arrows[i].mechanic == SnakeMechanic.standard) {
+          stdIndices.add(i);
+        }
+      }
+    }
+
+    // Shuffle standard arrow indices so that color pairs are scattered randomly
+    // across the canvas instead of clustering together at the exact center.
     stdIndices.shuffle(rng);
-    stdIndices.sort((ia, ib) {
-      final a = arrows[ia];
-      final b = arrows[ib];
-      final distA = _edgeDistance(a.row, a.col, gridSize);
-      final distB = _edgeDistance(b.row, b.col, gridSize);
-      return distB.compareTo(distA); // descending: inner arrows first
-    });
 
     int actualPairs = 0;
     for (int i = 0; i < stdIndices.length && actualPairs < pairs; i++) {
