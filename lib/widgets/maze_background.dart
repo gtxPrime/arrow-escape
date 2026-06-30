@@ -75,8 +75,8 @@ class MazeBackgroundPainter extends CustomPainter {
     final Set<String> occupiedCells = {};
     String cellKey(int r, int c) => '$r,$c';
 
-    // A clean density of 12 non-overlapping paths
-    final int numArrows = 12;
+    // A clean density of 15 non-overlapping paths
+    final int numArrows = 15;
     final colors = [
       AppColors.accentGold,
       AppColors.accentOrange,
@@ -89,7 +89,7 @@ class MazeBackgroundPainter extends CustomPainter {
       final strokeWidth = 3.5 + rng.nextDouble() * 2.0;
 
       final arrowPaint = Paint()
-        ..color = color.withValues(alpha: 0.18)
+        ..color = color // Fully solid color to hide grid dots beneath it
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round
@@ -201,7 +201,7 @@ class MazeBackgroundPainter extends CustomPainter {
       canvas.drawPath(
         caretPath,
         Paint()
-          ..color = color.withValues(alpha: 0.18)
+          ..color = color
           ..style = PaintingStyle.stroke
           ..strokeWidth = strokeWidth
           ..strokeCap = StrokeCap.round
