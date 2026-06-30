@@ -59,18 +59,6 @@ class MazeBackgroundPainter extends CustomPainter {
     final int rows = (size.height / spacing).ceil();
     final int cols = (size.width / spacing).ceil();
 
-    // Draw faint grid dots matching the game screen background
-    final dotPaint = Paint()..color = baseColor.withValues(alpha: 0.12);
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        canvas.drawCircle(
-          Offset(c * spacing + 19, r * spacing + 19),
-          1.5,
-          dotPaint,
-        );
-      }
-    }
-
     // Keep track of occupied cells to prevent paths from ever overlapping
     final Set<String> occupiedCells = {};
     String cellKey(int r, int c) => '$r,$c';
@@ -84,16 +72,12 @@ class MazeBackgroundPainter extends CustomPainter {
       AppColors.textSecondary,
     ];
 
+    // Pre-generate all paths first so we know which cells are occupied
+    final List<_GeneratedPath> generatedPaths = [];
+
     for (int i = 0; i < numArrows; i++) {
       final color = colors[rng.nextInt(colors.length)];
       final strokeWidth = 3.5 + rng.nextDouble() * 2.0;
-
-      final arrowPaint = Paint()
-        ..color = color // Fully solid color to hide grid dots beneath it
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
 
       // Find an unoccupied starting cell for this path
       int startRow = 0;
@@ -167,10 +151,41 @@ class MazeBackgroundPainter extends CustomPainter {
         occupiedCells.add(cellKey(currentValR, currentValC));
       }
 
-      if (pathPoints.length < 2) continue;
+      if (pathPoints.length >= 2) {
+        generatedPaths.add(_GeneratedPath(
+          points: pathPoints,
+          color: color,
+          strokeWidth: strokeWidth,
+        ));
+      }
+    }
+
+    // 1. Draw grid dots, but SKIP cells occupied by any arrow line
+    // This completely hides the dots below the arrows, removing the dotted arrow effect!
+    final dotPaint = Paint()..color = baseColor.withValues(alpha: 0.12);
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        if (occupiedCells.contains(cellKey(r, c))) continue;
+
+        canvas.drawCircle(
+          Offset(c * spacing + 19, r * spacing + 19),
+          1.5,
+          dotPaint,
+        );
+      }
+    }
+
+    // 2. Draw the generated arrow lines with slightly lowered opacity
+    for (final gp in generatedPaths) {
+      final arrowPaint = Paint()
+        ..color = gp.color.withValues(alpha: 0.70) // Softened opacity
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = gp.strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
 
       // Slice the path points based on animation progress
-      final animatedPoints = _getAnimatedPoints(pathPoints, progress, spacing);
+      final animatedPoints = _getAnimatedPoints(gp.points, progress, spacing);
       if (animatedPoints.length < 2) continue;
 
       // Draw path body
@@ -201,9 +216,9 @@ class MazeBackgroundPainter extends CustomPainter {
       canvas.drawPath(
         caretPath,
         Paint()
-          ..color = color
+          ..color = gp.color.withValues(alpha: 0.70) // Matching soft opacity
           ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
+          ..strokeWidth = gp.strokeWidth
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
       );
@@ -243,4 +258,16 @@ class MazeBackgroundPainter extends CustomPainter {
   bool shouldRepaint(covariant MazeBackgroundPainter oldDelegate) {
     return oldDelegate.progress != progress || oldDelegate.baseColor != baseColor;
   }
+}
+
+class _GeneratedPath {
+  final List<Offset> points;
+  final Color color;
+  final double strokeWidth;
+
+  _GeneratedPath({
+    required this.points,
+    required this.color,
+    required this.strokeWidth,
+  });
 }

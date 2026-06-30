@@ -39,13 +39,34 @@ class _GameScreenState extends State<GameScreen> {
   int _lives = AppConstants.maxLives;
   int? _loadedLevelNum;
   bool _isLoadingLevel = false; // true while level is being generated async
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
+    _initBannerAd();
   }
+
+  void _initBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AppConstants.admobBannerUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _isBannerAdLoaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+
 
   @override
   void didChangeDependencies() {
@@ -292,6 +313,7 @@ class _GameScreenState extends State<GameScreen> {
   void dispose() {
     _gameState?.removeListener(_onGameStateChanged);
     _confettiController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -306,7 +328,6 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     final levelType = AppConstants.levelTypeFor(_level.levelNumber);
-    final adManager = context.read<AdManager>();
 
     // Calculate level progress
     final totalArrows = _level.arrows.length;
@@ -388,7 +409,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
 
               // ── Banner Ad (centered and sized to avoid layout warnings) ──
-              if (adManager.gameBannerAd != null)
+              if (_isBannerAdLoaded && _bannerAd != null)
                 Container(
                   alignment: Alignment.center,
                   width: double.infinity,
@@ -398,7 +419,7 @@ class _GameScreenState extends State<GameScreen> {
                     height: 50,
                     child: AdWidget(
                       key: const ValueKey('game_banner_ad'),
-                      ad: adManager.gameBannerAd!,
+                      ad: _bannerAd!,
                     ),
                   ),
                 ),
@@ -1460,7 +1481,7 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
               ),
               const SizedBox(height: 28),
               Text(
-                'LEVEL ${widget.levelNumber}',
+                'Level ${widget.levelNumber}',
                 style: GoogleFonts.nunito(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
@@ -1552,7 +1573,7 @@ class _BossLoadingScreenState extends State<_BossLoadingScreen>
                     const Icon(LucideIcons.swords, color: _bossGlow, size: 16),
                     const SizedBox(width: 8),
                     Text(
-                      'BOSS',
+                      'Boss',
                       style: GoogleFonts.nunito(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
@@ -1571,7 +1592,7 @@ class _BossLoadingScreenState extends State<_BossLoadingScreen>
               AnimatedBuilder(
                 animation: _flame,
                 builder: (_, __) => Text(
-                  'LEVEL ${widget.levelNumber}',
+                  'Level ${widget.levelNumber}',
                   style: GoogleFonts.nunito(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -1686,7 +1707,7 @@ class _GodLoadingScreenState extends State<_GodLoadingScreen>
                     const Icon(LucideIcons.sparkles, color: _godGold, size: 16),
                     const SizedBox(width: 8),
                     Text(
-                      'GOD MODE',
+                      'God Mode',
                       style: GoogleFonts.nunito(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
@@ -1705,7 +1726,7 @@ class _GodLoadingScreenState extends State<_GodLoadingScreen>
               AnimatedBuilder(
                 animation: _glow,
                 builder: (_, __) => Text(
-                  'LEVEL ${widget.levelNumber}',
+                  'Level ${widget.levelNumber}',
                   style: GoogleFonts.nunito(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,

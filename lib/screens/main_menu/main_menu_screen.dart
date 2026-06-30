@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -12,7 +11,6 @@ import '../../data/repositories/progress_repository.dart';
 import '../../data/repositories/level_repository.dart';
 import '../../data/models/level.dart';
 import '../../widgets/maze_background.dart';
-import '../../ads/ad_manager.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -23,16 +21,41 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   bool _isNavigating = false; // prevents double-tap and shows instant feedback
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
 
   @override
   void initState() {
     super.initState();
+    _initBannerAd();
     // Record daily play + pre-warm current level in background after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<ProgressRepository>().recordDailyPlay();
       _preWarmLevels();
     });
+  }
+
+  void _initBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AppConstants.admobBannerUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _isBannerAdLoaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
   }
 
   /// Pre-generate the current level and next 3 in background isolates so that
@@ -58,7 +81,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressRepository>();
-    final adManager = context.read<AdManager>();
 
     return Scaffold(
       body: Container(
@@ -186,7 +208,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               const Spacer(flex: 3),
 
               // ── Banner Ad ──────────────────────────────────────────────────
-              if (adManager.homeBannerAd != null)
+              if (_isBannerAdLoaded && _bannerAd != null)
                 Container(
                   alignment: Alignment.center,
                   width: double.infinity,
@@ -197,7 +219,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     height: 50,
                     child: AdWidget(
                       key: const ValueKey('home_banner_ad'),
-                      ad: adManager.homeBannerAd!,
+                      ad: _bannerAd!,
                     ),
                   ),
                 ),
