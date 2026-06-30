@@ -13,7 +13,7 @@ class LivesBar extends StatelessWidget {
       children: List.generate(maxLives, (i) {
         final isFull = i < lives;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2.5),
+          padding: const EdgeInsets.symmetric(horizontal: 2.0),
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
             transitionBuilder: (child, anim) =>
@@ -22,7 +22,7 @@ class LivesBar extends StatelessWidget {
               Icons.favorite,
               key: ValueKey('heart_${i}_$isFull'),
               color: isFull ? const Color(0xFFFF2D55) : const Color(0xFFDDD5C3),
-              size: 24,
+              size: 20,
             ),
           ),
         );

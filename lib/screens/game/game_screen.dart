@@ -21,7 +21,6 @@ import '../../widgets/lives_bar.dart';
 import '../../widgets/wavy_progress_bar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -38,7 +37,6 @@ class _GameScreenState extends State<GameScreen> {
   bool _showingComplete = false;
   int _lives = AppConstants.maxLives;
   int? _loadedLevelNum;
-
 
   @override
   void initState() {
@@ -111,8 +109,8 @@ class _GameScreenState extends State<GameScreen> {
 
     final progress = context.read<ProgressRepository>();
     final adManager = context.read<AdManager>();
-    final stars = ProgressRepository.calculateStars(_gameState!.livesLost,
-        _level.totalArrows, _gameState!.movesUsed);
+    final stars = ProgressRepository.calculateStars(
+        _gameState!.livesLost, _level.totalArrows, _gameState!.movesUsed);
     final score =
         AppConstants.baseScore + (_lives * AppConstants.bonusPerRemainingLife);
 
@@ -249,14 +247,12 @@ class _GameScreenState extends State<GameScreen> {
 
     // Calculate level progress
     final totalArrows = _level.arrows.length;
-    final activeArrows = _gameState?.arrows
-            .where((a) => a.state != ArrowState.sliding)
-            .length ??
-        totalArrows;
+    final activeArrows =
+        _gameState?.arrows.where((a) => a.state != ArrowState.sliding).length ??
+            totalArrows;
     final clearedArrows = totalArrows - activeArrows;
-    final progressVal = totalArrows > 0
-        ? (clearedArrows / totalArrows).clamp(0.0, 1.0)
-        : 0.0;
+    final progressVal =
+        totalArrows > 0 ? (clearedArrows / totalArrows).clamp(0.0, 1.0) : 0.0;
 
     return Scaffold(
       body: Container(
@@ -373,6 +369,7 @@ class _TopBar extends StatelessWidget {
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Stack(
+        fit: StackFit.expand,
         children: [
           // Left Side (Back Button aligned left)
           Align(
@@ -391,12 +388,8 @@ class _TopBar extends StatelessWidget {
             ),
           ),
 
-          // Center Side (Level Label & Progress Bar with Stack positioning to prevent overlaps)
-          Positioned(
-            left: 50,
-            right: 150,
-            top: 0,
-            bottom: 0,
+          // Center Side (Level Label & Progress Bar, perfectly centered)
+          Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -444,10 +437,10 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 5),
-                // Level progress bar with horizontal wavy liquid animation (height increased by 10%)
+                // Level progress bar with horizontal wavy liquid animation (width adjusted to 80 to prevent overlaps)
                 WavyProgressBar(
                   progress: progress,
-                  width: 100,
+                  width: 80,
                   height: 9.0,
                 ),
               ],
@@ -461,7 +454,7 @@ class _TopBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 LivesBar(lives: lives, maxLives: AppConstants.maxLives),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 GestureDetector(
                   onTap: onSettings,
                   child: Container(
@@ -859,7 +852,7 @@ class _DialogSettingsTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),
