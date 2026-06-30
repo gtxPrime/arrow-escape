@@ -16,7 +16,9 @@ import '../../data/repositories/level_repository.dart';
 import '../../ads/ad_manager.dart';
 import '../../game/arrow_puzzle_game.dart';
 import '../../widgets/lives_bar.dart';
+import '../../widgets/wavy_progress_bar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -404,19 +406,11 @@ class _TopBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 5),
-              // Level progress bar with rounded corners
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox(
-                  width: 100,
-                  height: 6,
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: AppColors.surfaceLight,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  ),
-                ),
+              // Level progress bar with horizontal wavy liquid animation
+              WavyProgressBar(
+                progress: progress,
+                width: 100,
+                height: 8,
               ),
             ],
           ),
