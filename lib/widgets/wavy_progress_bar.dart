@@ -131,8 +131,8 @@ class _WavyProgressBarPainter extends CustomPainter {
     final fillWidth = progress * width;
     final wavePath = Path();
 
-    // Wave properties for the vertical front edge
-    final waveAmplitude = height * 0.28; // height-relative wave amplitude
+    // Wave properties for the vertical front edge (dampened to 0 at 100% progress for a flat, solid finish)
+    final waveAmplitude = height * 0.12 * (1.0 - progress);
     const waveFrequency = 1.0;          // 1 full cycle along the height
 
     final xStart = fillWidth + sin(-animationValue * 2 * pi) * waveAmplitude;
