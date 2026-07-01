@@ -21,6 +21,7 @@ import '../../widgets/lives_bar.dart';
 import '../../widgets/wavy_progress_bar.dart';
 import '../../widgets/arrow_line.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../core/audio_manager.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -513,7 +514,10 @@ class _GameScreenState extends State<GameScreen> {
                 animationWidget,
                 const SizedBox(height: 24),
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    AudioManager.instance.playClick();
+                    Navigator.pop(context);
+                  },
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -692,7 +696,10 @@ class _TopBar extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: GestureDetector(
-              onTap: onBack,
+              onTap: () {
+                AudioManager.instance.playClick();
+                onBack();
+              },
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -782,7 +789,10 @@ class _TopBar extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
-              onTap: onSettings,
+              onTap: () {
+                AudioManager.instance.playClick();
+                onSettings();
+              },
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -913,7 +923,10 @@ class _LevelCompleteDialog extends StatelessWidget {
             const SizedBox(height: 10),
 
             TextButton(
-              onPressed: onMenu,
+              onPressed: () {
+                AudioManager.instance.playClick();
+                onMenu();
+              },
               child: Text('Back to Menu',
                   style: GoogleFonts.nunito(color: AppColors.textSecondary)),
             ),
@@ -994,7 +1007,10 @@ class _GameOverDialog extends StatelessWidget {
             const SizedBox(height: 10),
 
             TextButton(
-              onPressed: onMenu,
+              onPressed: () {
+                AudioManager.instance.playClick();
+                onMenu();
+              },
               child: Text('Main Menu',
                   style: GoogleFonts.nunito(color: AppColors.textSecondary)),
             ),
@@ -1021,7 +1037,10 @@ class _DialogButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        AudioManager.instance.playClick();
+        onTap();
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
@@ -1128,7 +1147,10 @@ class _GameSettingsDialog extends StatelessWidget {
 
             // Close / Resume Button
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                AudioManager.instance.playClick();
+                Navigator.pop(context);
+              },
               child: Text(
                 'Resume Game',
                 style: GoogleFonts.nunito(

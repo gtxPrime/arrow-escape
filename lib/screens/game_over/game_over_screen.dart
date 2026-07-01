@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/app_colors.dart';
 import '../../ads/ad_manager.dart';
+import '../../core/audio_manager.dart';
 
 /// Full-screen game over overlay (alternative to dialog — used as a route).
 class GameOverScreen extends StatelessWidget {
@@ -115,8 +116,10 @@ class GameOverScreen extends StatelessWidget {
 
                 // Back to menu
                 TextButton(
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, '/menu'),
+                  onPressed: () {
+                    AudioManager.instance.playClick();
+                    Navigator.pushReplacementNamed(context, '/menu');
+                  },
                   child: Text('Main Menu',
                       style: GoogleFonts.nunito(
                           color: AppColors.textSecondary, fontSize: 16)),
@@ -148,7 +151,10 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        AudioManager.instance.playClick();
+        onTap();
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),

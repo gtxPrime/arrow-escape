@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../data/repositories/progress_repository.dart';
+import '../../core/audio_manager.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -24,7 +25,10 @@ class SettingsScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () {
+                        AudioManager.instance.playClick();
+                        Navigator.pop(context);
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -55,7 +59,10 @@ class SettingsScreen extends StatelessWidget {
                         label: 'Sound Effects',
                         trailing: Switch(
                           value: progress.soundEnabled,
-                          onChanged: (val) => progress.setSoundEnabled(val),
+                          onChanged: (val) {
+                            AudioManager.instance.playClick();
+                            progress.setSoundEnabled(val);
+                          },
                           activeThumbColor: AppColors.primary,
                         ),
                       ),
@@ -64,7 +71,10 @@ class SettingsScreen extends StatelessWidget {
                         label: 'Background Music',
                         trailing: Switch(
                           value: progress.musicEnabled,
-                          onChanged: (val) => progress.setMusicEnabled(val),
+                          onChanged: (val) {
+                            AudioManager.instance.playClick();
+                            progress.setMusicEnabled(val);
+                          },
                           activeThumbColor: AppColors.primary,
                         ),
                       ),
@@ -73,7 +83,10 @@ class SettingsScreen extends StatelessWidget {
                         label: 'Haptic Feedback',
                         trailing: Switch(
                           value: progress.vibrationEnabled,
-                          onChanged: (val) => progress.setVibrationEnabled(val),
+                          onChanged: (val) {
+                            AudioManager.instance.playClick();
+                            progress.setVibrationEnabled(val);
+                          },
                           activeThumbColor: AppColors.primary,
                         ),
                       ),
@@ -128,7 +141,12 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: onTap != null
+          ? () {
+              AudioManager.instance.playClick();
+              onTap!();
+            }
+          : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

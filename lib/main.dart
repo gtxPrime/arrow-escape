@@ -8,9 +8,13 @@ import 'app.dart';
 import 'data/repositories/progress_repository.dart';
 import 'data/repositories/level_repository.dart';
 import 'ads/ad_manager.dart';
+import 'core/audio_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize AudioManager
+  await AudioManager.instance.initialize();
 
   // Lock to portrait
   await SystemChrome.setPreferredOrientations([

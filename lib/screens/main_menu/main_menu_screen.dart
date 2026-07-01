@@ -11,6 +11,7 @@ import '../../data/repositories/progress_repository.dart';
 import '../../data/repositories/level_repository.dart';
 import '../../data/models/level.dart';
 import '../../widgets/maze_background.dart';
+import '../../core/audio_manager.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -123,12 +124,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ],
                     ),
 
-                    // Top Bar Actions
                     Row(
                       children: [
                         // Level Select grid icon
                         GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, '/levels'),
+                          onTap: () {
+                            AudioManager.instance.playClick();
+                            Navigator.pushNamed(context, '/levels');
+                          },
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -146,7 +149,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
                         // Settings icon
                         GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, '/settings'),
+                          onTap: () {
+                            AudioManager.instance.playClick();
+                            Navigator.pushNamed(context, '/settings');
+                          },
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -341,6 +347,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         onTap: _isNavigating
             ? null
             : () async {
+                AudioManager.instance.playClick();
                 if (!mounted) return;
                 setState(() => _isNavigating = true);
                 await Navigator.pushNamed(

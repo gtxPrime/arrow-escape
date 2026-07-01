@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../data/models/arrow.dart';
 import '../data/models/level.dart';
 import '../core/constants.dart';
+import '../core/audio_manager.dart';
 
 /// Manages the current game state: lives, moves, arrows remaining.
 class GameState extends ChangeNotifier {
@@ -139,6 +140,9 @@ class GameState extends ChangeNotifier {
     for (final k in exitInfo.consumed) _orphanDots.remove(k);
     notifyListeners();
 
+    // Play exit sound
+    AudioManager.instance.playArrowExit();
+
     final exitDurationMs = 400 + arrow.path.length * 80;
     Future.delayed(Duration(milliseconds: exitDurationMs), () {
       _arrows.removeWhere((a) => a.id == arrowId);
@@ -220,6 +224,9 @@ class GameState extends ChangeNotifier {
       }
     }
     notifyListeners();
+
+    // Play exit sound
+    AudioManager.instance.playArrowExit();
 
     // Find the max path length between the two to determine total slide duration
     final maxLen = groupArrows.map((a) => a.path.length).reduce((a, b) => a > b ? a : b);

@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/repositories/progress_repository.dart';
+import '../../core/audio_manager.dart';
 
 class LevelSelectScreen extends StatelessWidget {
   const LevelSelectScreen({super.key});
@@ -30,7 +31,10 @@ class LevelSelectScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () {
+                        AudioManager.instance.playClick();
+                        Navigator.pop(context);
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -76,6 +80,7 @@ class LevelSelectScreen extends StatelessWidget {
                       levelType: levelType,
                       onTap: isUnlocked
                           ? () {
+                              AudioManager.instance.playClick();
                               Navigator.pushReplacementNamed(
                                 context,
                                 '/game',
