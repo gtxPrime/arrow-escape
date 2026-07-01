@@ -113,6 +113,43 @@ graph TD
 - **Reverse Exit Deflector Routing (Phase 4)**: Unassigned orphan cells are converted to redirect dots. The generator simulates arrow exits in reverse construction order and configures deflection directions that guarantee a safe path to the grid boundaries.
 - **Solver Backtracking DFS Verification**: A custom depth-first search solver parses the generated board. The layout is accepted only if it solves within a dynamic state cap (1000 states for small grids, 2500 states for grids larger than 20x20). Otherwise, it resets the seed and restarts generation.
 
+### <img src="https://img.shields.io/badge/-Level_Data-1565C0?style=flat-square&logo=database&logoColor=white" align="center" /> Level Data Asset (`assets/levels.bin`)
+
+Boss and God levels use large 30×30 grids with up to 200 arrows — generating them on-device causes freezes. All 500 levels are pre-generated on PC and shipped as a single compact binary file (`assets/levels.bin`, **791 KB**).
+
+The binary format uses:
+- **Bitmask grid masks** — 113 bytes per 30×30 grid instead of hundreds of coordinate strings
+- **Delta-encoded arrow paths** — 1 byte per step instead of full `[row, col]` pairs
+- **Index table** — O(1) seek to any level by number, no scanning
+
+```
+[HEADER]       8 bytes   magic 'LVLB' + version + level count
+[INDEX TABLE]  N × 4 bytes  byte offset of each level record
+[DATA]         per level: gridSize, maskShape, difficulty, patternName,
+               arrows (direction/mechanic/path as delta steps),
+               mask bitmask, orphan dots
+```
+
+`LevelRepository` loads only the header on startup and seeks directly to whichever level is needed — the rest of the file is untouched.
+
+#### Regenerating `levels.bin`
+
+Run this whenever you change the generator or add new levels:
+```bash
+flutter test test/generate_levels_bin_test.dart -r expanded
+```
+Then commit the updated file:
+```bash
+git add assets/levels.bin
+git commit -m "asset: regenerate levels.bin"
+```
+
+#### Scaling to more levels
+1. Change `const totalLevels = 500` → your new count in `test/generate_levels_bin_test.dart`
+2. Update `static int get totalLevels => 500` in `lib/data/repositories/level_repository.dart`
+3. Re-run the generator — the index table grows automatically
+
+
 ### <img src="https://img.shields.io/badge/-Components-3F51B5?style=flat-square&logo=navigation&logoColor=white" align="center" /> Arrow Definition & Components
 Arrows are modeled in `ArrowModel` and rendered by `ArrowComponent`:
 - **Logical Model (`ArrowModel`)**: Defines the ID, head cell coordinate `(row, col)`, exit direction `ArrowDirection` (up, down, left, right), coordinate segment list (`path`), state (idle, sliding, blocked, exited), and color-locked grouping ID.
@@ -149,19 +186,28 @@ where $D_{i-1}$ represents the remaining deflector dot configurations on the gri
 
 ```
 lib/
-├── core/                   # Application constants, theme colors, and helper functions
+├── core/                      # App constants, theme colors, helper functions
 ├── data/
-│   ├── models/             # Game models (Level, Arrow, Grid cell representations)
-│   └── repositories/       # Level state and user progress persistence
+│   ├── level_binary_codec.dart  # Binary encoder/decoder for levels.bin
+│   ├── models/                # Game models (Level, Arrow, OrphanDot, etc.)
+│   ├── level_generator/       # Procedural generator, solver, mask shapes
+│   └── repositories/          # Level access (binary asset) & user progress
 ├── game/
-│   ├── components/         # Flame Components (Grid, Arrows, Particle systems)
+│   ├── components/            # Flame Components (Grid, Arrows, Particles)
 │   ├── arrow_puzzle_game.dart # Main Flame Game Controller
-│   └── game_state.dart     # In-game state machine and progression handlers
+│   └── game_state.dart        # In-game state machine and progression handlers
 ├── screens/
-│   ├── game_over/          # Game Over and retry logic
-│   ├── main_menu/          # Main Menu, levels selector, and daily streak UI
-│   └── play_screen/        # Main gameplay viewport wrapping the Flame widget
-└── widgets/                # Reusable UI controls (e.g. LivesBar, ActionButton)
+│   ├── game_over/             # Game Over and retry logic
+│   ├── main_menu/             # Main Menu, level selector, daily streak UI
+│   └── play_screen/           # Main gameplay viewport wrapping the Flame widget
+└── widgets/                   # Reusable UI controls (LivesBar, ActionButton…)
+
+assets/
+└── levels.bin                 # Pre-generated binary level data (791 KB, 500 levels)
+
+test/
+├── generate_levels_bin_test.dart  # PC generator → writes assets/levels.bin
+└── binary_codec_test.dart         # Round-trip encode/decode verification
 ```
 
 ---
