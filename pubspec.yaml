@@ -53,6 +53,7 @@ flutter:
     - assets/audio/
     - assets/lottie/
     - assets/fonts/
+    - assets/levels.json
 
   fonts:
     - family: Nunito

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/level.dart';
 import '../level_generator/level_generator.dart';
@@ -17,7 +18,22 @@ class LevelRepository {
   final Map<int, LevelModel> _cache = {};
   final Set<int> _generating = {}; // track in-flight async generations
 
+  Map<String, dynamic> _pregeneratedLevels = {};
+  bool _pregeneratedLoaded = false;
+
   LevelRepository([this._prefs]);
+
+  /// Load pre-generated levels from asset bundle (called during startup)
+  Future<void> loadPregeneratedLevels() async {
+    if (_pregeneratedLoaded) return;
+    try {
+      final jsonStr = await rootBundle.loadString('assets/levels.json');
+      _pregeneratedLevels = jsonDecode(jsonStr) as Map<String, dynamic>;
+      _pregeneratedLoaded = true;
+    } catch (e) {
+      debugPrint('Error loading pregenerated levels: $e');
+    }
+  }
 
   /// Get or generate a level by number (synchronous — always returns immediately).
   /// If the level is already cached (in memory or on disk), it returns instantly.
@@ -25,6 +41,17 @@ class LevelRepository {
   LevelModel getLevel(int levelNumber) {
     if (_cache.containsKey(levelNumber)) {
       return _cache[levelNumber]!;
+    }
+
+    // Try loading from pregenerated data seed (fastest)
+    if (_pregeneratedLoaded && _pregeneratedLevels.containsKey('$levelNumber')) {
+      try {
+        final level = LevelModel.fromJson(_pregeneratedLevels['$levelNumber'] as Map<String, dynamic>);
+        _cache[levelNumber] = level;
+        return level;
+      } catch (e) {
+        debugPrint('Error parsing pregenerated level: $e');
+      }
     }
 
     // Try loading from persistent disk cache
@@ -56,6 +83,13 @@ class LevelRepository {
     _generating.add(levelNumber);
 
     try {
+      // Check if already in pregenerated levels
+      if (_pregeneratedLoaded && _pregeneratedLevels.containsKey('$levelNumber')) {
+        final level = LevelModel.fromJson(_pregeneratedLevels['$levelNumber'] as Map<String, dynamic>);
+        _cache[levelNumber] = level;
+        return;
+      }
+
       // Check if already on disk first to avoid spinning up isolate
       if (_prefs != null && _prefs!.containsKey('cached_level_$levelNumber')) {
         final jsonStr = _prefs!.getString('cached_level_$levelNumber');
@@ -89,6 +123,14 @@ class LevelRepository {
   Future<LevelModel> getLevelAsync(int levelNumber) async {
     if (_cache.containsKey(levelNumber)) return _cache[levelNumber]!;
 
+    if (_pregeneratedLoaded && _pregeneratedLevels.containsKey('$levelNumber')) {
+      try {
+        final level = LevelModel.fromJson(_pregeneratedLevels['$levelNumber'] as Map<String, dynamic>);
+        _cache[levelNumber] = level;
+        return level;
+      } catch (_) {}
+    }
+
     if (_prefs != null && _prefs!.containsKey('cached_level_$levelNumber')) {
       final jsonStr = _prefs!.getString('cached_level_$levelNumber');
       if (jsonStr != null) {
@@ -115,6 +157,7 @@ class LevelRepository {
   /// Returns true if [levelNumber] is already cached (in memory or disk) and ready instantly.
   bool isCached(int levelNumber) {
     if (_cache.containsKey(levelNumber)) return true;
+    if (_pregeneratedLoaded && _pregeneratedLevels.containsKey('$levelNumber')) return true;
     if (_prefs != null && _prefs!.containsKey('cached_level_$levelNumber')) {
       return true;
     }

@@ -24,6 +24,8 @@ class AudioManager {
 
   late AudioPool _clickPool;
   bool _clickPoolInitialized = false;
+  final List<AudioPool> _exitPools = [];
+  bool _exitPoolsInitialized = false;
 
   Future<void> initialize() async {
     try {
@@ -41,6 +43,17 @@ class AudioManager {
         maxPlayers: 5,
       );
       _clickPoolInitialized = true;
+
+      // Pre-warm a pool of players for each arrow exit sound effect
+      for (final sound in _exitSounds) {
+        final pool = await FlameAudio.createPool(
+          sound,
+          minPlayers: 2,
+          maxPlayers: 4,
+        );
+        _exitPools.add(pool);
+      }
+      _exitPoolsInitialized = true;
     } catch (e) {
       debugPrint('Error initializing FlameAudio: $e');
     }
@@ -96,9 +109,14 @@ class AudioManager {
   Future<void> playArrowExit() async {
     if (!_soundEnabled) return;
     try {
-      final soundPath = _exitSounds[_exitSoundIndex];
+      final poolIndex = _exitSoundIndex;
       _exitSoundIndex = (_exitSoundIndex + 1) % _exitSounds.length;
-      await FlameAudio.play(soundPath, volume: 0.8);
+
+      if (_exitPoolsInitialized && poolIndex < _exitPools.length) {
+        await _exitPools[poolIndex].start(volume: 0.8);
+      } else {
+        await FlameAudio.play(_exitSounds[poolIndex], volume: 0.8);
+      }
     } catch (e) {
       debugPrint('Error playing arrow exit sound: $e');
     }

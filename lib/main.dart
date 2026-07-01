@@ -34,6 +34,7 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final progressRepo = ProgressRepository(prefs);
   final levelRepo = LevelRepository(prefs);
+  await levelRepo.loadPregeneratedLevels();
 
   runApp(
     MultiProvider(
