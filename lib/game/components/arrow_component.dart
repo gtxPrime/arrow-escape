@@ -3,7 +3,6 @@ import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/models/arrow.dart';
 import '../../data/models/level.dart';
@@ -491,8 +490,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
   // ── Color resolution ──────────────────────────────────────────────────────
 
   Color _color() {
-    if (arrowModel.state == ArrowState.blocked) {
-      return AppColors.accent; // Shake red on block
+    if (arrowModel.state == ArrowState.blocked || _isBlockedAnimating) {
+      return const Color(0xFFCC2200); // Vibrant red error color on block
     }
     if (arrowModel.colorGroup != null) {
       return _groupColors[arrowModel.colorGroup! % _groupColors.length];

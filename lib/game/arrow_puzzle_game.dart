@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/models/level.dart';
 import 'components/grid_component.dart';
@@ -28,7 +27,7 @@ class ArrowPuzzleGame extends FlameGame {
   });
 
   @override
-  Color backgroundColor() => AppColors.gridBg;
+  Color backgroundColor() => Colors.transparent;
 
   @override
   Future<void> onLoad() async {

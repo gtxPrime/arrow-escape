@@ -201,7 +201,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final levelType = AppConstants.levelTypeFor(_level.levelNumber);
     adManager.onLevelComplete(_level.levelNumber, levelType.isSpecial);
  
-    Future.delayed(const Duration(milliseconds: 1200), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         _confettiController.play();
         if (context.read<ProgressRepository>().vibrationEnabled) {
@@ -308,23 +308,53 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             onMenu: _handleMenu,
             onDoubleCoins: _handleDoubleCoins,
           ),
+          // Top Center Explosive Confetti
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              emissionFrequency: 0.2,
+              numberOfParticles: 20,
+              maxBlastForce: 60,
+              minBlastForce: 30,
+              gravity: 0.2,
+              shouldLoop: false,
+              colors: const [
+                Colors.red,
+                Colors.blue,
+                Colors.green,
+                Colors.yellow,
+                Colors.pink,
+                Colors.purple,
+                Colors.orange,
+                Colors.teal,
+                Colors.cyan,
+              ],
+            ),
+          ),
           // Bottom Left Confetti
           Align(
             alignment: Alignment.bottomLeft,
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirection: -pi / 4,
-              emissionFrequency: 0.08,
-              numberOfParticles: 5,
-              maxBlastForce: 55,
-              minBlastForce: 25,
+              emissionFrequency: 0.2,
+              numberOfParticles: 20,
+              maxBlastForce: 75,
+              minBlastForce: 35,
               gravity: 0.15,
               shouldLoop: false,
               colors: const [
-                Color(0xFF5E6B56),
-                Color(0xFFA8B5A2),
-                Color(0xFFF2EFEA),
-                Colors.white,
+                Colors.red,
+                Colors.blue,
+                Colors.green,
+                Colors.yellow,
+                Colors.pink,
+                Colors.purple,
+                Colors.orange,
+                Colors.teal,
+                Colors.cyan,
               ],
             ),
           ),
@@ -334,17 +364,22 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirection: -3 * pi / 4,
-              emissionFrequency: 0.08,
-              numberOfParticles: 5,
-              maxBlastForce: 55,
-              minBlastForce: 25,
+              emissionFrequency: 0.2,
+              numberOfParticles: 20,
+              maxBlastForce: 75,
+              minBlastForce: 35,
               gravity: 0.15,
               shouldLoop: false,
               colors: const [
-                Color(0xFF5E6B56),
-                Color(0xFFA8B5A2),
-                Color(0xFFF2EFEA),
-                Colors.white,
+                Colors.red,
+                Colors.blue,
+                Colors.green,
+                Colors.yellow,
+                Colors.pink,
+                Colors.purple,
+                Colors.orange,
+                Colors.teal,
+                Colors.cyan,
               ],
             ),
           ),
@@ -578,7 +613,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                           minScale: 0.8,
                           maxScale: 4.0,
                           boundaryMargin: const EdgeInsets.all(60),
-                          clipBehavior: Clip.none,
+                          clipBehavior: Clip.hardEdge,
                           child: Center(
                             child: SizedBox(
                               width: boardSize,
