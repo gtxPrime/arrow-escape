@@ -556,10 +556,11 @@ class LevelGenerator {
     // Large grids: slightly wider cap (2000) for complex deflector paths.
     final solverCap = gridSize > 20 ? 2000 : 600;
     final bfsSolution = LevelSolver.solve(level, solverCap);
-    if (bfsSolution == null) {
-      return null;
-    }
-    return level.copyWith(solutionOrder: bfsSolution);
+    
+    // If the solver times out/fails on complex levels, fall back to the guaranteed reverse construction order
+    // to prevent slow level generation loops/freezes.
+    final solution = bfsSolution ?? constructionSolution;
+    return level.copyWith(solutionOrder: solution);
   }
 
   // ── Helper: place an arrow and update occupied sets ──────────────────────────

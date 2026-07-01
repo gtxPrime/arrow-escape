@@ -33,7 +33,7 @@ void main() async {
   // Init SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   final progressRepo = ProgressRepository(prefs);
-  final levelRepo = LevelRepository();
+  final levelRepo = LevelRepository(prefs);
 
   runApp(
     MultiProvider(

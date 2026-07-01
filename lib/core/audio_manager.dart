@@ -22,6 +22,9 @@ class AudioManager {
   ];
   int _exitSoundIndex = 0;
 
+  late AudioPool _clickPool;
+  bool _clickPoolInitialized = false;
+
   Future<void> initialize() async {
     try {
       FlameAudio.bgm.initialize();
@@ -31,6 +34,13 @@ class AudioManager {
         'underwater.mp3',
         ..._exitSounds,
       ]);
+      // Pre-warm a pool of players for the click sound to ensure zero latency
+      _clickPool = await FlameAudio.createPool(
+        'click.ogg',
+        minPlayers: 3,
+        maxPlayers: 5,
+      );
+      _clickPoolInitialized = true;
     } catch (e) {
       debugPrint('Error initializing FlameAudio: $e');
     }
@@ -69,7 +79,11 @@ class AudioManager {
   Future<void> playClick() async {
     if (!_soundEnabled) return;
     try {
-      await FlameAudio.play('click.ogg', volume: 0.8);
+      if (_clickPoolInitialized) {
+        await _clickPool.start(volume: 0.8);
+      } else {
+        await FlameAudio.play('click.ogg', volume: 0.8);
+      }
     } catch (e) {
       debugPrint('Error playing click sound: $e');
     }

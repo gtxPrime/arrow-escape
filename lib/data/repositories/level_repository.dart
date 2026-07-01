@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/level.dart';
 import '../level_generator/level_generator.dart';
 
@@ -9,31 +11,64 @@ LevelModel _generateLevelIsolate(int levelNumber) {
 }
 
 /// Caches generated levels and provides access by level number.
-/// Generates up to 1000+ levels on demand.
+/// Generates up to 500 levels on demand and persists them to disk.
 class LevelRepository {
+  final SharedPreferences? _prefs;
   final Map<int, LevelModel> _cache = {};
   final Set<int> _generating = {}; // track in-flight async generations
 
+  LevelRepository([this._prefs]);
+
   /// Get or generate a level by number (synchronous — always returns immediately).
-  /// If the level is already cached (e.g. from a background pre-warm), it returns
-  /// instantly. Otherwise it generates on-the-spot (may block briefly).
+  /// If the level is already cached (in memory or on disk), it returns instantly.
+  /// Otherwise it generates on-the-spot.
   LevelModel getLevel(int levelNumber) {
-    return _cache.putIfAbsent(levelNumber, () {
-      return LevelGenerator.generateLevel(levelNumber);
-    });
+    if (_cache.containsKey(levelNumber)) {
+      return _cache[levelNumber]!;
+    }
+
+    // Try loading from persistent disk cache
+    if (_prefs != null) {
+      final jsonStr = _prefs!.getString('cached_level_$levelNumber');
+      if (jsonStr != null) {
+        try {
+          final level = LevelModel.fromJson(jsonDecode(jsonStr));
+          _cache[levelNumber] = level;
+          return level;
+        } catch (e) {
+          debugPrint('Error decoding cached level: $e');
+        }
+      }
+    }
+
+    final level = LevelGenerator.generateLevel(levelNumber);
+    _cache[levelNumber] = level;
+    _saveToDisk(levelNumber, level);
+    return level;
   }
 
   /// Asynchronously pre-generate [levelNumber] in a background isolate.
   /// This is truly non-blocking — level generation runs off the UI thread.
   /// Safe to call multiple times — duplicate requests are silently ignored.
   Future<void> preGenerateAsync(int levelNumber) async {
-    if (_cache.containsKey(levelNumber)) return;
+    if (isCached(levelNumber)) return;
     if (_generating.contains(levelNumber)) return;
     _generating.add(levelNumber);
 
     try {
+      // Check if already on disk first to avoid spinning up isolate
+      if (_prefs != null && _prefs!.containsKey('cached_level_$levelNumber')) {
+        final jsonStr = _prefs!.getString('cached_level_$levelNumber');
+        if (jsonStr != null) {
+          final level = LevelModel.fromJson(jsonDecode(jsonStr));
+          _cache[levelNumber] = level;
+          return;
+        }
+      }
+
       final level = await compute(_generateLevelIsolate, levelNumber);
       _cache[levelNumber] = level;
+      _saveToDisk(levelNumber, level);
     } catch (_) {
       // Silently ignore errors — getLevel() will regenerate if needed
     } finally {
@@ -54,6 +89,17 @@ class LevelRepository {
   Future<LevelModel> getLevelAsync(int levelNumber) async {
     if (_cache.containsKey(levelNumber)) return _cache[levelNumber]!;
 
+    if (_prefs != null && _prefs!.containsKey('cached_level_$levelNumber')) {
+      final jsonStr = _prefs!.getString('cached_level_$levelNumber');
+      if (jsonStr != null) {
+        try {
+          final level = LevelModel.fromJson(jsonDecode(jsonStr));
+          _cache[levelNumber] = level;
+          return level;
+        } catch (_) {}
+      }
+    }
+
     // If not generating yet, kick off background generation
     if (!_generating.contains(levelNumber)) {
       unawaited(preGenerateAsync(levelNumber));
@@ -66,8 +112,14 @@ class LevelRepository {
     return _cache[levelNumber]!;
   }
 
-  /// Returns true if [levelNumber] is already cached and ready instantly.
-  bool isCached(int levelNumber) => _cache.containsKey(levelNumber);
+  /// Returns true if [levelNumber] is already cached (in memory or disk) and ready instantly.
+  bool isCached(int levelNumber) {
+    if (_cache.containsKey(levelNumber)) return true;
+    if (_prefs != null && _prefs!.containsKey('cached_level_$levelNumber')) {
+      return true;
+    }
+    return false;
+  }
 
   /// Clear cache to free memory (keep current ±5 levels)
   void trimCache(int currentLevel) {
@@ -76,6 +128,16 @@ class LevelRepository {
       if (key < currentLevel - 5 || key > currentLevel + 10) {
         _cache.remove(key);
       }
+    }
+  }
+
+  void _saveToDisk(int levelNumber, LevelModel level) {
+    if (_prefs == null) return;
+    try {
+      final jsonStr = jsonEncode(level.toJson());
+      _prefs!.setString('cached_level_$levelNumber', jsonStr);
+    } catch (e) {
+      debugPrint('Error saving cached level to disk: $e');
     }
   }
 
