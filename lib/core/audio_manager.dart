@@ -13,12 +13,7 @@ class AudioManager {
   bool get musicEnabled => _musicEnabled;
 
   final List<String> _exitSounds = [
-    'swoosh_08.mp3',
-    'swoosh_16.mp3',
     'swoosh_18.mp3',
-    'sound_effect_1.wav',
-    'sound_effect_12.wav',
-    'sound_effect_8.wav',
   ];
   int _exitSoundIndex = 0;
 
