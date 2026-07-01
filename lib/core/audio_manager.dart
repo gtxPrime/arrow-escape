@@ -1,13 +1,10 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 
 /// Centralized audio manager for all game sounds and music.
 class AudioManager {
   AudioManager._();
   static final AudioManager instance = AudioManager._();
-
-  final AudioPlayer _sfxPlayer = AudioPlayer();
-  final AudioPlayer _musicPlayer = AudioPlayer();
 
   bool _soundEnabled = true;
   bool _musicEnabled = true;
@@ -16,19 +13,27 @@ class AudioManager {
   bool get musicEnabled => _musicEnabled;
 
   final List<String> _exitSounds = [
-    'audio/swoosh_08.mp3',
-    'audio/swoosh_16.mp3',
-    'audio/swoosh_18.mp3',
-    'audio/sound_effect_1.wav',
-    'audio/sound_effect_12.wav',
-    'audio/sound_effect_8.wav',
+    'swoosh_08.mp3',
+    'swoosh_16.mp3',
+    'swoosh_18.mp3',
+    'sound_effect_1.wav',
+    'sound_effect_12.wav',
+    'sound_effect_8.wav',
   ];
   int _exitSoundIndex = 0;
 
   Future<void> initialize() async {
-    await _musicPlayer.setReleaseMode(ReleaseMode.loop);
-    await _musicPlayer.setVolume(0.4);
-    await _sfxPlayer.setVolume(0.8);
+    try {
+      FlameAudio.bgm.initialize();
+      // Precache the audio files during splash screen load
+      await FlameAudio.audioCache.loadAll([
+        'click.ogg',
+        'underwater.mp3',
+        ..._exitSounds,
+      ]);
+    } catch (e) {
+      debugPrint('Error initializing FlameAudio: $e');
+    }
   }
 
   // ── Music ─────────────────────────────────────────────────────────────────────
@@ -36,8 +41,8 @@ class AudioManager {
   Future<void> playBgMusic() async {
     if (!_musicEnabled) return;
     try {
-      if (_musicPlayer.state == PlayerState.playing) return;
-      await _musicPlayer.play(AssetSource('audio/underwater.mp3'));
+      if (FlameAudio.bgm.isPlaying) return;
+      await FlameAudio.bgm.play('underwater.mp3', volume: 0.4);
     } catch (e) {
       debugPrint('Error playing background music: $e');
     }
@@ -52,7 +57,11 @@ class AudioManager {
   }
 
   Future<void> stopMusic() async {
-    await _musicPlayer.stop();
+    try {
+      await FlameAudio.bgm.stop();
+    } catch (e) {
+      debugPrint('Error stopping background music: $e');
+    }
   }
 
   // ── SFX ───────────────────────────────────────────────────────────────────────
@@ -60,18 +69,13 @@ class AudioManager {
   Future<void> playClick() async {
     if (!_soundEnabled) return;
     try {
-      final player = AudioPlayer();
-      await player.play(AssetSource('audio/click.ogg'));
-      player.onPlayerComplete.listen((_) {
-        player.dispose();
-      });
+      await FlameAudio.play('click.ogg', volume: 0.8);
     } catch (e) {
       debugPrint('Error playing click sound: $e');
     }
   }
 
   Future<void> playArrowTap() async {
-    // Falls back to UI click sound
     await playClick();
   }
 
@@ -80,12 +84,7 @@ class AudioManager {
     try {
       final soundPath = _exitSounds[_exitSoundIndex];
       _exitSoundIndex = (_exitSoundIndex + 1) % _exitSounds.length;
-
-      final player = AudioPlayer();
-      await player.play(AssetSource(soundPath));
-      player.onPlayerComplete.listen((_) {
-        player.dispose();
-      });
+      await FlameAudio.play(soundPath, volume: 0.8);
     } catch (e) {
       debugPrint('Error playing arrow exit sound: $e');
     }
@@ -105,20 +104,22 @@ class AudioManager {
 
   void setSoundEnabled(bool value) {
     _soundEnabled = value;
-    if (!value) _sfxPlayer.stop();
   }
 
   void setMusicEnabled(bool value) {
     _musicEnabled = value;
     if (!value) {
-      _musicPlayer.stop();
+      stopMusic();
     } else {
       playBgMusic();
     }
   }
 
   void dispose() {
-    _sfxPlayer.dispose();
-    _musicPlayer.dispose();
+    try {
+      FlameAudio.bgm.dispose();
+    } catch (e) {
+      debugPrint('Error disposing FlameAudio bgm: $e');
+    }
   }
 }
