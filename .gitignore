@@ -41,6 +41,7 @@ assets/images/spritesheet.png
 **/android/app/GeneratedPluginRegistrant.java
 **/android/app/proguard-rules.pro
 **/android/app/src/main/assets/
+**/android/key.properties
 **/*.jks
 **/*.keystore
 **/*.ap_

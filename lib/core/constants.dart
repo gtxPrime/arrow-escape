@@ -5,8 +5,8 @@ class AppConstants {
   AppConstants._();
 
   // App identity
-  static const String appName = 'Arrow Out';
-  static const String packageId = 'com.gxdevs.arrowout';
+  static const String appName = 'Arrow Escape';
+  static const String packageId = 'com.arrow.escape';
 
   // Grid sizes: 10×10 minimum at level 1, up to 40×40 at very high levels.
   static const int startingGridSize = 10;

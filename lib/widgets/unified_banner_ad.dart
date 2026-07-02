@@ -115,6 +115,9 @@ class _UnifiedBannerAdState extends State<UnifiedBannerAd> {
                 });
               }
             },
+            onAdClickedCallback: (ad) {},
+            onAdExpandedCallback: (ad) {},
+            onAdCollapsedCallback: (ad) {},
           ),
         ),
       );

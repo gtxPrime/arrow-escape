@@ -1,33 +1,33 @@
 <div align="center">
 
-  <img src="assets/images/logo.png" alt="Arrow Out Logo" width="120" height="120" onerror="this.src='https://raw.githubusercontent.com/gtxPrime/arrow-out/main/assets/images/logo.png'; this.onerror=null;" />
+  <img src="assets/images/logo.png" alt="Arrow Escape Logo" width="120" height="120" onerror="this.src='https://raw.githubusercontent.com/gtxPrime/arrow-escape/main/assets/images/logo.png'; this.onerror=null;" />
 
-# Arrow Out
+# Arrow Escape
 
 **A modern, casual grid puzzle game where you slide arrows out of the grid. Built with Flutter & Flame.**
 
   <p>
-    <a href="https://github.com/gtxPrime/arrow-out/stargazers">
-      <img src="https://img.shields.io/github/stars/gtxPrime/arrow-out?style=for-the-badge&color=yellow" alt="Stars" />
+    <a href="https://github.com/gtxPrime/arrow-escape/stargazers">
+      <img src="https://img.shields.io/github/stars/gtxPrime/arrow-escape?style=for-the-badge&color=yellow" alt="Stars" />
     </a>
-    <a href="https://github.com/gtxPrime/arrow-out/network/members">
-      <img src="https://img.shields.io/github/forks/gtxPrime/arrow-out?style=for-the-badge&color=orange" alt="Forks" />
+    <a href="https://github.com/gtxPrime/arrow-escape/network/members">
+      <img src="https://img.shields.io/github/forks/gtxPrime/arrow-escape?style=for-the-badge&color=orange" alt="Forks" />
     </a>
-    <a href="https://github.com/gtxPrime/arrow-out/issues">
-      <img src="https://img.shields.io/github/issues/gtxPrime/arrow-out?style=for-the-badge&color=blue" alt="Issues" />
+    <a href="https://github.com/gtxPrime/arrow-escape/issues">
+      <img src="https://img.shields.io/github/issues/gtxPrime/arrow-escape?style=for-the-badge&color=blue" alt="Issues" />
     </a>
-    <a href="https://github.com/gtxPrime/arrow-out/blob/main/LICENSE">
+    <a href="https://github.com/gtxPrime/arrow-escape/blob/main/LICENSE">
       <img src="https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge" alt="License" />
     </a>
     <a href="#">
       <img src="https://img.shields.io/badge/Platform-Flutter_|_Android_|_iOS-3DDC84?logo=flutter&logoColor=white&style=for-the-badge" alt="Platform" />
     </a>
-    <a href="https://github.com/gtxPrime/arrow-out/releases/latest">
-      <img src="https://img.shields.io/github/downloads/gtxPrime/arrow-out/total?label=Downloads&logo=github&style=for-the-badge&color=brightgreen" alt="GitHub Downloads" />
+    <a href="https://github.com/gtxPrime/arrow-escape/releases/latest">
+      <img src="https://img.shields.io/github/downloads/gtxPrime/arrow-escape/total?label=Downloads&logo=github&style=for-the-badge&color=brightgreen" alt="GitHub Downloads" />
     </a>
   </p>
 
-  <a href="https://github.com/gtxPrime/arrow-out/releases/latest">
+  <a href="https://github.com/gtxPrime/arrow-escape/releases/latest">
     <img src="https://raw.githubusercontent.com/gtxprime/mind-mint/main/docs/assets/github_badge.png" height="96" alt="Get it on GitHub" />
   </a>
 
@@ -49,10 +49,10 @@
 
 ---
 
-## <img src="https://img.shields.io/badge/-About-FF5500?style=flat-square&logo=info&logoColor=white" align="center" /> About Arrow Out
+## <img src="https://img.shields.io/badge/-About-FF5500?style=flat-square&logo=info&logoColor=white" align="center" /> About Arrow Escape
 
 > [!NOTE]
-> **Arrow Out** is a beautifully designed, highly interactive grid-based puzzle game. Players navigate challenges by sliding arrows out of the grid, encountering progressively harder difficulties (from Easy up to Boss & Super Hard levels). Developed using the powerful Flame game engine for Flutter, it offers responsive animations, particle effects, and dynamic transitions.
+> **Arrow Escape** is a beautifully designed, highly interactive grid-based puzzle game. Players navigate challenges by sliding arrows out of the grid, encountering progressively harder difficulties (from Easy up to Boss & Super Hard levels). Developed using the powerful Flame game engine for Flutter, it offers responsive animations, particle effects, and dynamic transitions.
 
 ---
 
@@ -133,21 +133,6 @@ The binary format uses:
 
 `LevelRepository` loads only the header on startup and seeks directly to whichever level is needed — the rest of the file is untouched.
 
-#### Regenerating & Verifying `levels.bin`
-
-To verify all 500 levels and regenerate any unsolvable ones, run the parallel check-and-fix pipeline. This splits the work across 5 parallel processes on multiple CPU cores:
-```bash
-powershell -ExecutionPolicy Bypass -File .\run_parallel.ps1
-```
-This script will spawn the concurrent jobs, optimize their priorities to High, display live progress logs, and automatically merge and spot-verify the final output file `assets/levels.bin`.
-
-
-#### Scaling to more levels
-1. Change `const totalLevels = 500` → your new count in `test/generate_and_verify_test.dart`
-2. Update `static int get totalLevels => 500` in `lib/data/repositories/level_repository.dart`
-3. Re-run the generator — the index table grows automatically
-
-
 
 ### <img src="https://img.shields.io/badge/-Components-3F51B5?style=flat-square&logo=navigation&logoColor=white" align="center" /> Arrow Definition & Components
 Arrows are modeled in `ArrowModel` and rendered by `ArrowComponent`:
@@ -203,10 +188,6 @@ lib/
 
 assets/
 └── levels.bin                 # Pre-generated binary level data (791 KB, 500 levels)
-
-test/
-├── generate_levels_bin_test.dart  # PC generator → writes assets/levels.bin
-└── binary_codec_test.dart         # Round-trip encode/decode verification
 ```
 
 ---
@@ -222,8 +203,8 @@ Follow these instructions to run the game locally:
 ### 2. Setup Codebase
 Clone this repository and fetch the dependencies:
 ```bash
-git clone https://github.com/gtxPrime/arrow-out.git
-cd arrow-out
+git clone https://github.com/gtxPrime/arrow-escape.git
+cd arrow-escape
 flutter pub get
 ```
 
@@ -283,7 +264,39 @@ Update the corresponding unit and app identifiers in `lib/core/constants.dart` f
 
 ---
 
+## 🎨 Customization Guide
+
+If you wish to customize and build your own version of Arrow Escape, follow these instructions:
+
+### 1. Change the App Package Name
+To publish your own version on the Google Play Store or iOS App Store, you need to change the application package name (Application ID):
+- **Android:**
+  - Update `applicationId` and `namespace` in `android/app/build.gradle.kts`.
+  - Update the package name in `android/app/src/main/AndroidManifest.xml`.
+  - Rename the package folder structure under `android/app/src/main/kotlin/` to match your new package name.
+  - Or, use a package like [change_app_package_name](https://pub.dev/packages/change_app_package_name) to do this automatically.
+
+### 2. Customizing Logo & Launch Screen
+- **App/Launcher Logo:** 
+  - Replace the launcher icons under `android/app/src/main/res/mipmap-*` folders with your own `ic_launcher.png` images.
+  - Replace the main application logo at [logo.png](assets/images/logo.png).
+- **Launch Screen Background:**
+  - The launch/splash background drawable layer is defined in [launch_background.xml](android/app/src/main/res/drawable/launch_background.xml). It uses `@android:color/transparent` by default. You can change this to any color drawable or custom resource.
+
+### 3. Modifying Audio & Music Files
+Sound effects and background tracks are located in the [assets/audio/](assets/audio/) directory:
+- `underwater.mp3`: Background game music.
+- `click.ogg` / `swoosh_18.mp3`: Sound effects for user interactions.
+- Simply replace these files with your own audio assets keeping the same file names, or add new tracks and update references in `lib/game/arrow_puzzle_game.dart` / `lib/core/constants.dart`.
+
+### ⚠️ Re-use & Giving Credit
+This project is open-source. If you decide to copy, fork, or use substantial portions of the source code, assets, levels, or game mechanics for your own projects, **you must give explicit credit** to the original repository by linking back to:
+👉 [github.com/gtxPrime/arrow-escape](https://github.com/gtxPrime/arrow-escape)
+
+---
+
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=gtxPrime/arrow-out&type=Date)](https://star-history.com/#gtxPrime/arrow-out&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=gtxPrime/arrow-escape&type=Date)](https://star-history.com/#gtxPrime/arrow-escape&Date)
+
 

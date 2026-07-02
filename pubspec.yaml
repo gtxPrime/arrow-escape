@@ -1,5 +1,5 @@
-name: arrow_puzzle
-description: Arrow Puzzle - A casual grid puzzle game where you slide arrows out of the grid.
+name: arrow_escape
+description: Arrow Escape - A casual grid puzzle game where you slide arrows out of the grid.
 publish_to: 'none'
 version: 1.0.0+1
 

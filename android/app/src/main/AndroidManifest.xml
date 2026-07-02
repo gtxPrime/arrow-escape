@@ -1,11 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.gxdevs.arrowout">
+    package="com.arrow.escape">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
-        android:label="Arrow Out"
+        android:label="Arrow Escape"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/LaunchTheme"
@@ -13,7 +13,7 @@
         android:hardwareAccelerated="true"
         android:windowSoftInputMode="adjustResize">
 
-        <!-- AdMob App ID (TEST ID — replace before publishing) -->
+        <!-- AdMob App ID (replace with real ID before publishing) -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713"/>

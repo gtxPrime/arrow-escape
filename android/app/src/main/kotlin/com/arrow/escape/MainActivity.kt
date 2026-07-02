@@ -1,4 +1,4 @@
-package com.gxdevs.arrowout
+package com.arrow.escape
 
 import io.flutter.embedding.android.FlutterActivity
 

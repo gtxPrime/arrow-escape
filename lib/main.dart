@@ -4,6 +4,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/constants.dart';
+
 import 'app.dart';
 import 'data/repositories/progress_repository.dart';
 import 'data/repositories/level_repository.dart';
@@ -27,8 +29,10 @@ void main() async {
     statusBarIconBrightness: Brightness.dark,
   ));
 
-  // Init AdMob
-  await MobileAds.instance.initialize();
+  // Init AdMob only when enabled
+  if (AppConstants.enableAdMob) {
+    await MobileAds.instance.initialize();
+  }
 
   // Init SharedPreferences
   final prefs = await SharedPreferences.getInstance();

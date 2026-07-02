@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
+import '../../core/constants.dart';
 import '../../data/repositories/progress_repository.dart';
 import '../../core/audio_manager.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  static const String _privacyPolicyUrl =
+      'https://gxdevs.blogspot.com/2026/07/arrow-escape-privacy-policy.html';
+  static const String _playStoreUrl =
+      'https://play.google.com/store/apps/details?id=${AppConstants.packageId}';
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,20 +110,20 @@ class SettingsScreen extends StatelessWidget {
                         label: 'Privacy Policy',
                         trailing: const Icon(Icons.chevron_right_rounded,
                             color: AppColors.textSecondary),
-                        onTap: () {},
+                        onTap: () => _launchUrl(_privacyPolicyUrl),
                       ),
                       _SettingsTile(
                         icon: Icons.star_outline_rounded,
                         label: 'Rate the App',
                         trailing: const Icon(Icons.chevron_right_rounded,
                             color: AppColors.textSecondary),
-                        onTap: () {},
+                        onTap: () => _launchUrl(_playStoreUrl),
                       ),
                       const Spacer(),
-                      Text('Arrow Out v1.0.0',
+                      Text('${AppConstants.appName} v1.0.0',
                           style: GoogleFonts.nunito(
                               color: AppColors.textMuted, fontSize: 12)),
-                      Text('com.gxdevs.arrowout',
+                      Text(AppConstants.packageId,
                           style: GoogleFonts.nunito(
                               color: AppColors.textMuted, fontSize: 11)),
                       const SizedBox(height: 16),
