@@ -247,18 +247,39 @@ flutter run
 
 ## <a id="-monetization"></a><img src="https://img.shields.io/badge/-Revenue-009688?style=flat-square&logo=dollar-sign&logoColor=white" align="center" /> Monetization & Configuration
 
-### AdMob Integration
-To configure your live ads, update `lib/core/constants.dart`:
-- `admobAppIdAndroid` → Your Google AdMob App ID
-- `admobBannerUnitId` → Your Banner Ad Unit ID
-- `admobInterstitialUnitId` → Your Interstitial Ad Unit ID
-- `admobRewardedUnitId` → Your Rewarded Video Ad Unit ID
+The game features an integrated 3-level waterfall fallback ad system: **Google AdMob (Priority 1) -> AppLovin MAX (Priority 2) -> Unity Ads (Priority 3)**.
 
-Also update the `<meta-data>` in [AndroidManifest.xml](file:///f:/Source%20Codes/Arrow%20game/android/app/src/main/AndroidManifest.xml) with your AdMob App ID.
+By default, only **AppLovin MAX** is enabled, and other networks are disabled via developer-friendly feature toggles in `lib/core/constants.dart`.
 
-### Unity & Facebook Ads Mediation
-- **Facebook Audience Network:** Set up your adapter through your AdMob Mediation setup. No extra code changes needed.
-- **Unity Ads:** Get your Game ID from the Unity Dashboard, then update `AppConstants.unityGameId` and set `unityTestMode = false`.
+### Feature Toggles
+You can dynamically toggle any of the integrated ad networks on/off using the following constants in `AppConstants`:
+- `enableAppLovin` (default: `true`): Set to `true` to active AppLovin MAX ads.
+- `enableAdMob` (default: `false`): Set to `true` to active Google AdMob ads.
+- `enableUnityAds` (default: `false`): Set to `true` to active Unity Ads.
+
+### Ad Unit Configuration
+Update the corresponding unit and app identifiers in `lib/core/constants.dart` for your production ad units:
+
+#### 1. AppLovin MAX Setup
+- `applovinSdkKey`: Your unique AppLovin SDK key.
+- `applovinBannerAdId`: AppLovin Banner Ad Unit ID.
+- `applovinInterstitialAdId`: AppLovin Interstitial Ad Unit ID.
+- `applovinRewardedAdId`: AppLovin Rewarded Ad Unit ID.
+*Note: Make sure to add your AppLovin SDK key in your `<meta-data>` inside your `AndroidManifest.xml` if compiling for Android.*
+
+#### 2. Google AdMob Setup
+- `admobAppIdAndroid`: Google AdMob App ID.
+- `admobBannerUnitId`: AdMob Banner Ad Unit ID.
+- `admobInterstitialUnitId`: AdMob Interstitial Ad Unit ID.
+- `admobRewardedUnitId`: AdMob Rewarded Ad Unit ID.
+*Note: Also update the `<meta-data>` tag in [AndroidManifest.xml](file:///f:/Source%20Codes/Arrow%20game/android/app/src/main/AndroidManifest.xml) with your live AdMob App ID.*
+
+#### 3. Unity Ads Setup
+- `unityGameId`: Your Unity Game ID.
+- `unityBannerAdId`: Unity Banner Placement ID (default: `'Banner_Android'`).
+- `unityInterstitialAdId`: Unity Interstitial Placement ID (default: `'Interstitial_Android'`).
+- `unityRewardedAdId`: Unity Rewarded Placement ID (default: `'Rewarded_Android'`).
+- `unityTestMode`: Set to `false` for live production ads.
 
 ---
 

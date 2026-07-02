@@ -3,14 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/repositories/progress_repository.dart';
 import '../../data/repositories/level_repository.dart';
 import '../../data/models/level.dart';
 import '../../widgets/maze_background.dart';
+import '../../widgets/unified_banner_ad.dart';
 import '../../core/audio_manager.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -22,13 +21,10 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   bool _isNavigating = false; // prevents double-tap and shows instant feedback
-  BannerAd? _bannerAd;
-  bool _isBannerAdLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _initBannerAd();
     // Record daily play + pre-warm current level in background after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -37,25 +33,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     });
   }
 
-  void _initBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: AppConstants.admobBannerUnitId,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) setState(() => _isBannerAdLoaded = true);
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    )..load();
-  }
-
   @override
   void dispose() {
-    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -214,21 +193,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               const Spacer(flex: 3),
 
               // ── Banner Ad ──────────────────────────────────────────────────
-              if (_isBannerAdLoaded && _bannerAd != null)
-                Container(
-                  alignment: Alignment.center,
-                  width: double.infinity,
-                  height: 50,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: SizedBox(
-                    width: 320,
-                    height: 50,
-                    child: AdWidget(
-                      key: const ValueKey('home_banner_ad'),
-                      ad: _bannerAd!,
-                    ),
-                  ),
+              Container(
+                alignment: Alignment.center,
+                width: double.infinity,
+                height: 50,
+                margin: const EdgeInsets.only(bottom: 8),
+                child: const UnifiedBannerAd(
+                  admobUnitId: AppConstants.admobBannerUnitId,
+                  applovinUnitId: AppConstants.applovinBannerAdId,
+                  unityPlacementId: AppConstants.unityBannerAdId,
                 ),
+              ),
             ],
           ),
         ),

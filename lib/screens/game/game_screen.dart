@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
 import 'package:provider/provider.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../widgets/unified_banner_ad.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:confetti/confetti.dart';
@@ -41,8 +41,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   int _lives = AppConstants.maxLives;
   int? _loadedLevelNum;
   bool _isLoadingLevel = false; // true while level is being generated async
-  BannerAd? _bannerAd;
-  bool _isBannerAdLoaded = false;
 
   // Timer fields
   Timer? _levelTimer;
@@ -58,23 +56,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
-    _initBannerAd();
-  }
-
-  void _initBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: AppConstants.admobBannerUnitId,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) setState(() => _isBannerAdLoaded = true);
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    )..load();
   }
 
 
@@ -446,7 +427,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _levelTimer?.cancel();
     _gameState?.removeListener(_onGameStateChanged);
     _confettiController.dispose();
-    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -630,20 +610,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               ),
 
               // ── Banner Ad (centered and sized to avoid layout warnings) ──
-              if (_isBannerAdLoaded && _bannerAd != null)
-                Container(
-                  alignment: Alignment.center,
-                  width: double.infinity,
-                  height: 50,
-                  child: SizedBox(
-                    width: 320,
-                    height: 50,
-                    child: AdWidget(
-                      key: const ValueKey('game_banner_ad'),
-                      ad: _bannerAd!,
-                    ),
-                  ),
+              Container(
+                alignment: Alignment.center,
+                width: double.infinity,
+                height: 50,
+                child: const UnifiedBannerAd(
+                  admobUnitId: AppConstants.admobBannerUnitId,
+                  applovinUnitId: AppConstants.applovinBannerAdId,
+                  unityPlacementId: AppConstants.unityBannerAdId,
                 ),
+              ),
             ],
           ),
         ),

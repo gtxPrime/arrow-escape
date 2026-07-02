@@ -27,8 +27,20 @@ class AppConstants {
   static const String admobRewardedUnitId  = 'ca-app-pub-3940256099942544/5224354917';
 
   static const String unityGameId       = 'YOUR_UNITY_GAME_ID';
+  static const String unityBannerAdId   = 'Banner_Android';
+  static const String unityInterstitialAdId = 'Interstitial_Android';
   static const String unityRewardedAdId = 'Rewarded_Android';
   static const bool   unityTestMode     = true;
+
+  static const String applovinSdkKey = 'YOUR_APPLOVIN_SDK_KEY';
+  static const String applovinBannerAdId = 'YOUR_APPLOVIN_BANNER_AD_UNIT_ID';
+  static const String applovinInterstitialAdId = 'YOUR_APPLOVIN_INTERSTITIAL_AD_UNIT_ID';
+  static const String applovinRewardedAdId = 'YOUR_APPLOVIN_REWARDED_AD_UNIT_ID';
+
+  // Ad Network Feature Toggles
+  static const bool enableAdMob = false;
+  static const bool enableUnityAds = false;
+  static const bool enableAppLovin = true;
 
   static const int interstitialEveryNLevels = 4;
 
