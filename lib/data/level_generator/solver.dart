@@ -69,6 +69,10 @@ class LevelSolver {
     final path = <String>[];
     int statesVisited = 0;
 
+    // Preallocated visited cache for exit path simulation to prevent GC churn in hot path
+    final exitVisited = Uint32List(gridSize * gridSize);
+    int exitToken = 0;
+
     bool dfs(int remainingCount) {
       if (remainingCount == 0) return true;
       if (statesVisited > maxStatesLimit) return false;
@@ -90,9 +94,20 @@ class LevelSolver {
           if (!activeArrows[partner]) continue;
 
           // Try to exit both
-          final consumed1 = _simulateExit(i, partner, gridSize, board, activeOrphans, orphanTypes, arrows);
+          exitToken++;
+          if (exitToken == 0) {
+            exitVisited.fillRange(0, exitVisited.length, 0);
+            exitToken = 1;
+          }
+          final consumed1 = _simulateExit(i, partner, gridSize, board, activeOrphans, orphanTypes, arrows, exitVisited, exitToken);
           if (consumed1 == null) continue;
-          final consumed2 = _simulateExit(partner, i, gridSize, board, activeOrphans, orphanTypes, arrows);
+
+          exitToken++;
+          if (exitToken == 0) {
+            exitVisited.fillRange(0, exitVisited.length, 0);
+            exitToken = 1;
+          }
+          final consumed2 = _simulateExit(partner, i, gridSize, board, activeOrphans, orphanTypes, arrows, exitVisited, exitToken);
           if (consumed2 == null) continue;
 
           // Apply move
@@ -147,7 +162,12 @@ class LevelSolver {
           activeArrows[i] = true;
         } else {
           // Standard Single Arrow
-          final consumed = _simulateExit(i, -1, gridSize, board, activeOrphans, orphanTypes, arrows);
+          exitToken++;
+          if (exitToken == 0) {
+            exitVisited.fillRange(0, exitVisited.length, 0);
+            exitToken = 1;
+          }
+          final consumed = _simulateExit(i, -1, gridSize, board, activeOrphans, orphanTypes, arrows, exitVisited, exitToken);
           if (consumed == null) continue;
 
           // Apply move
@@ -199,7 +219,9 @@ class LevelSolver {
       Uint16List board,
       List<bool> activeOrphans,
       Uint8List orphanTypes,
-      List<ArrowModel> arrows) {
+      List<ArrowModel> arrows,
+      Uint32List exitVisited,
+      int token) {
     final arrow = arrows[arrowIdx];
     ArrowDirection currentDir = arrow.direction;
     final head = arrow.path[0];
@@ -207,14 +229,11 @@ class LevelSolver {
     int nr = head[0] + d[0];
     int nc = head[1] + d[1];
     final consumed = <int>[];
-    
-    // Flat index visited map to prevent deflection loops
-    final visited = List<bool>.filled(gridSize * gridSize, false);
 
     while (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
       final idx = nr * gridSize + nc;
-      if (visited[idx]) return null;
-      visited[idx] = true;
+      if (exitVisited[idx] == token) return null;
+      exitVisited[idx] = token;
 
       if (activeOrphans[idx]) {
         consumed.add(idx);
