@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/models/level.dart';
 import '../../data/models/arrow.dart';
@@ -22,6 +21,19 @@ class GridComponent extends PositionComponent {
   final Map<String, ArrowComponent> _arrowComponents = {};
   late Set<String> _mask;
   late LevelType _levelType;
+
+  ui.Picture? _cachedDotGridPicture;
+
+  void _invalidateDotGrid() {
+    _cachedDotGridPicture?.dispose();
+    _cachedDotGridPicture = null;
+  }
+
+  @override
+  void onRemove() {
+    _invalidateDotGrid();
+    super.onRemove();
+  }
 
   GridComponent({
     required this.gameState,
@@ -69,6 +81,7 @@ class GridComponent extends PositionComponent {
   void rebuild() {
     _refreshMask();
     _buildArrows();
+    _invalidateDotGrid();
   }
 
   void resize(double newGridPixelSize) {
@@ -77,20 +90,17 @@ class GridComponent extends PositionComponent {
     for (final child in children) {
       if (child is ArrowComponent) child.updateCellSize(cellSize);
     }
+    _invalidateDotGrid();
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  RENDER
-  // ═══════════════════════════════════════════════════════════════════════════
+  void _recacheDotGrid() {
+    _cachedDotGridPicture?.dispose();
 
-  @override
-  void render(Canvas canvas) {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
     final gridSize = gameState.level.gridSize;
     final cs = cellSize;
-
-    // Glow and outer box removed as requested for a cleaner/smoother look
-
-    // ── Dot layer (drawn behind all arrows) ──────────────────────────────
     final baseDot = (cs * 0.045).clamp(0.6, 1.6);
     final inR = baseDot;
     final outR = inR * 0.55;
@@ -112,6 +122,22 @@ class GridComponent extends PositionComponent {
         );
       }
     }
+
+    _cachedDotGridPicture = recorder.endRecording();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  RENDER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @override
+  void render(Canvas canvas) {
+    final cs = cellSize;
+
+    if (_cachedDotGridPicture == null) {
+      _recacheDotGrid();
+    }
+    canvas.drawPicture(_cachedDotGridPicture!);
 
     // ── Orphan deflector dots (drawn on top of background dots) ────────────
     final orphanDots = gameState.orphanDots;
@@ -214,64 +240,21 @@ class GridComponent extends PositionComponent {
     }
   }
 
-  void _drawPerimeter(Canvas canvas, int gridSize, double cs) {
-    final p = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.20)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = (cs * 0.045).clamp(0.8, 2.0);
 
-    for (final key in _mask) {
-      final parts = key.split(',');
-      final r = int.parse(parts[0]);
-      final c = int.parse(parts[1]);
-      final x = c * cs, y = r * cs;
-
-      // Draw edge on each side that faces outside the mask
-      final edges = [
-        [-1, 0, x, y, x + cs, y],
-        [1, 0, x, y + cs, x + cs, y + cs],
-        [0, -1, x, y, x, y + cs],
-        [0, 1, x + cs, y, x + cs, y + cs],
-      ];
-      for (final e in edges) {
-        if (!_mask.contains('${r + e[0]},${c + e[1]}')) {
-          canvas.drawLine(
-            Offset(e[2].toDouble(), e[3].toDouble()),
-            Offset(e[4].toDouble(), e[5].toDouble()),
-            p,
-          );
-        }
-      }
-    }
-  }
-
-  void _glow(
-      Canvas canvas, double size, Color color, double blur, double width) {
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-          Rect.fromLTWH(-4, -4, size + 8, size + 8), const Radius.circular(16)),
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = width
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur),
-    );
-  }
-
-  static const Color _bossColor = Color(0xFFFF7A00);
-  static const Color _godColor = Color(0xFFAA55FF);
 
   // ── Update ────────────────────────────────────────────────────────────────
 
   @override
   void update(double dt) {
     super.update(dt);
-    final current = gameState.arrows.map((a) => a.id).toSet();
-    final gone =
-        _arrowComponents.keys.where((id) => !current.contains(id)).toList();
-    for (final id in gone) {
-      _arrowComponents[id]?.removeFromParent();
-      _arrowComponents.remove(id);
+    if (_arrowComponents.length != gameState.arrows.length) {
+      final current = gameState.arrows.map((a) => a.id).toSet();
+      final gone =
+          _arrowComponents.keys.where((id) => !current.contains(id)).toList();
+      for (final id in gone) {
+        _arrowComponents[id]?.removeFromParent();
+        _arrowComponents.remove(id);
+      }
     }
   }
 }
