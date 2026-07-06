@@ -28,6 +28,9 @@ class ProgressRepository extends ChangeNotifier {
   bool _musicEnabled = true;
   bool _vibrationEnabled = true;
 
+  // Dev Mode
+  bool _isDevMode = false;
+
   // ── Getters ──────────────────────────────────────────────────────────────────
   int get lives => _lives;
   int get maxLives => AppConstants.maxLives;
@@ -43,14 +46,27 @@ class ProgressRepository extends ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get musicEnabled => _musicEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
+  bool get isDevMode => _isDevMode;
 
   int getStarsForLevel(int level) => _levelResults[level]?.stars ?? 0;
-  bool isLevelUnlocked(int level) => level <= _highestUnlockedLevel;
+
+  bool isLevelUnlocked(int level) {
+    if (_isDevMode) return true;
+    return level <= _highestUnlockedLevel;
+  }
+
   bool isLevelCompleted(int level) => _levelResults.containsKey(level);
+
+  void toggleDevMode() {
+    _isDevMode = !_isDevMode;
+    _prefs.setBool('isDevMode', _isDevMode);
+    notifyListeners();
+  }
 
   ProgressRepository(this._prefs) {
     _load();
   }
+
 
   // ── Load / Save ──────────────────────────────────────────────────────────────
 
@@ -65,6 +81,8 @@ class ProgressRepository extends ChangeNotifier {
     _soundEnabled = _prefs.getBool('soundEnabled') ?? true;
     _musicEnabled = _prefs.getBool('musicEnabled') ?? true;
     _vibrationEnabled = _prefs.getBool('vibrationEnabled') ?? true;
+    _isDevMode = _prefs.getBool('isDevMode') ?? false;
+
 
     // Synchronize to AudioManager
     AudioManager.instance.setSoundEnabled(_soundEnabled);
@@ -189,7 +207,7 @@ class ProgressRepository extends ChangeNotifier {
       _levelResults[result.levelNumber] = result;
     }
     _totalScore += result.score;
-    _coins += (result.stars * 10);
+    _coins += result.score;
     _currentLevel = result.levelNumber + 1;
     if (_currentLevel > _highestUnlockedLevel) {
       _highestUnlockedLevel = _currentLevel;
