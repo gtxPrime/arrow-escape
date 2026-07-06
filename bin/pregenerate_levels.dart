@@ -1,32 +1,60 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:arrow_puzzle/data/level_generator/level_generator.dart';
+import '../lib/data/level_generator/level_generator.dart';
+import '../lib/data/level_binary_codec.dart';
+import '../lib/data/models/level.dart';
 
 void main() {
-  test('Pre-generate all 500 game levels and save to JSON', () {
-    print('Starting pre-generation of all 500 levels...');
-    final sw = Stopwatch()..start();
-    final Map<String, dynamic> levelsJson = {};
+  print('──────────────────────────────────────────────');
+  print(' Arrow Puzzle — Standalone Level Pre-generator');
+  print('──────────────────────────────────────────────');
 
-    for (int i = 1; i <= 500; i++) {
-      final levelSw = Stopwatch()..start();
-      final level = LevelGenerator.generateLevel(i);
-      levelSw.stop();
-      
-      levelsJson['$i'] = level.toJson();
-      
-      if (i % 25 == 0 || levelSw.elapsedMilliseconds > 200) {
-        print('Generated level $i / 500 in ${levelSw.elapsedMilliseconds}ms...');
-      }
+  const totalLevels = 500;
+  final levels = <LevelModel>[];
+  final sw = Stopwatch()..start();
+
+  for (int i = 1; i <= totalLevels; i++) {
+    final levelSw = Stopwatch()..start();
+    final level = LevelGenerator.generateLevel(i);
+    levelSw.stop();
+
+    levels.add(level);
+
+    final isBossOrGod = level.patternName.startsWith('Boss') ||
+        level.patternName.startsWith('God');
+    if (isBossOrGod || i % 25 == 0 || i == totalLevels) {
+      final ms = levelSw.elapsedMilliseconds;
+      final timeStr =
+          ms > 1000 ? '${(ms / 1000).toStringAsFixed(1)}s' : '${ms}ms';
+      print(
+          'Level ${'$i'.padLeft(3)} / $totalLevels  '
+          '[${level.patternName.padRight(12)}]  '
+          '${level.arrows.length.toString().padLeft(3)} arrows  '
+          '${level.gridSize}×${level.gridSize}  '
+          '$timeStr');
     }
+  }
 
-    sw.stop();
-    print('Generation finished in ${sw.elapsed.inSeconds} seconds.');
+  sw.stop();
+  print('');
+  print('Generation complete: ${sw.elapsed.inSeconds}s for $totalLevels levels');
 
-    print('Saving to assets/levels.json...');
-    final File file = File('assets/levels.json');
-    file.writeAsStringSync(jsonEncode(levelsJson));
-    print('Successfully saved ${levelsJson.length} levels to assets/levels.json.');
-  });
+  // Encode to binary
+  print('Encoding to binary...');
+  final encodeSw = Stopwatch()..start();
+  final bytes = encodeLevels(levels);
+  encodeSw.stop();
+
+  final outPath = 'assets/levels.bin';
+  // Ensure assets directory exists
+  final dir = Directory('assets');
+  if (!dir.existsSync()) {
+    dir.createSync();
+  }
+  
+  File(outPath).writeAsBytesSync(bytes);
+
+  final kbSize = (bytes.length / 1024).toStringAsFixed(1);
+  print('Written: $outPath (${kbSize} KB, ${bytes.length} bytes)');
+  print('Encoding time: ${encodeSw.elapsedMilliseconds}ms');
+  print('Done! ✓');
 }

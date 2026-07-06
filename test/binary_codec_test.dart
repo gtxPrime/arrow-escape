@@ -1,8 +1,8 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:arrow_puzzle/data/level_generator/level_generator.dart';
-import 'package:arrow_puzzle/data/level_binary_codec.dart';
+import 'package:arrow_escape/data/level_generator/level_generator.dart';
+import 'package:arrow_escape/data/level_binary_codec.dart';
 
 /// Round-trip test: generate levels, encode to binary, decode, verify correctness.
 ///

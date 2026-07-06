@@ -1,0 +1,46 @@
+[04:38:33] === Verify Chunk 1-100 ===
+[04:38:33] 100 to verify, 0 already cached & passing - skipping those
+[04:38:33]   OK   Level 1 [142ms] 10x10
+[04:38:33]   OK   Level 2 [32ms] 10x10
+[04:38:34]   OK   Level 3 [29ms] 10x10
+[04:38:34]   OK   Level 4 [267ms] 15x15
+[04:38:35]   OK   Level 5 [606ms] 16x16
+[04:38:35]   OK   Level 6 [163ms] 16x16
+[04:38:36]   OK   Level 7 [333ms] 27x27
+[04:38:36]   OK   Level 8 [163ms] 17x17
+[04:38:37]   OK   Level 9 [772ms] 18x18
+[04:38:37]   OK   Level 10 [635ms] 27x27
+[04:38:40]   OK   Level 14 [291ms] 28x28
+[04:38:42]   OK   Level 17 [1153ms] 28x28
+[04:38:43]   OK   Level 20 [475ms] 25x25
+[04:38:44]   OK   Level 21 [302ms] 28x28
+[04:38:46]   OK   Level 24 [327ms] 28x28
+[04:38:48]   OK   Level 28 [522ms] 29x29
+[04:38:49]   OK   Level 30 [401ms] 25x25
+[04:38:51]   OK   Level 31 [1313ms] 29x29
+[04:38:54]   OK   Level 35 [771ms] 30x30
+[04:38:56]   OK   Level 38 [355ms] 30x30
+[04:38:57]   OK   Level 40 [583ms] 25x25
+[04:38:58]   OK   Level 42 [180ms] 30x30
+[04:39:00]   OK   Level 45 [670ms] 30x30
+[04:39:02]   OK   Level 49 [509ms] 31x31
+[04:39:03]   OK   Level 50 [483ms] 26x26
+[04:39:05]   OK   Level 52 [919ms] 31x31
+[04:39:08]   OK   Level 56 [573ms] 32x32
+[04:39:10]   OK   Level 59 [1131ms] 32x32
+[04:39:12]   OK   Level 60 [1685ms] 26x26
+[04:39:14]   OK   Level 63 [598ms] 32x32
+[04:39:21]   OK   Level 66 [3147ms] 32x32
+[04:39:24]   OK   Level 70 [642ms] 33x33
+[04:39:26]   OK   Level 73 [673ms] 33x33
+[04:39:29]   OK   Level 77 [795ms] 34x34
+[04:39:33]   OK   Level 80 [1417ms] 34x34
+[04:39:38]   OK   Level 84 [959ms] 35x35
+[04:39:41]   OK   Level 87 [873ms] 35x35
+[04:39:44]   OK   Level 90 [545ms] 26x26
+[04:39:45]   OK   Level 91 [1287ms] 35x35
+[04:39:48]   OK   Level 94 [1401ms] 35x35
+[04:39:55]   OK   Level 98 [496ms] 36x36
+[04:39:56]   OK   Level 100 [642ms] 27x27
+[04:39:56] 
+[04:39:56] === Chunk 1-100 done: 100 pass, 0 fail [83s] ===

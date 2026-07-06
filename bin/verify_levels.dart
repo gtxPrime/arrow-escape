@@ -1,13 +1,13 @@
-import 'package:arrow_puzzle/data/level_generator/level_generator.dart';
-import 'package:arrow_puzzle/data/level_generator/solver.dart';
-import 'package:arrow_puzzle/data/models/arrow.dart';
-import 'package:arrow_puzzle/data/models/level.dart';
-import 'package:arrow_puzzle/core/constants.dart';
+import 'package:arrow_escape/data/level_generator/level_generator.dart';
+import 'package:arrow_escape/data/level_generator/solver.dart';
+import 'package:arrow_escape/data/models/arrow.dart';
+import 'package:arrow_escape/data/models/level.dart';
+import 'package:arrow_escape/core/constants.dart';
 
 /// Comprehensive level verification script.
 /// Generates all 500 levels and checks:
 ///   1. Solver can find a solution (grids ≤ 20)
-///   2. Arrow length distribution matches 65/35 split (±8% tolerance)
+///   2. Arrow length distribution matches 3-tier split (33/33/34% ±10% tolerance)
 ///   3. Orphan dot count is minimal
 ///   4. No orphan dot creates infinite deflection loops
 ///   5. No colorLock pair blocks its own partner
@@ -24,10 +24,11 @@ void main() {
   final failures = <String>[];
 
   // Distribution tracking
-  int totalLongArrows = 0;     // length >= 6
-  int totalMediumArrows = 0;   // length 3–5
-  int totalShortArrows = 0;    // length 2
-  int totalSingleArrows = 0;   // length 1
+  int totalVeryLongArrows = 0;  // length >= veryLongMin (grid-size-adaptive, ~55% of gridSize)
+  int totalLongArrows = 0;      // length >= longMin  (grid-size-adaptive, ~40% of gridSize)
+  int totalMediumArrows = 0;    // length 3–5
+  int totalShortArrows = 0;     // length 2
+  int totalSingleArrows = 0;    // length 1
 
   int totalOrphans = 0;
   int totalColoredOrphans = 0;
@@ -57,10 +58,14 @@ void main() {
       }
     }
 
-    // ── Check 2: Arrow length distribution ──
+    // ── Check 2: Arrow length distribution (grid-size-adaptive 3-tier) ──
+    final gs = level.gridSize;
+    final vlMin = 5 + (gs ~/ 6);
+    final lMin  = 3 + (gs ~/ 10);
     for (final arrow in level.arrows) {
       final len = arrow.path.length;
-      if (len >= 6) totalLongArrows++;
+      if (len >= vlMin) totalVeryLongArrows++;
+      else if (len >= lMin) totalLongArrows++;
       else if (len >= 3) totalMediumArrows++;
       else if (len == 2) totalShortArrows++;
       else totalSingleArrows++;
@@ -191,20 +196,21 @@ void main() {
   print('  Time: ${sw.elapsedMilliseconds}ms (${(sw.elapsedMilliseconds / totalLevels).toStringAsFixed(1)}ms/level)');
 
   // Arrow distribution
-  final totalLongMedium = totalLongArrows + totalMediumArrows;
-  final longPct = totalLongMedium > 0
-      ? (totalLongArrows / totalLongMedium * 100).toStringAsFixed(1)
-      : '0.0';
-  final medPct = totalLongMedium > 0
-      ? (totalMediumArrows / totalLongMedium * 100).toStringAsFixed(1)
-      : '0.0';
+  final totalTiered = totalVeryLongArrows + totalLongArrows + totalMediumArrows;
+  final vlPct = totalTiered > 0
+      ? (totalVeryLongArrows / totalTiered * 100).toStringAsFixed(1) : '0.0';
+  final lPct = totalTiered > 0
+      ? (totalLongArrows / totalTiered * 100).toStringAsFixed(1) : '0.0';
+  final mPct = totalTiered > 0
+      ? (totalMediumArrows / totalTiered * 100).toStringAsFixed(1) : '0.0';
 
-  print('\n  Arrow Length Distribution (among ≥3-dot arrows):');
-  print('    Long (6+):   $totalLongArrows ($longPct%)  [target: 35%]');
-  print('    Medium (3-5): $totalMediumArrows ($medPct%)  [target: 65%]');
-  print('    Short (2):   $totalShortArrows (gap-fillers)');
+  print('\n  Arrow Length Distribution (3-tier, grid-size-adaptive):');
+  print('    Very Long (vlMin+):  $totalVeryLongArrows ($vlPct%)  [target: 33%]');
+  print('    Long (lMin..vlMin-1): $totalLongArrows ($lPct%)  [target: 33%]');
+  print('    Medium (3..lMin-1):   $totalMediumArrows ($mPct%)  [target: 34%]');
+  print('    Short (2):           $totalShortArrows (gap-fillers)');
   if (totalSingleArrows > 0) {
-    print('    Single (1):  $totalSingleArrows (⚠ should be 0)');
+    print('    Single (1):          $totalSingleArrows (⚠ should be 0)');
   }
 
   print('\n  Orphan Dots:');

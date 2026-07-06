@@ -1,9 +1,9 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:arrow_puzzle/data/level_generator/level_generator.dart';
-import 'package:arrow_puzzle/data/level_binary_codec.dart';
-import 'package:arrow_puzzle/data/models/level.dart';
+import 'package:arrow_escape/data/level_generator/level_generator.dart';
+import 'package:arrow_escape/data/level_binary_codec.dart';
+import 'package:arrow_escape/data/models/level.dart';
 
 /// Generates all 500 levels and writes them to assets/levels.bin
 /// in a compact binary format.

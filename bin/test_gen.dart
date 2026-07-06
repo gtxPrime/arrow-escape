@@ -1,6 +1,6 @@
-import 'package:arrow_puzzle/data/level_generator/level_generator.dart';
-import 'package:arrow_puzzle/data/level_generator/solver.dart';
-import 'package:arrow_puzzle/core/constants.dart';
+import 'package:arrow_escape/data/level_generator/level_generator.dart';
+import 'package:arrow_escape/data/level_generator/solver.dart';
+import 'package:arrow_escape/core/constants.dart';
 
 void main() {
   print("Starting generator checks...");

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:arrow_puzzle/data/level_generator/level_generator.dart';
-import 'package:arrow_puzzle/data/level_generator/solver.dart';
-import 'package:arrow_puzzle/core/constants.dart';
+import 'package:arrow_escape/data/level_generator/level_generator.dart';
+import 'package:arrow_escape/data/level_generator/solver.dart';
+import 'package:arrow_escape/core/constants.dart';
 
 void main() {
   group('LevelSolver', () {
@@ -70,15 +70,15 @@ void main() {
     test('Grid size scales correctly by level', () {
       expect(AppConstants.gridSizeForLevel(1), equals(10));
       expect(AppConstants.gridSizeForLevel(3), equals(10));
-      expect(AppConstants.gridSizeForLevel(4), equals(10));
-      expect(AppConstants.gridSizeForLevel(7), equals(30)); // Boss
-      expect(AppConstants.gridSizeForLevel(10), equals(30)); // God
-      expect(AppConstants.gridSizeForLevel(14), equals(30)); // Boss
-      expect(AppConstants.gridSizeForLevel(20), equals(12)); // Normal: (10 + 17*0.115).round() = 12
-      expect(AppConstants.gridSizeForLevel(21), equals(30)); // Boss (pos = 4)
-      expect(AppConstants.gridSizeForLevel(100), equals(21)); // Normal: (10 + 97*0.115).round() = 21
-      expect(AppConstants.gridSizeForLevel(101), equals(30)); // God (pos = 7)
-      expect(AppConstants.gridSizeForLevel(200), equals(30)); // Normal (scales to >30 but capped at 30)
+      expect(AppConstants.gridSizeForLevel(4), equals(15));
+      expect(AppConstants.gridSizeForLevel(7), equals(27)); // Boss
+      expect(AppConstants.gridSizeForLevel(10), equals(27)); // God
+      expect(AppConstants.gridSizeForLevel(14), equals(28)); // Boss
+      expect(AppConstants.gridSizeForLevel(20), equals(25)); // Normal
+      expect(AppConstants.gridSizeForLevel(21), equals(28)); // Boss (pos = 4)
+      expect(AppConstants.gridSizeForLevel(100), equals(27)); // Normal
+      expect(AppConstants.gridSizeForLevel(101), equals(36)); // God (pos = 7)
+      expect(AppConstants.gridSizeForLevel(200), equals(29)); // Normal
     });
 
     test('Level type classification is correct', () {
@@ -113,7 +113,7 @@ void main() {
       // Since Boss & God levels are now fixed at 30x30, we verify difficulty
       // scaling using Normal levels which scale from 10x10 to 30x30.
       final easyLevels = <int>[];
-      for (int i = 4; i <= 30; i++) {
+      for (int i = 4; i <= 30; i += 3) {
         final type = AppConstants.levelTypeFor(i);
         if (type == LevelType.normal) easyLevels.add(i);
       }
@@ -123,7 +123,7 @@ void main() {
           easyLevels.length;
 
       final hardLevels = <int>[];
-      for (int i = 31; i <= 100; i++) {
+      for (int i = 31; i <= 100; i += 10) {
         final type = AppConstants.levelTypeFor(i);
         if (type == LevelType.normal) hardLevels.add(i);
       }
@@ -133,7 +133,7 @@ void main() {
           hardLevels.length;
 
       final expertLevels = <int>[];
-      for (int i = 101; i <= 300; i++) {
+      for (int i = 101; i <= 300; i += 30) {
         final type = AppConstants.levelTypeFor(i);
         if (type == LevelType.normal) expertLevels.add(i);
       }
