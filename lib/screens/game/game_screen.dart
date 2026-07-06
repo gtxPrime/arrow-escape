@@ -268,7 +268,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final adManager = context.read<AdManager>();
     adManager.showRewarded(
       onRewarded: () {
-        context.read<ProgressRepository>().addCoins((AppConstants.baseScore + (_lives * AppConstants.bonusPerRemainingLife)) ~/ 10);
+        context.read<ProgressRepository>().addCoins(AppConstants.baseScore + (_lives * AppConstants.bonusPerRemainingLife));
         _handleNextLevel();
       },
       onDismissed: () => Navigator.pop(context),
@@ -289,14 +289,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             onMenu: _handleMenu,
             onDoubleCoins: _handleDoubleCoins,
           ),
-          // Top Center Explosive Confetti
+          // Top Center Explosive Confetti (Subtle)
           Align(
             alignment: Alignment.topCenter,
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
-              emissionFrequency: 0.2,
-              numberOfParticles: 20,
+              emissionFrequency: 0.05,
+              numberOfParticles: 5,
               maxBlastForce: 60,
               minBlastForce: 30,
               gravity: 0.2,
@@ -314,14 +314,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               ],
             ),
           ),
-          // Bottom Left Confetti
+          // Bottom Left Confetti (Subtle)
           Align(
             alignment: Alignment.bottomLeft,
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirection: -pi / 4,
-              emissionFrequency: 0.2,
-              numberOfParticles: 20,
+              emissionFrequency: 0.01,
+              numberOfParticles: 1,
               maxBlastForce: 75,
               minBlastForce: 35,
               gravity: 0.15,
@@ -339,14 +339,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               ],
             ),
           ),
-          // Bottom Right Confetti
+          // Bottom Right Confetti (Subtle)
           Align(
             alignment: Alignment.bottomRight,
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirection: -3 * pi / 4,
-              emissionFrequency: 0.2,
-              numberOfParticles: 20,
+              emissionFrequency: 0.01,
+              numberOfParticles: 1,
               maxBlastForce: 75,
               minBlastForce: 35,
               gravity: 0.15,
@@ -616,7 +616,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 height: 50,
                 child: const UnifiedBannerAd(
                   admobUnitId: AppConstants.admobBannerUnitId,
-                  applovinUnitId: AppConstants.applovinBannerAdId,
                   unityPlacementId: AppConstants.unityBannerAdId,
                 ),
               ),
@@ -1126,6 +1125,8 @@ class _LevelCompleteDialog extends StatelessWidget {
     required this.onDoubleCoins,
   });
 
+  bool get _showAds => false;
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -1221,15 +1222,17 @@ class _LevelCompleteDialog extends StatelessWidget {
             const SizedBox(height: 10),
 
             // Double coins (rewarded ad)
-            _DialogButton(
-              label: '🎬 Double Coins',
-              icon: Icons.add_circle_outline,
-              gradient: AppColors.secondaryGradient,
-              textColor: AppColors.textPrimary,
-              iconColor: AppColors.textPrimary,
-              onTap: onDoubleCoins,
-            ),
-            const SizedBox(height: 10),
+            if (_showAds) ...[
+              _DialogButton(
+                label: 'Double Coins',
+                icon: LucideIcons.clapperboard,
+                gradient: AppColors.secondaryGradient,
+                textColor: AppColors.textPrimary,
+                iconColor: AppColors.textPrimary,
+                onTap: onDoubleCoins,
+              ),
+              const SizedBox(height: 10),
+            ],
 
             TextButton(
               onPressed: () {
@@ -1265,6 +1268,8 @@ class _GameOverDialog extends StatelessWidget {
     required this.onMenu,
   });
 
+  bool get _showAds => false;
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -1294,23 +1299,24 @@ class _GameOverDialog extends StatelessWidget {
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Text(
-                isTimeout
-                    ? 'Watch an ad to get +$continueTime seconds and continue'
-                    : 'Watch an ad to get 1 more life and continue',
-                style: GoogleFonts.nunito(
-                    fontSize: 13, color: AppColors.textSecondary)),
-            const SizedBox(height: 28),
-
+            const SizedBox(height: 20),
             // Continue with ad
-            _DialogButton(
-              label: isTimeout ? 'Get +$continueTime Seconds & Continue' : 'Get 1 More Life & Continue',
-              icon: LucideIcons.clapperboard,
-              gradient: AppColors.successGradient,
-              onTap: onContinue,
-            ),
-            const SizedBox(height: 10),
+            if (_showAds) ...[
+              Text(
+                  isTimeout
+                      ? 'Watch an ad to get +$continueTime seconds and continue'
+                      : 'Watch an ad to get 1 more life and continue',
+                  style: GoogleFonts.nunito(
+                      fontSize: 13, color: AppColors.textSecondary)),
+              const SizedBox(height: 28),
+              _DialogButton(
+                label: isTimeout ? 'Get +$continueTime Seconds & Continue' : 'Get 1 More Life & Continue',
+                icon: LucideIcons.clapperboard,
+                gradient: AppColors.successGradient,
+                onTap: onContinue,
+              ),
+              const SizedBox(height: 10),
+            ],
 
             // Restart (all lives back)
             _DialogButton(

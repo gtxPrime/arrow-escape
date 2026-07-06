@@ -1,12 +1,11 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:unity_ads_plugin/unity_ads_plugin.dart';
-import 'package:applovin_max/applovin_max.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../core/constants.dart';
 
 /// Central ad orchestrator — manages banner, interstitial, and rewarded ads.
-/// Uses a 3-level waterfall fallback strategy: AdMob (Priority 1) -> AppLovin (Priority 2) -> Unity Ads (Priority 3).
+/// Uses a waterfall fallback strategy: AdMob (Priority 1) -> Unity Ads (Priority 2).
 /// Each ad network can be toggled on/off dynamically in AppConstants.
 class AdManager {
   // ── AdMob state ──────────────────────────────────────────────────────────────
@@ -16,15 +15,6 @@ class AdManager {
   RewardedAd? _admobRewarded;
   bool _isAdmobRewardedLoaded = false;
   int _levelsSinceLastInterstitial = 0;
-
-  // ── AppLovin state ───────────────────────────────────────────────────────────
-  bool _isApplovinInitialized = false;
-  bool _isApplovinInterstitialLoaded = false;
-  bool _isApplovinRewardedLoaded = false;
-
-  Completer<void>? _applovinInterstitialCompleter;
-  void Function()? _applovinRewardedSuccessCallback;
-  void Function()? _applovinRewardedDismissCallback;
 
   // ── Unity Ads state ───────────────────────────────────────────────────────────
   bool _isUnityInitialized = false;
@@ -39,21 +29,7 @@ class AdManager {
       _loadAdmobRewarded();
     }
 
-    // 2. Initialize and load AppLovin MAX if enabled
-    if (AppConstants.enableAppLovin) {
-      AppLovinMAX.initialize(AppConstants.applovinSdkKey).then((sdkConfiguration) {
-        if (sdkConfiguration != null) {
-          _isApplovinInitialized = true;
-          _attachApplovinListeners();
-          _loadApplovinInterstitial();
-          _loadApplovinRewarded();
-        }
-      }).catchError((e) {
-        debugPrint('AppLovin MAX Initialization failed: $e');
-      });
-    }
-
-    // 3. Initialize and load Unity Ads if enabled
+    // 2. Initialize and load Unity Ads if enabled
     if (AppConstants.enableUnityAds) {
       UnityAds.init(
         gameId: AppConstants.unityGameId,
@@ -113,91 +89,7 @@ class AdManager {
     );
   }
 
-  // ── AppLovin Listeners ────────────────────────────────────────────────────────
-  void _attachApplovinListeners() {
-    if (!AppConstants.enableAppLovin) return;
-    // Interstitial
-    AppLovinMAX.setInterstitialListener(InterstitialListener(
-      onAdLoadedCallback: (ad) {
-        _isApplovinInterstitialLoaded = true;
-      },
-      onAdLoadFailedCallback: (adUnitId, error) {
-        _isApplovinInterstitialLoaded = false;
-        Future.delayed(const Duration(seconds: 15), () => _loadApplovinInterstitial());
-      },
-      onAdDisplayedCallback: (ad) {
-        _isApplovinInterstitialLoaded = false;
-      },
-      onAdDisplayFailedCallback: (ad, error) {
-        _isApplovinInterstitialLoaded = false;
-        _loadApplovinInterstitial();
-        if (_applovinInterstitialCompleter != null && !_applovinInterstitialCompleter!.isCompleted) {
-          _showUnityInterstitial(_applovinInterstitialCompleter!);
-          _applovinInterstitialCompleter = null;
-        }
-      },
-      onAdClickedCallback: (ad) {},
-      onAdHiddenCallback: (ad) {
-        _isApplovinInterstitialLoaded = false;
-        _loadApplovinInterstitial();
-        if (_applovinInterstitialCompleter != null && !_applovinInterstitialCompleter!.isCompleted) {
-          _applovinInterstitialCompleter!.complete();
-          _applovinInterstitialCompleter = null;
-        }
-      },
-      onAdRevenuePaidCallback: (ad) {},
-    ));
 
-    // Rewarded
-    AppLovinMAX.setRewardedAdListener(RewardedAdListener(
-      onAdLoadedCallback: (ad) {
-        _isApplovinRewardedLoaded = true;
-      },
-      onAdLoadFailedCallback: (adUnitId, error) {
-        _isApplovinRewardedLoaded = false;
-        Future.delayed(const Duration(seconds: 15), () => _loadApplovinRewarded());
-      },
-      onAdDisplayedCallback: (ad) {
-        _isApplovinRewardedLoaded = false;
-      },
-      onAdDisplayFailedCallback: (ad, error) {
-        _isApplovinRewardedLoaded = false;
-        _loadApplovinRewarded();
-        if (_applovinRewardedSuccessCallback != null) {
-          _showUnityRewarded(
-            onRewarded: _applovinRewardedSuccessCallback!,
-            onDismissed: _applovinRewardedDismissCallback,
-          );
-          _applovinRewardedSuccessCallback = null;
-          _applovinRewardedDismissCallback = null;
-        }
-      },
-      onAdClickedCallback: (ad) {},
-      onAdHiddenCallback: (ad) {
-        _isApplovinRewardedLoaded = false;
-        _loadApplovinRewarded();
-        _applovinRewardedDismissCallback?.call();
-        _applovinRewardedSuccessCallback = null;
-        _applovinRewardedDismissCallback = null;
-      },
-      onAdReceivedRewardCallback: (ad, reward) {
-        _applovinRewardedSuccessCallback?.call();
-        _applovinRewardedSuccessCallback = null;
-      },
-      onAdRevenuePaidCallback: (ad) {},
-    ));
-  }
-
-  // ── AppLovin Loading ──────────────────────────────────────────────────────────
-  void _loadApplovinInterstitial() {
-    if (!AppConstants.enableAppLovin || !_isApplovinInitialized) return;
-    AppLovinMAX.loadInterstitial(AppConstants.applovinInterstitialAdId);
-  }
-
-  void _loadApplovinRewarded() {
-    if (!AppConstants.enableAppLovin || !_isApplovinInitialized) return;
-    AppLovinMAX.loadRewardedAd(AppConstants.applovinRewardedAdId);
-  }
 
   // ── Unity Ads Loading ──────────────────────────────────────────────────────────
   void _loadUnityInterstitial() {
@@ -259,30 +151,17 @@ class AdManager {
           ad.dispose();
           _isAdmobInterstitialLoaded = false;
           _loadAdmobInterstitial();
-          // Fallback to AppLovin (Priority 2)
-          _showApplovinInterstitial(completer);
+          // Fallback to Unity Ads (Priority 2)
+          _showUnityInterstitial(completer);
         },
       );
       await _admobInterstitial!.show();
     } else {
-      // Fallback to AppLovin (Priority 2)
-      _showApplovinInterstitial(completer);
+      // Fallback to Unity Ads (Priority 2)
+      _showUnityInterstitial(completer);
     }
 
     return completer.future;
-  }
-
-  void _showApplovinInterstitial(Completer<void> completer) {
-    if (AppConstants.enableAppLovin &&
-        _isApplovinInitialized &&
-        _isApplovinInterstitialLoaded) {
-      _levelsSinceLastInterstitial = 0;
-      _applovinInterstitialCompleter = completer;
-      AppLovinMAX.showInterstitial(AppConstants.applovinInterstitialAdId);
-      return;
-    }
-    // Fallback to Unity Ads (Priority 3)
-    _showUnityInterstitial(completer);
   }
 
   void _showUnityInterstitial(Completer<void> completer) {
@@ -314,7 +193,6 @@ class AdManager {
   // ── Rewarded Logic (Waterfall) ────────────────────────────────────────────────
   bool get isRewardedAvailable {
     return (AppConstants.enableAdMob && _isAdmobRewardedLoaded) ||
-        (AppConstants.enableAppLovin && _isApplovinRewardedLoaded) ||
         (AppConstants.enableUnityAds && _isUnityRewardedLoaded);
   }
 
@@ -335,33 +213,17 @@ class AdManager {
           ad.dispose();
           _isAdmobRewardedLoaded = false;
           _loadAdmobRewarded();
-          // Fallback to AppLovin (Priority 2)
-          _showApplovinRewarded(onRewarded: onRewarded, onDismissed: onDismissed);
+          // Fallback to Unity Ads (Priority 2)
+          _showUnityRewarded(onRewarded: onRewarded, onDismissed: onDismissed);
         },
       );
       await _admobRewarded!.show(
         onUserEarnedReward: (_, reward) => onRewarded(),
       );
     } else {
-      // Fallback to AppLovin (Priority 2)
-      _showApplovinRewarded(onRewarded: onRewarded, onDismissed: onDismissed);
+      // Fallback to Unity Ads (Priority 2)
+      _showUnityRewarded(onRewarded: onRewarded, onDismissed: onDismissed);
     }
-  }
-
-  void _showApplovinRewarded({
-    required void Function() onRewarded,
-    void Function()? onDismissed,
-  }) {
-    if (AppConstants.enableAppLovin &&
-        _isApplovinInitialized &&
-        _isApplovinRewardedLoaded) {
-      _applovinRewardedSuccessCallback = onRewarded;
-      _applovinRewardedDismissCallback = onDismissed;
-      AppLovinMAX.showRewardedAd(AppConstants.applovinRewardedAdId);
-      return;
-    }
-    // Fallback to Unity Ads (Priority 3)
-    _showUnityRewarded(onRewarded: onRewarded, onDismissed: onDismissed);
   }
 
   void _showUnityRewarded({
