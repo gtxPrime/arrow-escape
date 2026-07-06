@@ -1,7 +1,7 @@
 name: arrow_escape
 description: Arrow Escape - A casual grid puzzle game where you slide arrows out of the grid.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -26,12 +26,12 @@ dependencies:
 
   # UI & Animations
   google_fonts: ^6.2.1
-  lottie: ^3.1.2
+
   confetti: ^0.7.0
   flutter_animate: ^4.5.0
 
   # Audio
-  audioplayers: ^6.1.0
+
 
   # Utils
   collection: ^1.18.0
@@ -39,7 +39,6 @@ dependencies:
   package_info_plus: ^8.1.2
   url_launcher: ^6.3.0
   lucide_icons_flutter: ^3.1.14+2
-  applovin_max: ^4.6.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

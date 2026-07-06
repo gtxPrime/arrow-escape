@@ -1,4 +1,4 @@
-package com.arrow.escape
+package com.arrowx.escape
 
 import io.flutter.embedding.android.FlutterActivity
 
