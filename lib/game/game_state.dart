@@ -41,7 +41,7 @@ class GameState extends ChangeNotifier {
   }
 
   // ── Getters ───────────────────────────────────────────────────────────────────
-  List<ArrowModel> get arrows => List.unmodifiable(_arrows);
+  List<ArrowModel> get arrows => _arrows;
   int get lives => _lives;
   int get movesUsed => _movesUsed;
   int get livesLost => _livesLost;
@@ -50,7 +50,19 @@ class GameState extends ChangeNotifier {
   int get arrowsRemaining => _arrows.length;
   LevelModel get level => _currentLevel;
   /// Live orphan dots remaining (consumed dots are absent from this map).
-  Map<String, OrphanDotType> get orphanDots => Map.unmodifiable(_orphanDots);
+  Map<String, OrphanDotType> get orphanDots => _orphanDots;
+
+  /// Called by the ArrowComponent when its exit animation completes.
+  void handleArrowExitCompleted(String arrowId) {
+    _arrows.removeWhere((a) => a.id == arrowId);
+    _consumedDotsByArrow.remove(arrowId);
+
+    if (_arrows.isEmpty) {
+      _isComplete = true;
+      onLevelComplete();
+    }
+    notifyListeners();
+  }
 
   List<OrphanDot> getConsumedDotsForArrow(String arrowId) {
     return _consumedDotsByArrow[arrowId] ?? [];
@@ -143,18 +155,6 @@ class GameState extends ChangeNotifier {
     // Play exit sound
     AudioManager.instance.playArrowExit();
 
-    final exitDurationMs = 400 + arrow.path.length * 80;
-    Future.delayed(Duration(milliseconds: exitDurationMs), () {
-      _arrows.removeWhere((a) => a.id == arrowId);
-      _consumedDotsByArrow.remove(arrowId);
-
-      if (_arrows.isEmpty) {
-        _isComplete = true;
-        onLevelComplete();
-      }
-      notifyListeners();
-    });
-
     return TapResult.exited;
   }
 
@@ -228,22 +228,6 @@ class GameState extends ChangeNotifier {
     // Play exit sound
     AudioManager.instance.playArrowExit();
 
-    // Find the max path length between the two to determine total slide duration
-    final maxLen = groupArrows.map((a) => a.path.length).reduce((a, b) => a > b ? a : b);
-    final exitDurationMs = 400 + maxLen * 80;
-
-    Future.delayed(Duration(milliseconds: exitDurationMs), () {
-      for (final arrow in groupArrows) {
-        _arrows.removeWhere((a) => a.id == arrow.id);
-        _consumedDotsByArrow.remove(arrow.id);
-      }
-      if (_arrows.isEmpty) {
-        _isComplete = true;
-        onLevelComplete();
-      }
-      notifyListeners();
-    });
-
     return TapResult.exited;
   }
 
@@ -298,10 +282,6 @@ class GameState extends ChangeNotifier {
     }
     return _ExitInfo(false, consumed);
   }
-
-  /// Convenience bool wrapper used by block-animation code.
-  bool _isHeadBlocked(ArrowModel arrow, [String? ignoreId]) =>
-      _computeExitInfo(arrow, ignoreId).blocked;
 
   // ── Reset ─────────────────────────────────────────────────────────────────────
 
