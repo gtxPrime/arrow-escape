@@ -64,12 +64,15 @@
 * ✦ **Deflector Dots (Orphan Dots):** Isolated cells remaining after generation are converted to deflectors. 
   * Starting levels ($\le 20$) feature neutral (grey) dots that arrows pass straight through.
   * Higher levels introduce red (clockwise/right) and blue (counter-clockwise/left) deflector dots.
+* ✦ **Long Tap Arrow Preview:** Long-pressing any arrow projects a glowing deflection path on hold, mapping out redirect dots and obstacles.
+* ✦ **Dev Mode:** Unlock all levels instantly with a long press on the main menu title (indicated by a golden DEV MODE badge).
 * ✦ **Daily Streaks:** Tracks user gameplay consistency and records daily play sessions.
 * ✦ **Lives System:** Keep track of remaining lives with custom visual meters and animated, synchronized heart icons.
 * ✦ **Timed Challenges:** God levels (after level 100) and Boss levels (after level 200) feature dynamic countdown timers. The duration scales with the difficulty and quantity of arrows. Resuming from a timeout via rewarded ads grants a dynamic extra time buffer matching the quantity of remaining arrows, coupled with an observer-driven auto-pause system for background/foreground transitions.
 
 ### <img src="https://img.shields.io/badge/-Juice-E040FB?style=flat-square&logo=sparkles&logoColor=white" align="center" /> Visual & Sound Effects
 * ✦ **Juicy Animations:** Utilizes `flutter_animate`, Confetti, and custom Lottie integrations for satisfying level-complete feedback.
+* ✦ **Performance Optimized (FPS Fix):** Heavy background layers (e.g. background dot grid) are cached as a static `ui.Picture` to avoid expensive redraw commands on every Frame tick. Reduced confetti emissions prevent frame drops on mid-to-lower range devices.
 * ✦ **Soundtracks & SFX:** Rich audio feedback powered by `flame_audio` and `audioplayers` for sliding, matching, winning, and losing states.
 * ✦ **Premium UI:** Designed with HSL-tailored colors, smooth gradients, and custom Nunito typography.
 
@@ -91,7 +94,7 @@ The game leverages the **Flame Engine** (a modular Flutter game engine library) 
 ### <img src="https://img.shields.io/badge/-Loop-607D8B?style=flat-square&logo=settings&logoColor=white" align="center" /> Game Loop & Engine Flow
 The game loop runs on a dual-phase execution tick:
 1. **Update Phase (`update(double dt)`)**: Evaluates real-time animations (e.g. arrow slide offsets, rotation angles, particle decay times) and updates the logical coordinate grid in `GameState`.
-2. **Render Phase (`render(Canvas canvas)`)**: Draws grid cells, deflector plates, standard arrows, and particle effects directly onto the double-buffered screen canvas.
+2. **Render Phase (`render(Canvas canvas)`)**: Draws grid cells, deflector plates, standard arrows, and particle effects directly onto the double-buffered screen canvas. Under the hood, static components are recached into an isolate `ui.Picture` buffer to keep CPU/GPU draw cycles at a constant 60/120 FPS.
 
 ### <img src="https://img.shields.io/badge/-Pipeline-E91E63?style=flat-square&logo=git-commit&logoColor=white" align="center" /> The Level Generation Pipeline
 Every level is fully generated programmatically and deterministically from a level number seed:
@@ -112,11 +115,11 @@ graph TD
 - **Inward Growth (Phases 1 & 2)**: Starts by finding exit boundary cells and growing arrow paths inward. This guarantees that at least a subset of arrows can exit without obstructions.
 - **Length-2 Packing (Phase 3)**: Sweeps remaining isolated tiles using a center-out shuffled search grid, preventing clustering of small arrows.
 - **Reverse Exit Deflector Routing (Phase 4)**: Unassigned orphan cells are converted to redirect dots. The generator simulates arrow exits in reverse construction order and configures deflection directions that guarantee a safe path to the grid boundaries.
-- **Solver Backtracking DFS Verification**: A custom depth-first search solver parses the generated board. The layout is accepted only if it solves within a dynamic state cap (1000 states for small grids, 2500 states for grids larger than 20x20). Otherwise, it resets the seed and restarts generation.
+- **Solver Backtracking DFS Verification**: A custom depth-first search solver parses the generated board. The layout is accepted only if it solves within a dynamic state cap.
 
 ### <img src="https://img.shields.io/badge/-Level_Data-1565C0?style=flat-square&logo=database&logoColor=white" align="center" /> Level Data Asset (`assets/levels.bin`)
 
-Boss and God levels use large 30×30 grids with up to 200 arrows — generating them on-device causes freezes. All 500 levels are pre-generated on PC and shipped as a single compact binary file (`assets/levels.bin`, **791 KB**).
+Boss and God levels use large 40×40 grids with hundreds of arrows — generating them on-device causes freezes. All 500 levels are pre-generated on PC and shipped as a single compact binary file (`assets/levels.bin`, **887 KB**).
 
 The binary format uses:
 - **Bitmask grid masks** — 113 bytes per 30×30 grid instead of hundreds of coordinate strings
@@ -145,8 +148,8 @@ The generator models the puzzle constraints mathematically to guarantee solvable
 
 #### 1. Dynamic Grid Scaling
 The board dimensions grow dynamically as a function of the level number:
-$$\text{Grid Size } (G) = \text{clamp}\Big(10, \,\, 10 + \big\lfloor (L - 3) \times 0.115 \big\rfloor, \,\, 30\Big)$$
-where $L$ represents the level number.
+* Normal levels ramp from 15x15 (level 4) to 35x35 (level 500).
+* Boss/God levels scale up to 40x40 at high cycles.
 
 #### 2. Deflector Density (Orphan Bounds)
 The target quantity of deflector dots is computed as a percentage of the total active mask area ($M$) and is capped:
@@ -187,7 +190,7 @@ lib/
 └── widgets/                   # Reusable UI controls (LivesBar, ActionButton…)
 
 assets/
-└── levels.bin                 # Pre-generated binary level data (791 KB, 500 levels)
+└── levels.bin                 # Pre-generated binary level data (887 KB, 500 levels)
 ```
 
 ---
@@ -228,13 +231,10 @@ flutter run
 
 ## <a id="-monetization"></a><img src="https://img.shields.io/badge/-Revenue-009688?style=flat-square&logo=dollar-sign&logoColor=white" align="center" /> Monetization & Configuration
 
-The game features an integrated 3-level waterfall fallback ad system: **Google AdMob (Priority 1) -> AppLovin MAX (Priority 2) -> Unity Ads (Priority 3)**.
-
-By default, only **AppLovin MAX** is enabled, and other networks are disabled via developer-friendly feature toggles in `lib/core/constants.dart`.
+The game features an integrated ad system: **Google AdMob (Priority 1) -> Unity Ads (Priority 2)**. AppLovin SDK integration has been fully deprecated.
 
 ### Feature Toggles
 You can dynamically toggle any of the integrated ad networks on/off using the following constants in `AppConstants`:
-- `enableAppLovin` (default: `true`): Set to `true` to active AppLovin MAX ads.
 - `enableAdMob` (default: `false`): Set to `true` to active Google AdMob ads.
 - `enableUnityAds` (default: `false`): Set to `true` to active Unity Ads.
 
