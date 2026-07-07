@@ -546,7 +546,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     if (_isPreviewMode) {
       final preview = _previewPath;
       if (preview != null && preview.length >= 2) {
-        _drawPreviewPath(canvas, preview, mainColor);
+        final isBlocked = gameState.isArrowBlocked(arrowModel.id);
+        _drawPreviewPath(canvas, preview, isBlocked);
       }
     }
 
@@ -659,7 +660,7 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
   }
 
   /// Draws the preview line as a solid glowing shadow path.
-  void _drawPreviewPath(Canvas canvas, List<Offset> preview, Color arrowColor) {
+  void _drawPreviewPath(Canvas canvas, List<Offset> preview, bool isBlocked) {
     if (preview.length < 2) return;
 
     // Build a continuous path
@@ -668,23 +669,31 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
       rawPath.lineTo(preview[i].dx, preview[i].dy);
     }
 
+    final Color shadowColor = isBlocked
+        ? const Color(0xFFFF3B30) // Shade of red for blocked shadow
+        : const Color(0xFF34C759); // Shade of green for clear shadow
+
+    final Color coreColor = isBlocked
+        ? const Color(0xFFE53935) // Shade of red for blocked core line
+        : const Color(0xFF2E7D32); // Shade of green for clear core line
+
     // --- Soft glowing shadow layer (wide, blurred) ---
     canvas.drawPath(
       rawPath,
       Paint()
-        ..color = arrowColor.withValues(alpha: 0.28)
+        ..color = shadowColor.withValues(alpha: 0.35)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = cellSize * 0.32
+        ..strokeWidth = cellSize * 0.45 // Broader shadow (previously 0.32)
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0),
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6.0),
     );
 
     // --- Core guideline layer (narrow, solid) ---
     canvas.drawPath(
       rawPath,
       Paint()
-        ..color = arrowColor.withValues(alpha: 0.85)
+        ..color = coreColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = cellSize * 0.08
         ..strokeCap = StrokeCap.round
