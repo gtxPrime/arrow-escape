@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -21,21 +22,72 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   bool _isNavigating = false; // prevents double-tap and shows instant feedback
+  late final ScrollController _timelineScrollController;
+
+  int _lastTickIndex = -1;
 
   @override
   void initState() {
     super.initState();
+    _timelineScrollController = ScrollController();
+    _timelineScrollController.addListener(_onScroll);
     // Record daily play + pre-warm current level in background after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<ProgressRepository>().recordDailyPlay();
       _preWarmLevels();
+      _scrollToCurrentLevel(animate: false);
+    });
+  }
+
+  void _onScroll() {
+    if (!mounted) return;
+    final progress = context.read<ProgressRepository>();
+    if (!progress.vibrationEnabled) return;
+
+    const itemWidth = 60.0;
+    // Tick index is offset divided by itemWidth
+    final index = (_timelineScrollController.offset / itemWidth).round();
+    if (index != _lastTickIndex) {
+      _lastTickIndex = index;
+      HapticFeedback.lightImpact();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToCurrentLevel(animate: false);
     });
   }
 
   @override
   void dispose() {
+    _timelineScrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToCurrentLevel({bool animate = true}) {
+    if (!_timelineScrollController.hasClients) return;
+    final currentLevel = context.read<ProgressRepository>().currentLevel;
+    final screenWidth = MediaQuery.of(context).size.width;
+    const itemWidth = 60.0;
+    final targetOffset = (currentLevel - 1) * itemWidth - (screenWidth / 2) + (itemWidth / 2);
+    final clampedOffset = targetOffset.clamp(
+      0.0,
+      _timelineScrollController.position.maxScrollExtent,
+    );
+
+    if (animate) {
+      _timelineScrollController.animateTo(
+        clampedOffset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    } else {
+      _timelineScrollController.jumpTo(clampedOffset);
+    }
   }
 
   /// Pre-generate the current level and next 3 in background isolates so that
@@ -240,7 +292,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               const Spacer(flex: 2),
 
               // ── Level Slider / Timeline ───────────────────────────────────
-              _buildLevelTimeline(progress.currentLevel),
+              _buildLevelTimeline(progress),
 
               const SizedBox(height: 36),
 
@@ -269,76 +321,148 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 );
   }
 
-  Widget _buildLevelTimeline(int currentLevel) {
-    final levelRange = List.generate(5, (index) => currentLevel - 2 + index);
+  Widget _buildLevelTimeline(ProgressRepository progress) {
+    final currentLevel = progress.currentLevel;
+    const totalLevels = 500;
+    const itemWidth = 60.0;
 
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Connecting line behind bubbles
-        Container(
-          width: 250,
-          height: 4,
-          color: const Color(0xFFE5DEC9),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: levelRange.map((lvl) {
-            if (lvl <= 0) return const SizedBox(width: 48);
+    return SizedBox(
+      height: 80,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          ListView.builder(
+            controller: _timelineScrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: totalLevels,
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width / 2 - itemWidth / 2,
+            ),
+            itemBuilder: (context, index) {
+              final lvl = index + 1;
+              final isCurrent = lvl == currentLevel;
+              final isUnlocked = progress.isLevelUnlocked(lvl);
+              final type = AppConstants.levelTypeFor(lvl);
 
-            final isCurrent = lvl == currentLevel;
+              Color bubbleColor;
+              Color textColor;
+              double size = isCurrent ? 46.0 : 34.0;
 
-            Color bubbleColor;
-            Color textColor;
-            double size = isCurrent ? 46.0 : 34.0;
-            final type = AppConstants.levelTypeFor(lvl);
+              if (!isUnlocked) {
+                bubbleColor = const Color(0xFFD3CFC9); // Grey for locked levels
+                textColor = const Color(0xFF8B7365).withValues(alpha: 0.5);
+              } else if (type == LevelType.god) {
+                bubbleColor = const Color(0xFFB33939); // Red for God levels
+                textColor = Colors.white;
+              } else if (type == LevelType.boss) {
+                bubbleColor = const Color(0xFF8E44AD); // Purple for Boss levels
+                textColor = Colors.white;
+              } else {
+                bubbleColor = isCurrent ? const Color(0xFFC08255) : const Color(0xFFE6DCC8); // Normal colors
+                textColor = isCurrent ? Colors.white : const Color(0xFF8B7365);
+              }
 
-            if (type == LevelType.god) {
-              bubbleColor = const Color(0xFFB33939); // Red for God levels
-              textColor = Colors.white;
-            } else if (type == LevelType.boss) {
-              bubbleColor = const Color(0xFF8E44AD); // Purple for Boss levels
-              textColor = Colors.white;
-            } else {
-              bubbleColor = isCurrent ? const Color(0xFFC08255) : const Color(0xFFE6DCC8); // Normal colors (Gold-brown if active current, warm beige otherwise)
-              textColor = isCurrent ? Colors.white : const Color(0xFF8B7365);
-            }
+              return Container(
+                width: itemWidth,
+                alignment: Alignment.center,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Connecting line behind bubbles
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 4,
+                            color: lvl == 1
+                                ? Colors.transparent
+                                : const Color(0xFFE5DEC9),
+                          ),
+                        ),
+                        SizedBox(width: size),
+                        Expanded(
+                          child: Container(
+                            height: 4,
+                            color: lvl == totalLevels
+                                ? Colors.transparent
+                                : const Color(0xFFE5DEC9),
+                          ),
+                        ),
+                      ],
+                    ),
 
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                color: bubbleColor,
-                shape: BoxShape.circle,
-                border: isCurrent
-                    ? Border.all(color: Colors.white, width: 3)
-                    : null,
-                boxShadow: isCurrent
-                    ? [
-                        BoxShadow(
-                          color: bubbleColor.withValues(alpha: 0.4),
-                          blurRadius: 12,
-                          spreadRadius: 3,
-                        )
-                      ]
-                    : null,
-              ),
-              child: Center(
-                child: Text(
-                  '$lvl',
-                  style: GoogleFonts.nunito(
-                    fontSize: isCurrent ? 18 : 14,
-                    fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w700,
-                    color: textColor,
-                  ),
+                    // Bubble
+                    GestureDetector(
+                      onTap: () {
+                        AudioManager.instance.playClick();
+                        if (isUnlocked) {
+                          progress.setCurrentLevel(lvl);
+                          // Auto scroll to center the selected bubble
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _scrollToCurrentLevel();
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Level $lvl is locked!',
+                                style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFFC0392B),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        width: size,
+                        height: size,
+                        decoration: BoxDecoration(
+                          color: bubbleColor,
+                          shape: BoxShape.circle,
+                          border: isCurrent
+                              ? Border.all(color: Colors.white, width: 3)
+                              : null,
+                          boxShadow: isCurrent
+                              ? [
+                                  BoxShadow(
+                                    color: bubbleColor.withValues(alpha: 0.4),
+                                    blurRadius: 12,
+                                    spreadRadius: 3,
+                                  )
+                                ]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$lvl',
+                            style: GoogleFonts.nunito(
+                              fontSize: isCurrent ? 18 : 14,
+                              fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w700,
+                              color: textColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -347,25 +471,33 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final diffLabel = _getDifficultyLabel(progress.currentLevel);
     final difficulty = Difficulty.forLevel(progress.currentLevel);
 
+    final levelType = AppConstants.levelTypeFor(progress.currentLevel);
+
     final Color baseColor;
-    switch (difficulty) {
-      case Difficulty.tutorial:
-      case Difficulty.easy:
-        baseColor = AppColors.easy;
-        break;
-      case Difficulty.medium:
-        baseColor = AppColors.medium;
-        break;
-      case Difficulty.hard:
-        baseColor = AppColors.hard;
-        break;
-      case Difficulty.expert:
-        baseColor = AppColors.expert;
-        break;
-      case Difficulty.master:
-      case Difficulty.legend:
-        baseColor = AppColors.master;
-        break;
+    if (levelType == LevelType.god) {
+      baseColor = const Color(0xFFB33939); // Red for God levels
+    } else if (levelType == LevelType.boss) {
+      baseColor = const Color(0xFF8E44AD); // Purple for Boss levels
+    } else {
+      switch (difficulty) {
+        case Difficulty.tutorial:
+        case Difficulty.easy:
+          baseColor = AppColors.easy;
+          break;
+        case Difficulty.medium:
+          baseColor = AppColors.medium;
+          break;
+        case Difficulty.hard:
+          baseColor = AppColors.hard;
+          break;
+        case Difficulty.expert:
+          baseColor = AppColors.expert;
+          break;
+        case Difficulty.master:
+        case Difficulty.legend:
+          baseColor = AppColors.master;
+          break;
+      }
     }
 
     final Color darkerColor = Color.lerp(baseColor, Colors.black, 0.25) ?? baseColor;
@@ -389,7 +521,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 if (mounted) setState(() => _isNavigating = false);
               },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.fastOutSlowIn,
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
           decoration: BoxDecoration(
