@@ -586,67 +586,39 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     // so LayoutBuilder must be OUTSIDE to get finite values).
                     final boardSize =
                         min(constraints.maxWidth, constraints.maxHeight - 16);
-                    return Stack(
-                      children: [
-                        // InteractiveViewer now fills the full Expanded area,
-                        // making pinch-zoom work anywhere on screen.
-                        InteractiveViewer(
-                          minScale: 0.8,
-                          maxScale: 4.0,
-                          boundaryMargin: const EdgeInsets.all(60),
-                          clipBehavior: Clip.hardEdge,
-                          child: Center(
-                            child: SizedBox(
-                              width: boardSize,
-                              height: boardSize,
-                              child: GameWidget(game: _game),
-                            ),
+                    return ShaderMask(
+                      shaderCallback: (Rect bounds) {
+                        return const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black,
+                            Colors.black,
+                            Colors.transparent,
+                          ],
+                          stops: [
+                            0.0,
+                            0.08,
+                            0.92,
+                            1.0,
+                          ],
+                        ).createShader(bounds);
+                      },
+                      blendMode: BlendMode.dstIn,
+                      child: InteractiveViewer(
+                        minScale: 0.8,
+                        maxScale: 4.0,
+                        boundaryMargin: const EdgeInsets.all(60),
+                        clipBehavior: Clip.hardEdge,
+                        child: Center(
+                          child: SizedBox(
+                            width: boardSize,
+                            height: boardSize,
+                            child: GameWidget(game: _game),
                           ),
                         ),
-                        // Top gradient shadow fade (warm cream fade)
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: 40,
-                          child: IgnorePointer(
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Color(0xFFF2EFEA),
-                                    Color(0x00F2EFEA),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Bottom gradient shadow fade
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          height: 40,
-                          child: IgnorePointer(
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    Color(0xFFE2DFDA),
-                                    Color(0x00E2DFDA),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      ],
+                      ),
                     );
                   },
                 ),
