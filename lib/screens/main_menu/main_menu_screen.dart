@@ -12,6 +12,9 @@ import '../../data/models/level.dart';
 import '../../widgets/maze_background.dart';
 import '../../widgets/unified_banner_ad.dart';
 import '../../core/audio_manager.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -37,6 +40,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       context.read<ProgressRepository>().recordDailyPlay();
       _preWarmLevels();
       _scrollToCurrentLevel(animate: false);
+      _checkPlayStoreUpdate();
     });
   }
 
@@ -98,6 +102,24 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     // Pre-warm current + next 3 levels in background isolates (non-blocking)
     for (int i = 0; i < 4; i++) {
       levelRepo.preGenerateAsync(currentLevel + i);
+    }
+  }
+
+  Future<void> _checkPlayStoreUpdate() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        if (info.immediateUpdateAllowed) {
+          await InAppUpdate.performImmediateUpdate();
+        } else if (info.flexibleUpdateAllowed) {
+          await InAppUpdate.startFlexibleUpdate();
+          await InAppUpdate.completeFlexibleUpdate();
+        }
+      }
+    } catch (e) {
+      debugPrint('Play Store update check failed: $e');
     }
   }
 
