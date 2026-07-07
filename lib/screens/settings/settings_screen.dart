@@ -120,7 +120,7 @@ class SettingsScreen extends StatelessWidget {
                         onTap: () => _launchUrl(_playStoreUrl),
                       ),
                       const Spacer(),
-                      Text('${AppConstants.appName} v1.0.2',
+                      Text('${AppConstants.appName} v1.0.3',
                           style: GoogleFonts.nunito(
                               color: AppColors.textMuted, fontSize: 12)),
                       Text(AppConstants.packageId,
