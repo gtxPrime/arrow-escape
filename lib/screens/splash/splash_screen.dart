@@ -177,6 +177,16 @@ class _SplashScreenState extends State<SplashScreen>
   Widget _buildLogo() {
     return Column(
       children: [
+        Image.asset(
+          'assets/images/logo.png',
+          width: 140,
+          height: 140,
+          fit: BoxFit.contain,
+        )
+            .animate(delay: 150.ms)
+            .fadeIn(duration: 500.ms)
+            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
+        const SizedBox(height: 16),
         Text(
           'Arrow Out',
           style: GoogleFonts.nunito(
