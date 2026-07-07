@@ -50,7 +50,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final index = (_timelineScrollController.offset / itemWidth).round();
     if (index != _lastTickIndex) {
       _lastTickIndex = index;
-      HapticFeedback.lightImpact();
+      HapticFeedback.selectionClick();
     }
   }
 
@@ -71,9 +71,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   void _scrollToCurrentLevel({bool animate = true}) {
     if (!_timelineScrollController.hasClients) return;
     final currentLevel = context.read<ProgressRepository>().currentLevel;
-    final screenWidth = MediaQuery.of(context).size.width;
     const itemWidth = 60.0;
-    final targetOffset = (currentLevel - 1) * itemWidth - (screenWidth / 2) + (itemWidth / 2);
+    final targetOffset = (currentLevel - 1) * itemWidth;
     final clampedOffset = targetOffset.clamp(
       0.0,
       _timelineScrollController.position.maxScrollExtent,
@@ -328,140 +327,159 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
     return SizedBox(
       height: 80,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          ListView.builder(
-            controller: _timelineScrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: totalLevels,
-            padding: EdgeInsets.symmetric(
-              horizontal: MediaQuery.of(context).size.width / 2 - itemWidth / 2,
-            ),
-            itemBuilder: (context, index) {
-              final lvl = index + 1;
-              final isCurrent = lvl == currentLevel;
-              final isUnlocked = progress.isLevelUnlocked(lvl);
-              final type = AppConstants.levelTypeFor(lvl);
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return const LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Colors.transparent,
+              Colors.black,
+              Colors.black,
+              Colors.transparent,
+            ],
+            stops: [
+              0.0,
+              0.15,
+              0.85,
+              1.0,
+            ],
+          ).createShader(bounds);
+        },
+        blendMode: BlendMode.dstIn,
+        child: ListView.builder(
+          controller: _timelineScrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: totalLevels,
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width / 2 - itemWidth / 2,
+          ),
+          itemBuilder: (context, index) {
+            final lvl = index + 1;
+            final isCurrent = lvl == currentLevel;
+            final isUnlocked = progress.isLevelUnlocked(lvl);
+            final type = AppConstants.levelTypeFor(lvl);
 
-              Color bubbleColor;
-              Color textColor;
-              double size = isCurrent ? 46.0 : 34.0;
+            Color bubbleColor;
+            Color textColor;
+            double size = isCurrent ? 46.0 : 34.0;
 
-              if (!isUnlocked) {
-                bubbleColor = const Color(0xFFD3CFC9); // Grey for locked levels
-                textColor = const Color(0xFF8B7365).withValues(alpha: 0.5);
-              } else if (type == LevelType.god) {
-                bubbleColor = const Color(0xFFB33939); // Red for God levels
-                textColor = Colors.white;
-              } else if (type == LevelType.boss) {
-                bubbleColor = const Color(0xFF8E44AD); // Purple for Boss levels
-                textColor = Colors.white;
-              } else {
-                bubbleColor = isCurrent ? const Color(0xFFC08255) : const Color(0xFFE6DCC8); // Normal colors
-                textColor = isCurrent ? Colors.white : const Color(0xFF8B7365);
-              }
+            if (!isUnlocked) {
+              bubbleColor = const Color(0xFFD3CFC9); // Grey for locked levels
+              textColor = const Color(0xFF8B7365).withValues(alpha: 0.5);
+            } else if (type == LevelType.god) {
+              bubbleColor = const Color(0xFFB33939); // Red for God levels
+              textColor = Colors.white;
+            } else if (type == LevelType.boss) {
+              bubbleColor = const Color(0xFF8E44AD); // Purple for Boss levels
+              textColor = Colors.white;
+            } else {
+              bubbleColor = isCurrent ? const Color(0xFFC08255) : const Color(0xFFE6DCC8); // Normal colors
+              textColor = isCurrent ? Colors.white : const Color(0xFF8B7365);
+            }
 
-              return Container(
-                width: itemWidth,
+            return Container(
+              width: itemWidth,
+              alignment: Alignment.center,
+              child: Stack(
                 alignment: Alignment.center,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Connecting line behind bubbles
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 4,
-                            color: lvl == 1
-                                ? Colors.transparent
-                                : const Color(0xFFE5DEC9),
-                          ),
+                children: [
+                  // Connecting line behind bubbles
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          color: lvl == 1
+                              ? Colors.transparent
+                              : const Color(0xFFE5DEC9),
                         ),
-                        SizedBox(width: size),
-                        Expanded(
-                          child: Container(
-                            height: 4,
-                            color: lvl == totalLevels
-                                ? Colors.transparent
-                                : const Color(0xFFE5DEC9),
-                          ),
+                      ),
+                      SizedBox(width: size),
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          color: lvl == totalLevels
+                              ? Colors.transparent
+                              : const Color(0xFFE5DEC9),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
 
-                    // Bubble
-                    GestureDetector(
-                      onTap: () {
-                        AudioManager.instance.playClick();
-                        if (isUnlocked) {
-                          progress.setCurrentLevel(lvl);
-                          // Auto scroll to center the selected bubble
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _scrollToCurrentLevel();
-                          });
-                        } else {
-                          ScaffoldMessenger.of(context).clearSnackBars();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Level $lvl is locked!',
-                                style: GoogleFonts.nunito(
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
+                  // Bubble
+                  GestureDetector(
+                    onTap: () {
+                      AudioManager.instance.playClick();
+                      if (progress.vibrationEnabled) {
+                        HapticFeedback.selectionClick();
+                      }
+                      if (isUnlocked) {
+                        progress.setCurrentLevel(lvl);
+                        // Auto scroll to center the selected bubble
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _scrollToCurrentLevel();
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Level $lvl is locked!',
+                              style: GoogleFonts.nunito(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
                               ),
-                              backgroundColor: const Color(0xFFC0392B),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              duration: const Duration(seconds: 1),
                             ),
-                          );
-                        }
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        width: size,
-                        height: size,
-                        decoration: BoxDecoration(
-                          color: bubbleColor,
-                          shape: BoxShape.circle,
-                          border: isCurrent
-                              ? Border.all(color: Colors.white, width: 3)
-                              : null,
-                          boxShadow: isCurrent
-                              ? [
-                                  BoxShadow(
-                                    color: bubbleColor.withValues(alpha: 0.4),
-                                    blurRadius: 12,
-                                    spreadRadius: 3,
-                                  )
-                                ]
-                              : null,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '$lvl',
-                            style: GoogleFonts.nunito(
-                              fontSize: isCurrent ? 18 : 14,
-                              fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w700,
-                              color: textColor,
+                            backgroundColor: const Color(0xFFC0392B),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        color: bubbleColor,
+                        shape: BoxShape.circle,
+                        border: isCurrent
+                            ? Border.all(color: Colors.white, width: 3)
+                            : null,
+                        boxShadow: isCurrent
+                            ? [
+                                BoxShadow(
+                                  color: bubbleColor.withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                  spreadRadius: 3,
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$lvl',
+                          style: GoogleFonts.nunito(
+                            fontSize: isCurrent ? 18 : 14,
+                            fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w700,
+                            color: textColor,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
