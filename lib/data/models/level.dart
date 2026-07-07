@@ -58,6 +58,7 @@ enum MaskShape {
   tree,
   house,
   crown,
+  saturn,
 }
 
 // ─── Difficulty Enum ──────────────────────────────────────────────────────────
