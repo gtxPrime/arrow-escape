@@ -14,6 +14,7 @@ class GameState extends ChangeNotifier {
   int _livesLost = 0;
   bool _isComplete = false;
   bool _isGameOver = false;
+  bool _isDeadlocked = false;
 
   // Live orphan dot map (dots are removed when consumed by an exiting arrow)
   late Map<String, OrphanDotType> _orphanDots;
@@ -28,6 +29,7 @@ class GameState extends ChangeNotifier {
   final void Function() onLevelComplete;
   final void Function() onGameOver;
   final void Function() onLifeLost;
+  final void Function() onDeadlock;
   final bool isDevMode;
 
   GameState({
@@ -35,6 +37,7 @@ class GameState extends ChangeNotifier {
     required this.onLevelComplete,
     required this.onGameOver,
     required this.onLifeLost,
+    required this.onDeadlock,
     this.isDevMode = false,
   }) {
     _currentLevel = level;
@@ -49,6 +52,7 @@ class GameState extends ChangeNotifier {
   int get livesLost => _livesLost;
   bool get isComplete => _isComplete;
   bool get isGameOver => _isGameOver;
+  bool get isDeadlocked => _isDeadlocked;
   int get arrowsRemaining => _arrows.length;
   LevelModel get level => _currentLevel;
   /// Live orphan dots remaining (consumed dots are absent from this map).
@@ -62,8 +66,59 @@ class GameState extends ChangeNotifier {
     if (_arrows.isEmpty) {
       _isComplete = true;
       onLevelComplete();
+    } else {
+      if (checkDeadlock()) {
+        _isDeadlocked = true;
+        onDeadlock();
+      }
     }
     notifyListeners();
+  }
+
+  /// Returns true if all remaining arrows are blocked (deadlocked).
+  bool checkDeadlock() {
+    if (_arrows.isEmpty) return false;
+
+    for (final arrow in _arrows) {
+      final grp = arrow.colorGroup;
+      if (grp != null) {
+        final groupArrows = _arrows.where((a) => a.colorGroup == grp).toList();
+        if (groupArrows.length == 2) {
+          final arrow1 = groupArrows[0];
+          final arrow2 = groupArrows[1];
+          final exit1 = _computeExitInfo(arrow1, arrow2.id);
+          final exit2 = _computeExitInfo(arrow2, arrow1.id);
+          if (!exit1.blocked && !exit2.blocked) {
+            return false; // Found a paired group that can exit
+          }
+        }
+      } else {
+        final exit = _computeExitInfo(arrow);
+        if (!exit.blocked) {
+          return false; // Found a standard/ice arrow that can exit/crack
+        }
+      }
+    }
+    return true; // All remaining arrows are blocked!
+  }
+
+  /// Returns true if the given arrow (or its color paired partner) is currently blocked.
+  bool isArrowBlocked(String arrowId) {
+    final index = _arrows.indexWhere((a) => a.id == arrowId);
+    if (index == -1) return true;
+    final arrow = _arrows[index];
+    final grp = arrow.colorGroup;
+    if (grp != null) {
+      final groupArrows = _arrows.where((a) => a.colorGroup == grp).toList();
+      if (groupArrows.length == 2) {
+        final arrow1 = groupArrows[0];
+        final arrow2 = groupArrows[1];
+        final exitInfo1 = _computeExitInfo(arrow1, arrow2.id);
+        final exitInfo2 = _computeExitInfo(arrow2, arrow1.id);
+        return exitInfo1.blocked || exitInfo2.blocked;
+      }
+    }
+    return _computeExitInfo(arrow).blocked;
   }
 
   List<OrphanDot> getConsumedDotsForArrow(String arrowId) {
@@ -300,6 +355,7 @@ class GameState extends ChangeNotifier {
     _livesLost = 0;
     _isComplete = false;
     _isGameOver = false;
+    _isDeadlocked = false;
     _clearedColorGroups.clear();
     notifyListeners();
   }
