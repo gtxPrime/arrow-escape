@@ -60,7 +60,7 @@ class AudioManager {
     if (!_musicEnabled) return;
     try {
       if (FlameAudio.bgm.isPlaying) return;
-      await FlameAudio.bgm.play('underwater.mp3', volume: 0.22);
+      await FlameAudio.bgm.play('underwater.mp3', volume: 0.35);
     } catch (e) {
       debugPrint('Error playing background music: $e');
     }
