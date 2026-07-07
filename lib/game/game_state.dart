@@ -28,12 +28,14 @@ class GameState extends ChangeNotifier {
   final void Function() onLevelComplete;
   final void Function() onGameOver;
   final void Function() onLifeLost;
+  final bool isDevMode;
 
   GameState({
     required LevelModel level,
     required this.onLevelComplete,
     required this.onGameOver,
     required this.onLifeLost,
+    this.isDevMode = false,
   }) {
     _currentLevel = level;
     _arrows = level.arrows.map((a) => a.copyWith()).toList();
@@ -160,9 +162,11 @@ class GameState extends ChangeNotifier {
 
   TapResult _handleBlocked(int index, ArrowModel arrow, String arrowId) {
     _arrows[index] = arrow.copyWith(state: ArrowState.blocked);
-    _lives--;
-    _livesLost++;
-    onLifeLost();
+    if (!isDevMode) {
+      _lives--;
+      _livesLost++;
+      onLifeLost();
+    }
 
     // Reset arrow state after animation
     Future.delayed(AppConstants.arrowShakeDuration, () {
@@ -173,7 +177,7 @@ class GameState extends ChangeNotifier {
       }
     });
 
-    if (_lives <= 0) {
+    if (!isDevMode && _lives <= 0) {
       _isGameOver = true;
       onGameOver();
       notifyListeners();
@@ -192,9 +196,11 @@ class GameState extends ChangeNotifier {
         _arrows[index] = arrow.copyWith(state: ArrowState.blocked);
       }
     }
-    _lives--;
-    _livesLost++;
-    onLifeLost();
+    if (!isDevMode) {
+      _lives--;
+      _livesLost++;
+      onLifeLost();
+    }
 
     // Reset both after animation
     Future.delayed(AppConstants.arrowShakeDuration, () {
@@ -207,7 +213,7 @@ class GameState extends ChangeNotifier {
       notifyListeners();
     });
 
-    if (_lives <= 0) {
+    if (!isDevMode && _lives <= 0) {
       _isGameOver = true;
       onGameOver();
     }
