@@ -125,6 +125,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       onLevelComplete: _onLevelComplete,
       onGameOver: _onGameOver,
       onLifeLost: _onLifeLost,
+      isDevMode: context.read<ProgressRepository>().isDevMode,
     );
     _gameState!.addListener(_onGameStateChanged);
 
@@ -599,6 +600,48 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                               width: boardSize,
                               height: boardSize,
                               child: GameWidget(game: _game),
+                            ),
+                          ),
+                        ),
+                        // Top gradient shadow fade (warm cream fade)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 40,
+                          child: IgnorePointer(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color(0xFFF2EFEA),
+                                    Color(0x00F2EFEA),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Bottom gradient shadow fade
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: 40,
+                          child: IgnorePointer(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    Color(0xFFE2DFDA),
+                                    Color(0x00E2DFDA),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
