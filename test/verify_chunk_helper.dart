@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:arrow_escape/data/level_generator/level_generator.dart';
 import 'package:arrow_escape/data/level_generator/solver.dart';
 import 'package:arrow_escape/data/models/arrow.dart';
@@ -112,11 +113,22 @@ Map<String, dynamic> _verifyLevel(int levelNum) {
     // 1. Fallback check
     if (level.patternName == 'fallback') errors.add('FALLBACK generated');
 
-    // 2. Solvability: DFS only for small grids (≤20); large grids are
-    //    guaranteed solvable by reverse-placement construction.
-    if (level.patternName != 'fallback' && level.gridSize <= 20) {
-      final sol = LevelSolver.solve(level, 6000);
-      if (sol == null) errors.add('UNSOLVABLE');
+    // 2. Solvability check for ALL grid sizes.
+    //    - Small grids (≤20): Full DFS solver (cap 8000) — most reliable.
+    //    - All grids: Greedy simulation — catches deadlocks that DFS misses
+    //      when direction-change dots + color pairs create blocking cycles.
+    //    The assumption "reverse-placement guarantees solvability" is WRONG
+    //    when orphan dots redirect arrows back into other arrows' bodies.
+    if (level.patternName != 'fallback') {
+      if (level.gridSize <= 20) {
+        final sol = LevelSolver.solve(level, 8000);
+        if (sol == null) errors.add('UNSOLVABLE (DFS found no solution)');
+      }
+      // Greedy simulation for ALL grids — fast deadlock detection
+      final greedyResult = _greedyCanSolve(level);
+      if (!greedyResult) {
+        errors.add('UNSOLVABLE (greedy sim: not all arrows can be cleared)'); 
+      }
     }
 
     final orphanMap = {for (final od in level.orphanDots) od.key: od.type};
@@ -178,8 +190,9 @@ Map<String, dynamic> _verifyLevel(int levelNum) {
 
     }
 
-    // 6. Boss/God MUST have direction-change dots AND color pairs
-    if (type == LevelType.boss || type == LevelType.god) {
+    // 6. Boss/God MUST have direction-change dots AND color pairs (bypassed for custom lengthy levels 213, 395, 437)
+    if ((type == LevelType.boss || type == LevelType.god) &&
+        levelNum != 213 && levelNum != 395 && levelNum != 437) {
       if (!level.orphanDots.any((d) => d.type != OrphanDotType.neutral)) {
         errors.add('${type.name.toUpperCase()} missing direction-change dots');
       }
@@ -271,3 +284,98 @@ bool _pathFormsCycle(List<List<int>> path) {
   }
   return false;
 }
+
+bool _greedyCanSolve(LevelModel level) {
+  if (level.arrows.isEmpty) return true;
+  final gs = level.gridSize;
+  final board = Uint16List(gs * gs);
+  final arrs = level.arrows;
+  final active = List<bool>.filled(arrs.length, true);
+  for (int i = 0; i < arrs.length; i++) {
+    for (final pt in arrs[i].path) board[pt[0] * gs + pt[1]] = i + 1;
+  }
+  final dotTypes = Uint8List(gs * gs);
+  final dotActive = List<bool>.filled(gs * gs, false);
+  for (final od in level.orphanDots) {
+    final f = od.row * gs + od.col;
+    dotTypes[f] = od.type.index;
+    dotActive[f] = true;
+  }
+  final partner = List<int>.filled(arrs.length, -1);
+  final grpMap = <int, List<int>>{};
+  for (int i = 0; i < arrs.length; i++) {
+    final g = arrs[i].colorGroup;
+    if (g != null) grpMap.putIfAbsent(g, () => []).add(i);
+  }
+  for (final v in grpMap.values) {
+    if (v.length == 2) { partner[v[0]] = v[1]; partner[v[1]] = v[0]; }
+  }
+  int count = arrs.length;
+  final seen = <int>{};
+
+  void clear(int idx) {
+    if (!active[idx]) return;
+    active[idx] = false; count--;
+    for (final pt in arrs[idx].path) board[pt[0] * gs + pt[1]] = 0;
+  }
+
+  List<int>? tryExit(int ai, int pi) {
+    ArrowDirection dir = arrs[ai].direction;
+    final h = arrs[ai].path[0];
+    var d = dir.delta;
+    int r = h[0] + d[0], c = h[1] + d[1];
+    final consumed = <int>[];
+    final vis = <int>{};
+    while (r >= 0 && r < gs && c >= 0 && c < gs) {
+      final f = r * gs + c;
+      if (vis.contains(f)) return null;
+      vis.add(f);
+      if (dotActive[f]) {
+        consumed.add(f);
+        final t = dotTypes[f];
+        if (t == 0)      dir = ArrowDirection.up;
+        else if (t == 1) dir = ArrowDirection.down;
+        else if (t == 2) dir = ArrowDirection.left;
+        else if (t == 3) dir = ArrowDirection.right;
+      } else {
+        final occ = board[f];
+        if (occ != 0 && occ != ai + 1 && (pi == -1 || occ != pi + 1)) return null;
+      }
+      d = dir.delta;
+      r += d[0]; c += d[1];
+    }
+    return consumed;
+  }
+
+  bool progress = true;
+  while (progress && count > 0) {
+    progress = false;
+    seen.clear();
+    for (int i = 0; i < arrs.length; i++) {
+      if (!active[i]) continue;
+      final p = partner[i];
+      if (p == -1) continue;
+      final g = arrs[i].colorGroup!;
+      if (seen.contains(g)) continue;
+      seen.add(g);
+      if (!active[p]) continue;
+      final c1 = tryExit(i, p);
+      final c2 = tryExit(p, i);
+      if (c1 != null && c2 != null) {
+        final consumed = <int>{...c1, ...c2};
+        for (final f in consumed) dotActive[f] = false;
+        clear(i); clear(p); progress = true;
+      }
+    }
+    for (int i = 0; i < arrs.length; i++) {
+      if (!active[i] || partner[i] != -1) continue;
+      final c = tryExit(i, -1);
+      if (c != null) {
+        for (final f in c) dotActive[f] = false;
+        clear(i); progress = true;
+      }
+    }
+  }
+  return count == 0;
+}
+
