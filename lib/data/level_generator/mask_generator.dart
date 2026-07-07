@@ -39,7 +39,7 @@ class MaskGenerator {
   static const List<String> _bossShapeNames = [
     'cat', 'dog', 'frog', 'fox', 'tiger', 'panda',
     'fish', 'bird', 'butterfly',
-    'guitar', 'tree', 'house', 'crown',
+    'guitar', 'tree', 'house', 'crown', 'saturn',
   ];
 
   static Set<String> _randomBossShape(int side, Random rng) {
@@ -77,6 +77,7 @@ class MaskGenerator {
       case 'tree':      return treeMask(side);
       case 'house':     return houseMask(side);
       case 'crown':     return crownMask(side);
+      case 'saturn':    return saturnMask(side);
       // Geometric
       case 'heart':     return heartMask(side);
       case 'star':      return starMask(side, 5);
@@ -476,6 +477,17 @@ class MaskGenerator {
     return _clean(mask, side);
   }
 
+  /// Saturn: sphere + flat wide ring ellipse.
+  static Set<String> saturnMask(int side) {
+    final mask = <String>{};
+    final s = side.toDouble();
+    // Sphere
+    _ellipse(mask, side, s * 0.5, s * 0.5, s * 0.26, s * 0.26);
+    // Flat wide ring
+    _ellipse(mask, side, s * 0.5, s * 0.5, s * 0.46, s * 0.085);
+    return _clean(mask, side);
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   //  SVG PATH MASK (Lucide icon d-path → cell grid)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -652,6 +664,11 @@ class MaskGenerator {
   // Legacy public alias used by grid_component
   static Set<String> maskForLevel(int levelNumber, Random rng, int side) {
     final type = AppConstants.levelTypeFor(levelNumber);
+    if (type == LevelType.boss) {
+      if (levelNumber == 7) return shapeByName('guitar', side, rng);
+      if (levelNumber == 14) return shapeByName('saturn', side, rng);
+      if (levelNumber == 21) return shapeByName('butterfly', side, rng);
+    }
     return maskForLevelType(type, rng, side);
   }
 }
