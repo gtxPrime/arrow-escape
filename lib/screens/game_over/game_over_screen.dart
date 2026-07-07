@@ -21,7 +21,7 @@ class GameOverScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        decoration: BoxDecoration(gradient: AppColors.bgGradient),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(28),
@@ -104,7 +104,7 @@ class GameOverScreen extends StatelessWidget {
                   icon: LucideIcons.rotateCcw,
                   label: 'Restart Level',
                   subtitle: 'Start over with 3 lives',
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                       colors: [AppColors.surfaceLight, AppColors.surface]),
                   onTap: () {
                     Navigator.pushReplacementNamed(context, '/game',

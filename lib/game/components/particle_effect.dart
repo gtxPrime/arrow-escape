@@ -33,7 +33,7 @@ class ExitParticleEffect extends ParticleSystemComponent {
           ),
         );
 
-  static const _particleColors = [
+  static final _particleColors = [
     AppColors.primary,
     AppColors.accentGold,
     AppColors.accentGreen,

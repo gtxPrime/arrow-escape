@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants.dart';
+import '../../core/app_colors.dart';
 import '../../data/models/level.dart';
 import '../../data/models/arrow.dart';
 import '../game_state.dart';
@@ -23,6 +24,7 @@ class GridComponent extends PositionComponent {
   late LevelType _levelType;
 
   ui.Picture? _cachedDotGridPicture;
+  bool _isDarkCached = AppColors.isDark;
 
   void _invalidateDotGrid() {
     _cachedDotGridPicture?.dispose();
@@ -106,10 +108,10 @@ class GridComponent extends PositionComponent {
     final outR = inR * 0.55;
 
     final inPaint = Paint()
-      ..color = const Color(0xFFC8BFB0)
+      ..color = AppColors.isDark ? const Color(0x3CFFFFFF) : const Color(0xFFC8BFB0)
       ..style = PaintingStyle.fill;
     final outPaint = Paint()
-      ..color = const Color(0x1EBBBBBB)
+      ..color = AppColors.isDark ? const Color(0x11FFFFFF) : const Color(0x1EBBBBBB)
       ..style = PaintingStyle.fill;
 
     for (int r = 0; r < gridSize; r++) {
@@ -134,7 +136,8 @@ class GridComponent extends PositionComponent {
   void render(Canvas canvas) {
     final cs = cellSize;
 
-    if (_cachedDotGridPicture == null) {
+    if (_cachedDotGridPicture == null || _isDarkCached != AppColors.isDark) {
+      _isDarkCached = AppColors.isDark;
       _recacheDotGrid();
     }
     canvas.drawPicture(_cachedDotGridPicture!);

@@ -20,7 +20,7 @@ class LevelSelectScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        decoration: BoxDecoration(gradient: AppColors.bgGradient),
         child: SafeArea(
           child: Column(
             children: [
@@ -41,7 +41,7 @@ class LevelSelectScreen extends StatelessWidget {
                           color: AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        child: Icon(Icons.arrow_back_ios_new_rounded,
                             color: AppColors.textPrimary, size: 18),
                       ),
                     ),
@@ -159,15 +159,15 @@ class _LevelCell extends StatelessWidget {
           children: [
             // Level type badge
             if (levelType == LevelType.god)
-              const Icon(LucideIcons.flame, color: AppColors.accent, size: 12)
+              Icon(LucideIcons.flame, color: AppColors.accent, size: 12)
             else if (levelType == LevelType.boss)
               const Icon(LucideIcons.zap, color: Color(0xFF8E44AD), size: 12)
             else if (levelType == LevelType.tutorial)
-              const Icon(LucideIcons.bookOpen, color: AppColors.accentGreen, size: 12),
+              Icon(LucideIcons.bookOpen, color: AppColors.accentGreen, size: 12),
 
             // Lock or number
             if (!isUnlocked)
-              const Icon(Icons.lock_outline_rounded,
+              Icon(Icons.lock_outline_rounded,
                   color: AppColors.textMuted, size: 20)
             else
               Text('$levelNumber',

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -27,6 +27,7 @@ class ProgressRepository extends ChangeNotifier {
   bool _soundEnabled = true;
   bool _musicEnabled = true;
   bool _vibrationEnabled = true;
+  ThemeMode _themeMode = ThemeMode.system;
 
   // 40x40 warning state
   bool _hasSeen40x40Warning = false;
@@ -49,6 +50,7 @@ class ProgressRepository extends ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get musicEnabled => _musicEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
+  ThemeMode get themeMode => _themeMode;
   bool get hasSeen40x40Warning => _hasSeen40x40Warning;
   bool get isDevMode => _isDevMode;
 
@@ -87,6 +89,12 @@ class ProgressRepository extends ChangeNotifier {
     _vibrationEnabled = _prefs.getBool('vibrationEnabled') ?? true;
     _hasSeen40x40Warning = _prefs.getBool('hasSeen40x40Warning') ?? false;
     _isDevMode = _prefs.getBool('isDevMode') ?? false;
+
+    final themeStr = _prefs.getString('themeMode') ?? 'system';
+    _themeMode = ThemeMode.values.firstWhere(
+      (e) => e.name == themeStr,
+      orElse: () => ThemeMode.system,
+    );
 
 
     // Synchronize to AudioManager
@@ -252,6 +260,12 @@ class ProgressRepository extends ChangeNotifier {
   Future<void> setVibrationEnabled(bool value) async {
     _vibrationEnabled = value;
     await _prefs.setBool('vibrationEnabled', value);
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode value) async {
+    _themeMode = value;
+    await _prefs.setString('themeMode', value.name);
     notifyListeners();
   }
 

@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        decoration: BoxDecoration(gradient: AppColors.bgGradient),
         child: Stack(
           children: [
             AnimatedBuilder(

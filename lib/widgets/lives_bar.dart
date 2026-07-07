@@ -68,7 +68,7 @@ class _LivesBarState extends State<LivesBar> with SingleTickerProviderStateMixin
                       size: 25,
                     ),
                   )
-                : const Icon(
+                : Icon(
                     Icons.favorite_border,
                     color: AppColors.surfaceLight,
                     size: 24,

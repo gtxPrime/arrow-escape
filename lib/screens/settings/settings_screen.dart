@@ -29,7 +29,7 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        decoration: BoxDecoration(gradient: AppColors.bgGradient),
         child: SafeArea(
           child: Column(
             children: [
@@ -50,7 +50,7 @@ class SettingsScreen extends StatelessWidget {
                           color: AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        child: Icon(Icons.arrow_back_ios_new_rounded,
                             color: AppColors.textPrimary, size: 18),
                       ),
                     ),
@@ -105,18 +105,55 @@ class SettingsScreen extends StatelessWidget {
                           activeThumbColor: AppColors.primary,
                         ),
                       ),
-                      const Divider(color: AppColors.surfaceLight, height: 32),
+                      _SettingsTile(
+                        icon: Icons.brightness_medium_outlined,
+                        label: 'Theme Mode',
+                        trailing: DropdownButtonHideUnderline(
+                          child: DropdownButton<ThemeMode>(
+                            value: progress.themeMode,
+                            dropdownColor: AppColors.surface,
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: AppColors.textPrimary),
+                            style: GoogleFonts.nunito(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: ThemeMode.system,
+                                child: Text('System'),
+                              ),
+                              DropdownMenuItem(
+                                value: ThemeMode.light,
+                                child: Text('Light'),
+                              ),
+                              DropdownMenuItem(
+                                value: ThemeMode.dark,
+                                child: Text('Dark'),
+                              ),
+                            ],
+                            onChanged: (ThemeMode? val) {
+                              if (val != null) {
+                                AudioManager.instance.playClick();
+                                progress.setThemeMode(val);
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      Divider(color: AppColors.surfaceLight, height: 32),
                       _SettingsTile(
                         icon: Icons.privacy_tip_outlined,
                         label: 'Privacy Policy',
-                        trailing: const Icon(Icons.chevron_right_rounded,
+                        trailing: Icon(Icons.chevron_right_rounded,
                             color: AppColors.textSecondary),
                         onTap: () => _launchUrl(_privacyPolicyUrl),
                       ),
                       _SettingsTile(
                         icon: Icons.star_outline_rounded,
                         label: 'Rate the App',
-                        trailing: const Icon(Icons.chevron_right_rounded,
+                        trailing: Icon(Icons.chevron_right_rounded,
                             color: AppColors.textSecondary),
                         onTap: () => _launchUrl(_playStoreUrl),
                       ),

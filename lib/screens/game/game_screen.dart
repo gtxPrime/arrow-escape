@@ -614,7 +614,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        decoration: BoxDecoration(gradient: AppColors.bgGradient),
         child: SafeArea(
           child: Column(
             children: [
@@ -819,7 +819,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     color: AppColors.accentOrange.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(LucideIcons.alertTriangle,
+                  child: Icon(LucideIcons.alertTriangle,
                       color: AppColors.accentOrange, size: 28),
                 ),
                 const SizedBox(height: 16),
@@ -1085,7 +1085,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             child: Container(
               width: 14,
               height: 14,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.accent,
                 shape: BoxShape.circle,
               ),
@@ -1258,7 +1258,7 @@ class _TopBar extends StatelessWidget {
                   color: AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(LucideIcons.arrowLeft,
+                child: Icon(LucideIcons.arrowLeft,
                     color: AppColors.textPrimary, size: 18),
               ),
             ),
@@ -1351,7 +1351,7 @@ class _TopBar extends StatelessWidget {
                   color: AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(LucideIcons.settings,
+                child: Icon(LucideIcons.settings,
                     color: AppColors.textPrimary, size: 18),
               ),
             ),
@@ -1402,7 +1402,7 @@ class _LevelCompleteDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               LucideIcons.partyPopper,
               color: AppColors.primary,
               size: 52,
@@ -1485,7 +1485,7 @@ class _LevelCompleteDialog extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Icon(
+                    Icon(
                       LucideIcons.trophy,
                       color: AppColors.accentGold,
                       size: 32,
@@ -1689,7 +1689,7 @@ class _DeadlockDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               LucideIcons.alertTriangle,
               color: AppColors.accentOrange,
               size: 52,
@@ -1866,7 +1866,7 @@ class _GameSettingsDialog extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-            const Divider(color: AppColors.surfaceLight, height: 1),
+            Divider(color: AppColors.surfaceLight, height: 1),
             const SizedBox(height: 20),
 
             // Restart Button
@@ -2118,8 +2118,8 @@ class _BlinkingCursorState extends State<_BlinkingCursor>
 
 /// Bouncing colored dots.
 class _BouncingDots extends StatefulWidget {
-  final Color color;
-  const _BouncingDots({this.color = AppColors.primary});
+  final Color? color;
+  const _BouncingDots({this.color});
 
   @override
   State<_BouncingDots> createState() => _BouncingDotsState();
@@ -2161,7 +2161,7 @@ class _BouncingDotsState extends State<_BouncingDots>
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: widget.color.withValues(alpha: 0.5 + 0.5 * t),
+                  color: (widget.color ?? AppColors.primary).withValues(alpha: 0.5 + 0.5 * t),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -2218,7 +2218,7 @@ class _LevelLoadingScreenState extends State<_LevelLoadingScreen>
   Widget _buildNormalScreen() {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        decoration: BoxDecoration(gradient: AppColors.bgGradient),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

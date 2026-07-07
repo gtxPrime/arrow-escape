@@ -137,7 +137,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        decoration: BoxDecoration(gradient: AppColors.bgGradient),
         child: Stack(
           children: [
             const Positioned(
@@ -190,7 +190,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               color: AppColors.surfaceLight,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               LucideIcons.layoutGrid,
                               color: AppColors.textPrimary,
                               size: 22,
@@ -211,7 +211,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               color: AppColors.surfaceLight,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.settings_outlined,
                               color: AppColors.textPrimary,
                               size: 22,
@@ -386,10 +386,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             Color bubbleColor;
             Color textColor;
             double size = isCurrent ? 46.0 : 34.0;
+            final isDark = AppColors.isDark;
 
             if (!isUnlocked) {
-              bubbleColor = const Color(0xFFD3CFC9); // Grey for locked levels
-              textColor = const Color(0xFF8B7365).withValues(alpha: 0.5);
+              bubbleColor = isDark ? const Color(0xFF2A3027) : const Color(0xFFD3CFC9); // Dark green-gray vs Grey
+              textColor = isDark ? const Color(0xFF5E6B56) : const Color(0xFF8B7365).withValues(alpha: 0.5);
             } else if (type == LevelType.god) {
               bubbleColor = const Color(0xFFB33939); // Red for God levels
               textColor = Colors.white;
@@ -397,8 +398,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               bubbleColor = const Color(0xFF8E44AD); // Purple for Boss levels
               textColor = Colors.white;
             } else {
-              bubbleColor = isCurrent ? const Color(0xFFC08255) : const Color(0xFFE6DCC8); // Normal colors
-              textColor = isCurrent ? Colors.white : const Color(0xFF8B7365);
+              bubbleColor = isCurrent 
+                  ? (isDark ? const Color(0xFFD48A55) : const Color(0xFFC08255)) 
+                  : (isDark ? const Color(0xFF3D473A) : const Color(0xFFE6DCC8));
+              textColor = isCurrent 
+                  ? Colors.white 
+                  : (isDark ? const Color(0xFFECF0EB) : const Color(0xFF8B7365));
             }
 
             return Container(
@@ -415,7 +420,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           height: 4,
                           color: lvl == 1
                               ? Colors.transparent
-                              : const Color(0xFFE5DEC9),
+                              : (isDark ? const Color(0xFF2A3027) : const Color(0xFFE5DEC9)),
                         ),
                       ),
                       SizedBox(width: size),
@@ -424,7 +429,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           height: 4,
                           color: lvl == totalLevels
                               ? Colors.transparent
-                              : const Color(0xFFE5DEC9),
+                              : (isDark ? const Color(0xFF2A3027) : const Color(0xFFE5DEC9)),
                         ),
                       ),
                     ],

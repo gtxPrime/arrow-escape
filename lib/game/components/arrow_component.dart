@@ -4,6 +4,7 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants.dart';
+import '../../core/app_colors.dart';
 import '../../data/models/arrow.dart';
 import '../../data/models/level.dart';
 import '../game_state.dart';
@@ -710,7 +711,7 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     if (arrowModel.colorGroup != null) {
       return _groupColors[arrowModel.colorGroup! % _groupColors.length];
     }
-    return const Color(0xFF6E503F); // Clean brown color
+    return AppColors.arrowUp;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
