@@ -28,6 +28,9 @@ class ProgressRepository extends ChangeNotifier {
   bool _musicEnabled = true;
   bool _vibrationEnabled = true;
 
+  // 40x40 warning state
+  bool _hasSeen40x40Warning = false;
+
   // Dev Mode
   bool _isDevMode = false;
 
@@ -46,6 +49,7 @@ class ProgressRepository extends ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get musicEnabled => _musicEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
+  bool get hasSeen40x40Warning => _hasSeen40x40Warning;
   bool get isDevMode => _isDevMode;
 
   int getStarsForLevel(int level) => _levelResults[level]?.stars ?? 0;
@@ -81,6 +85,7 @@ class ProgressRepository extends ChangeNotifier {
     _soundEnabled = _prefs.getBool('soundEnabled') ?? true;
     _musicEnabled = _prefs.getBool('musicEnabled') ?? true;
     _vibrationEnabled = _prefs.getBool('vibrationEnabled') ?? true;
+    _hasSeen40x40Warning = _prefs.getBool('hasSeen40x40Warning') ?? false;
     _isDevMode = _prefs.getBool('isDevMode') ?? false;
 
 
@@ -247,6 +252,12 @@ class ProgressRepository extends ChangeNotifier {
   Future<void> setVibrationEnabled(bool value) async {
     _vibrationEnabled = value;
     await _prefs.setBool('vibrationEnabled', value);
+    notifyListeners();
+  }
+
+  Future<void> setHasSeen40x40Warning(bool value) async {
+    _hasSeen40x40Warning = value;
+    await _prefs.setBool('hasSeen40x40Warning', value);
     notifyListeners();
   }
 
