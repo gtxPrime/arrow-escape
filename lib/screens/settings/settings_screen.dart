@@ -6,6 +6,7 @@ import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../data/repositories/progress_repository.dart';
 import '../../core/audio_manager.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -120,9 +121,18 @@ class SettingsScreen extends StatelessWidget {
                         onTap: () => _launchUrl(_playStoreUrl),
                       ),
                       const Spacer(),
-                      Text('${AppConstants.appName} v1.0.3',
-                          style: GoogleFonts.nunito(
-                              color: AppColors.textMuted, fontSize: 12)),
+                      FutureBuilder<PackageInfo>(
+                        future: PackageInfo.fromPlatform(),
+                        builder: (context, snapshot) {
+                          final version = snapshot.data?.version ?? '1.0.4';
+                          final buildNumber = snapshot.data?.buildNumber ?? '5';
+                          return Text(
+                            '${AppConstants.appName} v$version+$buildNumber',
+                            style: GoogleFonts.nunito(
+                                color: AppColors.textMuted, fontSize: 12),
+                          );
+                        },
+                      ),
                       Text(AppConstants.packageId,
                           style: GoogleFonts.nunito(
                               color: AppColors.textMuted, fontSize: 11)),
