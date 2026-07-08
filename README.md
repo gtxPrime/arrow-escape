@@ -6,10 +6,30 @@
 
 **A casual grid puzzle game — slide arrows out of the grid. Built with Flutter & Flame.**
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white&style=flat-square)](https://flutter.dev)
-[![Flame](https://img.shields.io/badge/Flame-1.18-orange?style=flat-square)](https://flame-engine.org)
-[![License](https://img.shields.io/badge/License-MIT-brightgreen?style=flat-square)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Windows-blue?style=flat-square)](#installation)
+  <p>
+    <a href="https://github.com/gtxPrime/arrow-escape/stargazers">
+      <img src="https://img.shields.io/github/stars/gtxPrime/arrow-escape?style=for-the-badge&color=yellow" alt="Stars" />
+    </a>
+    <a href="https://github.com/gtxPrime/arrow-escape/network/members">
+      <img src="https://img.shields.io/github/forks/gtxPrime/arrow-escape?style=for-the-badge&color=orange" alt="Forks" />
+    </a>
+    <a href="https://github.com/gtxPrime/arrow-escape/issues">
+      <img src="https://img.shields.io/github/issues/gtxPrime/arrow-escape?style=for-the-badge&color=blue" alt="Issues" />
+    </a>
+    <a href="https://github.com/gtxPrime/arrow-escape/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge" alt="License" />
+    </a>
+    <a href="#">
+      <img src="https://img.shields.io/badge/Platform-Flutter_|_Android_|_iOS_|_Web-3DDC84?logo=flutter&logoColor=white&style=for-the-badge" alt="Platform" />
+    </a>
+    <a href="https://github.com/gtxPrime/arrow-escape/releases/latest">
+      <img src="https://img.shields.io/github/downloads/gtxPrime/arrow-escape/total?label=Downloads&logo=github&style=for-the-badge&color=brightgreen" alt="Downloads" />
+    </a>
+  </p>
+
+  <a href="https://github.com/gtxPrime/arrow-escape/releases/latest">
+    <img src="https://raw.githubusercontent.com/gtxprime/mind-mint/main/docs/assets/github_badge.png" height="80" alt="Get it on GitHub" />
+  </a>
 
 </div>
 
@@ -91,35 +111,11 @@ Type:     Norm Norm Norm BOSS Norm Norm  GOD
 | 301 - 500 | Master |
 | 500+ | Legend |
 
-### Arrow Model
+### Arrow Mechanics
 
-Every arrow (`ArrowModel`) has:
-
-| Field | Type | Description |
-|---|---|---|
-| `id` | String | Unique ID e.g. `"a_12_3"` |
-| `row`, `col` | int | Head cell position |
-| `direction` | ArrowDirection | `up / down / left / right` |
-| `path` | List of [row,col] | Cells from head (index 0) to tail |
-| `state` | ArrowState | `idle / sliding / blocked / exited / locked` |
-| `mechanic` | SnakeMechanic | `standard / colorLock` |
-| `colorGroup` | int? | Links two arrows into a color pair |
-
-**Mechanics:**
-- `standard` — Tap → path clear = exits, path blocked = shake + life lost
-- `colorLock` — Tap either arrow in the pair → both must be clear to exit together; either blocked = both shake + life lost
-
-### Deflector Dots (Orphan Dots)
-
-Cells not covered by any arrow become deflector dots. When an exiting arrow passes through one, it is redirected and the dot is consumed.
-
-| Type | Effect |
-|---|---|
-| neutral | Arrow passes straight through |
-| up / down / left / right | Arrow is redirected in that direction |
-
-> [!NOTE]
-> Each dot can only deflect one arrow per level session.
+- **standard** — Tap an arrow: path clear = exits, path blocked = shake + life lost
+- **colorLock** — Two matched-color arrows must exit simultaneously; either blocked = both shake + life lost
+- **Deflector Dots** — Gold dots redirect an exiting arrow and are consumed on use
 
 ### Lives & Scoring
 
@@ -211,47 +207,6 @@ Boss/God levels use shaped silhouettes:
 | Geometric | heart, star, diamond, hexagon, blob, circle |
 | Animals | cat, dog, frog, fox, tiger, panda, fish, bird, butterfly |
 | Objects | guitar, tree, house, crown, saturn |
-
----
-
-## Project Structure
-
-```
-lib/
-├── core/
-│   ├── app_colors.dart          # Light & dark palette
-│   ├── audio_manager.dart       # Music + SFX controller
-│   └── constants.dart           # enableDevMode, grid params, ad IDs
-├── data/
-│   ├── level_generator/
-│   │   ├── level_generator.dart # v4 generator (3-phase pipeline)
-│   │   ├── mask_generator.dart  # Mask shape definitions
-│   │   └── solver.dart          # DFS solvability verifier
-│   ├── models/
-│   │   ├── arrow.dart           # ArrowModel, ArrowDirection, etc.
-│   │   └── level.dart           # LevelModel, OrphanDot, MaskShape
-│   └── repositories/
-│       ├── level_repository.dart    # Level loading & caching
-│       └── progress_repository.dart # Lives, score, dev mode
-├── game/
-│   ├── arrow_puzzle_game.dart   # Flame Game root
-│   ├── components/
-│   │   ├── arrow_component.dart # Renders & animates each arrow
-│   │   └── grid_component.dart  # Grid, deflector dots, preview
-│   └── game_state.dart          # Tap handler, lives, deadlock
-├── screens/
-│   ├── game/game_screen.dart    # Gameplay UI, timer, tutorials
-│   ├── level_select/            # Level grid with stars & locks
-│   ├── main_menu/               # Menu, dev mode gesture, streaks
-│   └── settings/                # Theme, sound, vibration
-└── ads/ad_manager.dart          # AdMob / Unity waterfall
-
-assets/
-├── audio/          # underwater.mp3, click.ogg, swoosh_18.mp3
-├── fonts/          # Nunito (Regular, Bold, ExtraBold, Black)
-├── images/logo.png
-└── levels.bin      # 500 pre-generated levels (887 KB)
-```
 
 ---
 
