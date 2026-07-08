@@ -40,6 +40,12 @@ class AppConstants {
   // static const String applovinInterstitialAdId = 'YOUR_APPLOVIN_INTERSTITIAL_AD_UNIT_ID';
   // static const String applovinRewardedAdId = 'YOUR_APPLOVIN_REWARDED_AD_UNIT_ID';
 
+  // Dev Mode Feature Toggle
+  /// Set to [true] to allow long-pressing the game title on the main menu to
+  /// toggle Dev Mode (all levels unlocked, no life penalty).
+  /// Set to [false] to fully disable Dev Mode in production builds.
+  static const bool enableDevMode = true;
+
   // Ad Network Feature Toggles
   static const bool enableAdMob = false;
   static const bool enableUnityAds = false;

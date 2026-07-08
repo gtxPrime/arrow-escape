@@ -228,32 +228,35 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
               // ── Center Title "ARROW ESCAPE" ──
               GestureDetector(
-                onLongPress: () {
-                  AudioManager.instance.playClick();
-                  progress.toggleDevMode();
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        progress.isDevMode
-                            ? 'Dev Mode Enabled: All levels unlocked!'
-                            : 'Dev Mode Disabled',
-                        style: GoogleFonts.nunito(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                      backgroundColor: progress.isDevMode
-                          ? const Color(0xFF27AE60)
-                          : const Color(0xFFC0392B),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
+                // Long-press toggles Dev Mode — only active when AppConstants.enableDevMode == true.
+                onLongPress: AppConstants.enableDevMode
+                    ? () {
+                        AudioManager.instance.playClick();
+                        progress.toggleDevMode();
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              progress.isDevMode
+                                  ? 'Dev Mode Enabled: All levels unlocked!'
+                                  : 'Dev Mode Disabled',
+                              style: GoogleFonts.nunito(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                            backgroundColor: progress.isDevMode
+                                ? const Color(0xFF27AE60)
+                                : const Color(0xFFC0392B),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    : null,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
