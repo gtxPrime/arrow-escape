@@ -96,25 +96,32 @@ The game loop runs on a dual-phase execution tick:
 1. **Update Phase (`update(double dt)`)**: Evaluates real-time animations (e.g. arrow slide offsets, rotation angles, particle decay times) and updates the logical coordinate grid in `GameState`.
 2. **Render Phase (`render(Canvas canvas)`)**: Draws grid cells, deflector plates, standard arrows, and particle effects directly onto the double-buffered screen canvas. Under the hood, static components are recached into an isolate `ui.Picture` buffer to keep CPU/GPU draw cycles at a constant 60/120 FPS.
 
-### <img src="https://img.shields.io/badge/-Pipeline-E91E63?style=flat-square&logo=git-commit&logoColor=white" align="center" /> The Level Generation Pipeline
+### <img src="https://img.shields.io/badge/-Pipeline-E91E63?style=flat-square&logo=git-commit&logoColor=white" align="center" /> The Level Generation Pipeline (v4 Rewrite)
 Every level is fully generated programmatically and deterministically from a level number seed:
 
 ```mermaid
 graph TD
     A["Seeded Random (levelNumber)"] --> B["Shape Selection & Mask Generation"]
-    B --> C["Phase 1 & 2: Grow Long/Medium Arrows (exit inward)"]
-    C --> D["Phase 3: Pack Remaining Space (Length-2 pairs)"]
-    D --> E["Phase 4: Assign Safe Deflector Directions (reverse-trace)"]
-    E --> F["Phase 5: Apply Mechanics (ColorLock groups)"]
+    B --> C["Phase 1: Grow ≥3-dot Arrows (Very Long, Long, Med Tiers)"]
+    C --> D["Phase 2: Pack Remaining Gaps (Length-2 adjacent-pair sweep)"]
+    D --> E["Phase 3: Assign Safe Deflector Directions (reverse construction trace)"]
+    E --> F["Phase 4: Apply Mechanics (ColorLock groups & Safety Auditing)"]
     F --> G["Level Verification via Backtracking Solver (DFS)"]
-    G -- "Unsolvable / Cap Hit" --> A
+    G -- "Unsolvable / Loop / Cap Hit" --> A
     G -- "Verified Solvable" --> H["Accept Level Model"]
 ```
 
 - **Seeded Randomness**: Uses `Random(levelNumber * 103 + 51)` to produce identical layouts for a given level ID across all player devices.
-- **Inward Growth (Phases 1 & 2)**: Starts by finding exit boundary cells and growing arrow paths inward. This guarantees that at least a subset of arrows can exit without obstructions.
-- **Length-2 Packing (Phase 3)**: Sweeps remaining isolated tiles using a center-out shuffled search grid, preventing clustering of small arrows.
-- **Reverse Exit Deflector Routing (Phase 4)**: Unassigned orphan cells are converted to redirect dots. The generator simulates arrow exits in reverse construction order and configures deflection directions that guarantee a safe path to the grid boundaries.
+- **3-Phase Fill Pipeline**:
+  - **Phase 1 (≥3-dot Arrows)**: Places longer paths (33% Very Long [$\ge \text{ceil}(\text{gridSize} \times 0.55)$], 33% Long [$\ge \text{ceil}(\text{gridSize} \times 0.40)$], and 34% Medium [3–5 cells]). Terminates when no candidate positions can accept paths $\ge 3$.
+  - **Phase 2 (2-dot Pair-Sweep)**: Fills remaining gaps using exit-constrained length-2 arrows first, then falls back to a greedy adjacent-pair sweep to maximize cell coverage.
+  - **Phase 3 (Orphans & Deflector Assignment)**: Any remaining un-fillable single cells are designated as **Orphan Dots**. If a level allows direction dots (e.g. boss/god or tutorial 3), orphan cells are set as deflectors with directions computed by reverse-tracing candidate exit paths.
+- **Aesthetic Path Growth Constraints**:
+  - **Tangle Factor**: Higher levels use adaptive turn biases (up to 85% turn-chance) and shorter max-straight limits (down to 2 cells) to yield visually tangled, organic zig-zag bodies.
+  - **Anti-Square Check**: The path growth algorithm actively rejects moves that form closed loops (where an arrow body loops back to enclose its own starting region).
+- **Safety Audits**:
+  - **Orphan Dot Loop Safety**: Checks that redirect deflector settings do not create infinite redirection loops or locking redirect boxes.
+  - **ColorLock Pair Safety**: Verifies that paired arrows do not cross each other's bodies, preventing mutually-blocking configurations.
 - **Solver Backtracking DFS Verification**: A custom depth-first search solver parses the generated board. The layout is accepted only if it solves within a dynamic state cap.
 
 ### <img src="https://img.shields.io/badge/-Level_Data-1565C0?style=flat-square&logo=database&logoColor=white" align="center" /> Level Data Asset (`assets/levels.bin`)
