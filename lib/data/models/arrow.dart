@@ -81,9 +81,6 @@ enum SnakeMechanic {
 
   /// Color paired arrows that exit together.
   colorLock,
-
-  /// Requires two successful (non-blocked) taps: first cracks, second clears.
-  iceSegment,
 }
 
 // ─── Arrow State Enum ─────────────────────────────────────────────────────────
@@ -93,7 +90,6 @@ enum ArrowState {
   sliding,    // Currently animating
   blocked,    // Hit a wall — showing error
   exited,     // Successfully left grid
-  cracked,    // Ice snake cracked (first tap done), needs second tap
   locked,     // colorLock snake — locked by its colorKey not yet cleared
 }
 

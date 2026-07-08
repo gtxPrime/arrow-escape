@@ -151,10 +151,6 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
       case TapResult.locked:
         _playLockedAnimation();
         break;
-      case TapResult.cracked:
-        _playCrackAnimation();
-        _isAnimating = false;
-        break;
       case TapResult.ignored:
         _isAnimating = false;
         break;
@@ -333,16 +329,6 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
       MoveEffect.to(Vector2(ox - 3, oy), EffectController(duration: 0.05)),
       MoveEffect.to(Vector2(ox, oy), EffectController(duration: 0.04)),
     ], onComplete: () => _isAnimating = false));
-  }
-
-  // ── Ice first crack: scale pulse ──────────────────────────────────────────
-
-  void _playCrackAnimation() {
-    add(SequenceEffect([
-      ScaleEffect.to(Vector2.all(1.08), EffectController(duration: 0.07)),
-      ScaleEffect.to(Vector2.all(0.96), EffectController(duration: 0.07)),
-      ScaleEffect.to(Vector2.all(1.00), EffectController(duration: 0.06)),
-    ]));
   }
 
   // ── Update ────────────────────────────────────────────────────────────────

@@ -154,7 +154,7 @@ class GameState extends ChangeNotifier {
     if (index == -1) return TapResult.ignored;
 
     final arrow = _arrows[index];
-    if (arrow.state != ArrowState.idle && arrow.state != ArrowState.cracked) {
+    if (arrow.state != ArrowState.idle) {
       return TapResult.ignored;
     }
 
@@ -182,18 +182,6 @@ class GameState extends ChangeNotifier {
           return _handleGroupExited(grp, groupArrows);
         }
       }
-    }
-
-    // ── Ice mechanic: first tap cracks, second tap clears ────────────────────
-    if (arrow.mechanic == SnakeMechanic.iceSegment &&
-        arrow.state == ArrowState.idle) {
-      if (_computeExitInfo(arrow).blocked) {
-        return _handleBlocked(index, arrow, arrowId);
-      }
-      // First successful tap: crack
-      _arrows[index] = arrow.copyWith(state: ArrowState.cracked);
-      notifyListeners();
-      return TapResult.cracked;
     }
 
     // ── Standard move check ─────────────────────────────────────────
@@ -382,7 +370,7 @@ class GameState extends ChangeNotifier {
   }
 }
 
-enum TapResult { exited, blocked, locked, cracked, ignored }
+enum TapResult { exited, blocked, locked, ignored }
 
 /// Exit path analysis result for one arrow.
 class _ExitInfo {

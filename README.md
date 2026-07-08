@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
   <img src="assets/images/logo.png" alt="Arrow Escape Logo" width="120" height="120" onerror="this.src='https://raw.githubusercontent.com/gtxPrime/arrow-escape/main/assets/images/logo.png'; this.onerror=null;" />
 
@@ -145,8 +145,8 @@ Every arrow is an `ArrowModel` with the following properties:
 | `row`, `col` | int | Head cell coordinates |
 | `direction` | ArrowDirection | up / down / left / right — the exit direction |
 | `path` | List of [row,col] | Ordered cells from head (index 0) to tail (last) |
-| `state` | ArrowState | idle / sliding / blocked / exited / cracked / locked |
-| `mechanic` | SnakeMechanic | standard / colorLock / iceSegment |
+| `state` | ArrowState | idle / sliding / blocked / exited / locked |
+| `mechanic` | SnakeMechanic | standard / colorLock |
 | `colorGroup` | int or null | Non-null groups two arrows into a color pair |
 
 #### Arrow Directions
@@ -168,7 +168,6 @@ The base rendered asset points right (0 rad). `ArrowComponent` rotates the canva
 | sliding | Exit animation in progress |
 | blocked | Path obstructed — shake animation plays, life is lost |
 | exited | Successfully left the grid; removed from model list |
-| cracked | Ice arrow first tap done — needs one more tap |
 | locked | Color-lock arrow whose partner has not exited yet |
 
 #### Arrow Mechanics
@@ -177,7 +176,6 @@ The base rendered asset points right (0 rad). `ArrowComponent` rotates the canva
 |---|---|
 | standard | Tap — if path clear, arrow slides and exits; otherwise blocked |
 | colorLock | Two arrows share a colorGroup. Tap either — both paths checked simultaneously. Both clear = both exit. Either blocked = both shake, one life lost |
-| iceSegment | First tap (path clear) = cracked state. Second tap = exits. First tap while blocked = shake + life lost |
 
 ---
 
