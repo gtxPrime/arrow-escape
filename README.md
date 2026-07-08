@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/images/logo.png" alt="Arrow Escape Logo" width="100" height="100" />
+<img src="assets/images/logo.png" alt="Arrow Escape Logo" width="120" height="120" />
 
 # Arrow Escape
 
@@ -185,7 +185,7 @@ $$\text{turnBias} = 0.65 + \text{tangleFactor} \times 0.20$$
 
 **Max deflector dots** (M = active mask cells):
 
-$$E_{\text{max}} = \text{clamp}\!\left(5,\;\lceil M \times P \rceil,\;150\right) \quad P = \begin{cases}22\% & G \le 20 \\ 16\% & G > 20\end{cases}$$
+$$E_{\text{max}} = \text{clamp}\!\left(5,\;\lceil M \times P \rceil,\;150\right) \quad P = 22\% \text{ if } G \le 20, \text{ else } 16\%$$
 
 ### Level Binary Asset (`assets/levels.bin`)
 
@@ -328,10 +328,8 @@ static const int interstitialEveryNLevels = 4;
 
 ## Star History
 
-<a href="https://star-history.com/#gtxPrime/arrow-escape&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=gtxPrime/arrow-escape&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=gtxPrime/arrow-escape&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=gtxPrime/arrow-escape&type=Date" />
-  </picture>
-</a>
+<div align="center">
+  <a href="https://star-history.com/#gtxPrime/arrow-escape&Date">
+    <img src="https://api.star-history.com/svg?repos=gtxPrime/arrow-escape&type=Date&theme=dark" alt="Star History Chart" />
+  </a>
+</div>
