@@ -32,6 +32,9 @@ class ProgressRepository extends ChangeNotifier {
   // 40x40 warning state
   bool _hasSeen40x40Warning = false;
 
+  // Zoom hint state
+  bool _hasSeenZoomHint = false;
+
   // Dev Mode
   bool _isDevMode = false;
 
@@ -52,6 +55,7 @@ class ProgressRepository extends ChangeNotifier {
   bool get vibrationEnabled => _vibrationEnabled;
   ThemeMode get themeMode => _themeMode;
   bool get hasSeen40x40Warning => _hasSeen40x40Warning;
+  bool get hasSeenZoomHint => _hasSeenZoomHint;
   bool get isDevMode => _isDevMode;
 
   int getStarsForLevel(int level) => _levelResults[level]?.stars ?? 0;
@@ -88,6 +92,7 @@ class ProgressRepository extends ChangeNotifier {
     _musicEnabled = _prefs.getBool('musicEnabled') ?? true;
     _vibrationEnabled = _prefs.getBool('vibrationEnabled') ?? true;
     _hasSeen40x40Warning = _prefs.getBool('hasSeen40x40Warning') ?? false;
+    _hasSeenZoomHint = _prefs.getBool('hasSeenZoomHint') ?? false;
     _isDevMode = _prefs.getBool('isDevMode') ?? false;
 
     final themeStr = _prefs.getString('themeMode') ?? 'system';
@@ -272,6 +277,12 @@ class ProgressRepository extends ChangeNotifier {
   Future<void> setHasSeen40x40Warning(bool value) async {
     _hasSeen40x40Warning = value;
     await _prefs.setBool('hasSeen40x40Warning', value);
+    notifyListeners();
+  }
+
+  Future<void> setHasSeenZoomHint(bool value) async {
+    _hasSeenZoomHint = value;
+    await _prefs.setBool('hasSeenZoomHint', value);
     notifyListeners();
   }
 

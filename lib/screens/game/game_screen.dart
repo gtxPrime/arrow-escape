@@ -731,7 +731,17 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   bool get _isLevelReady => _gameState != null;
 
   void _showTutorialDialogIfNeeded(int levelNum) {
-    if (levelNum == 2) {
+    if (levelNum == 1) {
+      _showTutorialDialog(
+        title: 'How to Play',
+        description:
+            'Arrows slide in the direction they point. Tap an arrow to make it escape the grid! Arrows cannot pass through other arrows, so plan their escape order carefully.',
+        icon: LucideIcons.playCircle,
+        iconColor: const Color(0xFF4CAF50),
+        animationWidget: _buildNormalArrowAnimation(),
+        stepText: '1/3',
+      );
+    } else if (levelNum == 2) {
       _showTutorialDialog(
         title: 'Color Paired Arrows',
         description:
@@ -739,6 +749,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         icon: LucideIcons.coins,
         iconColor: const Color(0xFFFF2D55),
         animationWidget: _buildColorLockAnimation(),
+        stepText: '2/3',
       );
     } else if (levelNum == 3) {
       _showTutorialDialog(
@@ -748,6 +759,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         icon: LucideIcons.rotateCw,
         iconColor: const Color(0xFFFFAA00),
         animationWidget: _buildDeflectorAnimation(),
+        stepText: '3/3',
       );
     }
 
@@ -758,8 +770,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       _show40x40WarningDialog();
     }
 
-    // If the arrows are very small, show a snackbar warning to zoom in/out
-    if (_level.gridSize >= 25) {
+    // If the arrows are very small, show a snackbar warning to zoom in/out (one-time only)
+    if (_level.gridSize >= 25 && !progressRepo.hasSeenZoomHint) {
+      progressRepo.setHasSeenZoomHint(true);
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -892,6 +905,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     required IconData icon,
     required Color iconColor,
     required Widget animationWidget,
+    required String stepText,
   }) {
     setState(() => _isGamePaused = true);
     showDialog(
@@ -905,17 +919,39 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             decoration: BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.surfaceLight, width: 3),
+              border: Border.all(color: iconColor.withValues(alpha: 0.25), width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  blurRadius: 32,
+                  color: iconColor.withValues(alpha: 0.15),
+                  blurRadius: 36,
+                  spreadRadius: 4,
                 ),
               ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Tutorial Step Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: iconColor.withValues(alpha: 0.3), width: 1),
+                  ),
+                  child: Text(
+                    'TUTORIAL STEP $stepText',
+                    style: GoogleFonts.nunito(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: iconColor,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Pulsing Icon
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -923,8 +959,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: iconColor, size: 28),
-                ),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                        begin: const Offset(0.92, 0.92),
+                        end: const Offset(1.08, 1.08),
+                        duration: 1000.ms,
+                        curve: Curves.easeInOut),
                 const SizedBox(height: 16),
+                
                 Text(
                   title,
                   textAlign: TextAlign.center,
@@ -980,7 +1023,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 ),
               ],
             ),
-          ),
+          )
+              .animate()
+              .scale(
+                  begin: const Offset(0.9, 0.9),
+                  end: const Offset(1.0, 1.0),
+                  duration: 320.ms,
+                  curve: Curves.easeOutBack)
+              .fade(duration: 250.ms),
         );
       },
     ).then((_) {
@@ -990,28 +1040,28 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     });
   }
 
-  Widget _buildColorLockAnimation() {
+  Widget _buildNormalArrowAnimation() {
     return Container(
       height: 100,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surfaceLight, width: 1),
       ),
       child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            // First paired arrow
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF2D55).withValues(alpha: 0.15),
+                color: AppColors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFF2D55), width: 1.5),
+                border: Border.all(color: AppColors.primary, width: 1.5),
               ),
-              child: const Icon(Icons.arrow_upward_rounded,
-                  color: Color(0xFFFF2D55), size: 18),
+              child: Icon(Icons.arrow_forward_rounded,
+                  color: AppColors.primary, size: 20),
             )
                 .animate(onPlay: (c) => c.repeat())
                 .scale(
@@ -1019,30 +1069,102 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     end: const Offset(1.03, 1.03),
                     duration: 800.ms,
                     curve: Curves.easeInOut)
-                .slideY(begin: 0, end: -1.2, delay: 1000.ms, duration: 600.ms)
+                .slideX(begin: 0, end: 1.5, delay: 1000.ms, duration: 600.ms)
                 .fadeOut(delay: 1000.ms, duration: 200.ms),
+            Positioned(
+              right: 80,
+              bottom: 15,
+              child: Icon(
+                Icons.touch_app_rounded,
+                color: AppColors.textPrimary.withValues(alpha: 0.8),
+                size: 24,
+              )
+                  .animate(onPlay: (c) => c.repeat())
+                  .hide()
+                  .fadeIn(delay: 400.ms, duration: 200.ms)
+                  .scale(begin: const Offset(1.2, 1.2), end: const Offset(0.9, 0.9), delay: 400.ms, duration: 400.ms, curve: Curves.easeOutBack)
+                  .fadeOut(delay: 800.ms, duration: 200.ms),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-            const SizedBox(width: 32),
+  Widget _buildColorLockAnimation() {
+    final Color lockColor = const Color(0xFFFF2D55);
+    return Container(
+      height: 100,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surfaceLight, width: 1),
+      ),
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // First paired arrow
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: lockColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: lockColor, width: 1.5),
+                  ),
+                  child: Icon(Icons.arrow_upward_rounded,
+                      color: lockColor, size: 18),
+                )
+                    .animate(onPlay: (c) => c.repeat())
+                    .scale(
+                        begin: const Offset(0.9, 0.9),
+                        end: const Offset(1.03, 1.03),
+                        duration: 800.ms,
+                        curve: Curves.easeInOut)
+                    .slideY(begin: 0, end: -1.2, delay: 1000.ms, duration: 600.ms)
+                    .fadeOut(delay: 1000.ms, duration: 200.ms),
 
-            // Second paired arrow (exits at the same time!)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF2D55).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFF2D55), width: 1.5),
-              ),
-              child: const Icon(Icons.arrow_upward_rounded,
-                  color: Color(0xFFFF2D55), size: 18),
-            )
-                .animate(onPlay: (c) => c.repeat())
-                .scale(
-                    begin: const Offset(0.9, 0.9),
-                    end: const Offset(1.03, 1.03),
-                    duration: 800.ms,
-                    curve: Curves.easeInOut)
-                .slideY(begin: 0, end: -1.2, delay: 1000.ms, duration: 600.ms)
-                .fadeOut(delay: 1000.ms, duration: 200.ms),
+                const SizedBox(width: 32),
+
+                // Second paired arrow (exits at the same time!)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: lockColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: lockColor, width: 1.5),
+                  ),
+                  child: Icon(Icons.arrow_upward_rounded,
+                      color: lockColor, size: 18),
+                )
+                    .animate(onPlay: (c) => c.repeat())
+                    .scale(
+                        begin: const Offset(0.9, 0.9),
+                        end: const Offset(1.03, 1.03),
+                        duration: 800.ms,
+                        curve: Curves.easeInOut)
+                    .slideY(begin: 0, end: -1.2, delay: 1000.ms, duration: 600.ms)
+                    .fadeOut(delay: 1000.ms, duration: 200.ms),
+              ],
+            ),
+            Positioned(
+              left: 110,
+              bottom: 12,
+              child: Icon(
+                Icons.touch_app_rounded,
+                color: AppColors.textPrimary.withValues(alpha: 0.8),
+                size: 24,
+              )
+                  .animate(onPlay: (c) => c.repeat())
+                  .hide()
+                  .fadeIn(delay: 400.ms, duration: 200.ms)
+                  .scale(begin: const Offset(1.2, 1.2), end: const Offset(0.9, 0.9), delay: 400.ms, duration: 400.ms, curve: Curves.easeOutBack)
+                  .fadeOut(delay: 800.ms, duration: 200.ms),
+            ),
           ],
         ),
       ),
@@ -1054,8 +1176,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       height: 100,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surfaceLight, width: 1),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -1080,7 +1203,19 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 size: 16,
               ),
             ),
-          ),
+          )
+              .animate(onPlay: (c) => c.repeat())
+              .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.15, 1.15),
+                  delay: 600.ms,
+                  duration: 200.ms,
+                  curve: Curves.easeOutBack)
+              .then(duration: 200.ms)
+              .scale(
+                  begin: const Offset(1.15, 1.15),
+                  end: const Offset(1, 1),
+                  duration: 200.ms),
           Positioned(
             child: Container(
               width: 14,

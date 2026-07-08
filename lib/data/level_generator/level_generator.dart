@@ -52,6 +52,135 @@ import 'mask_generator.dart';
 class LevelGenerator {
   /// Generate a level. Seeded by levelNumber for determinism.
   static LevelModel generateLevel(int levelNumber) {
+    if (levelNumber == 1) {
+      final arrows = [
+        ArrowModel(
+          id: 'a_1_1',
+          row: 4,
+          col: 5,
+          direction: ArrowDirection.right,
+          isPartOfPattern: true,
+          path: [[4, 5]],
+          mechanic: SnakeMechanic.standard,
+        ),
+        ArrowModel(
+          id: 'a_1_2',
+          row: 5,
+          col: 5,
+          direction: ArrowDirection.up,
+          isPartOfPattern: true,
+          path: [[5, 5]],
+          mechanic: SnakeMechanic.standard,
+        ),
+        ArrowModel(
+          id: 'a_1_3',
+          row: 6,
+          col: 5,
+          direction: ArrowDirection.up,
+          isPartOfPattern: true,
+          path: [[6, 5]],
+          mechanic: SnakeMechanic.standard,
+        ),
+      ];
+
+      return LevelModel(
+        levelNumber: 1,
+        gridSize: 10,
+        arrows: arrows,
+        patternName: 'Tutorial 1',
+        difficulty: Difficulty.tutorial,
+        maskShape: MaskShape.square,
+        mask: MaskGenerator.squareMask(10),
+        orphanDots: [],
+        solutionOrder: ['a_1_1', 'a_1_2', 'a_1_3'],
+      );
+    }
+
+    if (levelNumber == 2) {
+      final arrows = [
+        ArrowModel(
+          id: 'a_2_1',
+          row: 5,
+          col: 4,
+          direction: ArrowDirection.up,
+          isPartOfPattern: true,
+          path: [[5, 4]],
+          mechanic: SnakeMechanic.colorLock,
+          colorGroup: 0,
+        ),
+        ArrowModel(
+          id: 'a_2_2',
+          row: 5,
+          col: 5,
+          direction: ArrowDirection.right,
+          isPartOfPattern: true,
+          path: [[5, 5]],
+          mechanic: SnakeMechanic.colorLock,
+          colorGroup: 0,
+        ),
+        ArrowModel(
+          id: 'a_2_3',
+          row: 4,
+          col: 4,
+          direction: ArrowDirection.left,
+          isPartOfPattern: true,
+          path: [[4, 4]],
+          mechanic: SnakeMechanic.standard,
+        ),
+      ];
+
+      return LevelModel(
+        levelNumber: 2,
+        gridSize: 10,
+        arrows: arrows,
+        patternName: 'Tutorial 2',
+        difficulty: Difficulty.tutorial,
+        maskShape: MaskShape.square,
+        mask: MaskGenerator.squareMask(10),
+        orphanDots: [],
+        solutionOrder: ['a_2_3', 'a_2_1', 'a_2_2'],
+      );
+    }
+
+    if (levelNumber == 3) {
+      final arrows = [
+        ArrowModel(
+          id: 'a_3_1',
+          row: 6,
+          col: 4,
+          direction: ArrowDirection.up,
+          isPartOfPattern: true,
+          path: [[6, 4]],
+          mechanic: SnakeMechanic.standard,
+        ),
+        ArrowModel(
+          id: 'a_3_2',
+          row: 4,
+          col: 6,
+          direction: ArrowDirection.down,
+          isPartOfPattern: true,
+          path: [[4, 6]],
+          mechanic: SnakeMechanic.standard,
+        ),
+      ];
+
+      final orphanDots = [
+        const OrphanDot(row: 4, col: 4, type: OrphanDotType.right),
+      ];
+
+      return LevelModel(
+        levelNumber: 3,
+        gridSize: 10,
+        arrows: arrows,
+        patternName: 'Tutorial 3',
+        difficulty: Difficulty.tutorial,
+        maskShape: MaskShape.square,
+        mask: MaskGenerator.squareMask(10),
+        orphanDots: orphanDots,
+        solutionOrder: ['a_3_2', 'a_3_1'],
+      );
+    }
+
     final type = AppConstants.levelTypeFor(levelNumber);
     int gridSize = AppConstants.gridSizeForLevel(levelNumber);
     if (levelNumber == 213) gridSize = 32;

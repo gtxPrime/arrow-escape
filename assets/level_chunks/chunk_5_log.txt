@@ -1,147 +1,103 @@
-[17:12:25] === Chunk 401-500  (56 cached) ===
-[17:12:25] Level 401 - CACHED
-[17:12:25] Level 402 - CACHED
-[17:12:25] Level 403 - CACHED
-[17:12:25] Level 404 - CACHED
-[17:12:25] Level 405 - CACHED
-[17:12:25] Level 406 - CACHED
-[17:12:25] Level 407 - CACHED
-[17:12:25] Level 408 - CACHED
-[17:12:25] Level 409 - CACHED
-[17:12:25] Level 410 - CACHED
-[17:12:25] Level 411 - CACHED
-[17:12:25] Level 412 - CACHED
-[17:12:25] Level 413 - CACHED
-[17:12:25] Level 414 - CACHED
-[17:12:25] Level 415 - CACHED
-[17:12:25] Level 416 - CACHED
-[17:12:25] Level 417 - CACHED
-[17:12:25] Level 418 - CACHED
-[17:12:25] Level 419 - CACHED
-[17:12:25] Level 420 - CACHED
-[17:12:25] Level 421 - CACHED
-[17:12:25] Level 422 - CACHED
-[17:12:25] Level 423 - CACHED
-[17:12:25] Level 424 - CACHED
-[17:12:25] Level 425 - CACHED
-[17:12:25] Level 426 - CACHED
-[17:12:25] Level 427 - CACHED
-[17:12:25] Level 428 - CACHED
-[17:12:25] Level 429 - CACHED
-[17:12:25] Level 430 - CACHED
-[17:12:25] Level 431 - CACHED
-[17:12:25] Level 432 - CACHED
-[17:12:25] Level 433 - CACHED
-[17:12:25] Level 434 - CACHED
-[17:12:25] Level 435 - CACHED
-[17:12:25] Level 436 - CACHED
-[17:12:25] Level 437 - CACHED
-[17:12:25] Level 438 - CACHED
-[17:12:25] Level 439 - generating...
-[17:13:25] Level 439 - OK  221 arrows  34x34  60.8s
-[17:13:25] Level 440 - CACHED
-[17:13:25] Level 441 - CACHED
-[17:13:25] Level 442 - generating...
-[17:14:56] Level 442 - OK  216 arrows  34x34  90.6s
-[17:14:56] Level 443 - CACHED
-[17:14:56] Level 444 - generating...
-[17:15:00] Level 444 - OK  153 arrows  40x40  3.4s
-[17:15:00] Level 445 - CACHED
-[17:15:00] Level 446 - generating...
-[17:15:42] Level 446 - OK  227 arrows  34x34  42.1s
-[17:15:42] Level 447 - generating...
-[17:18:16] Level 447 - OK  256 arrows  34x34  154.7s
-[17:18:17] Level 448 - CACHED
-[17:18:17] Level 449 - CACHED
-[17:18:17] Level 450 - generating...
-[17:18:27] Level 450 - OK  259 arrows  34x34  10.5s
-[17:18:27] Level 451 - generating...
-[17:24:45] Level 451 - OK  284 arrows  40x40  377.4s
-[17:24:45] Level 452 - CACHED
-[17:24:45] Level 453 - CACHED
-[17:24:45] Level 454 - generating...
-[17:25:54] Level 454 - OK  237 arrows  34x34  69.4s
-[17:25:54] Level 455 - CACHED
-[17:25:54] Level 456 - CACHED
-[17:25:54] Level 457 - generating...
-[17:27:37] Level 457 - OK  250 arrows  34x34  102.7s
-[17:27:37] Level 458 - CACHED
-[17:27:37] Level 459 - generating...
-[17:28:21] Level 459 - OK  245 arrows  34x34  44.6s
-[17:28:21] Level 460 - generating...
-[17:29:52] Level 460 - OK  233 arrows  34x34  90.7s
-[17:29:52] Level 461 - CACHED
-[17:29:52] Level 462 - CACHED
-[17:29:52] Level 463 - CACHED
-[17:29:52] Level 464 - CACHED
-[17:29:52] Level 465 - CACHED
-[17:29:52] Level 466 - generating...
-[17:30:50] Level 466 - OK  259 arrows  34x34  58.0s
-[17:30:50] Level 467 - generating...
-[17:31:57] Level 467 - OK  257 arrows  34x34  66.3s
-[17:31:57] Level 468 - CACHED
-[17:31:57] Level 469 - CACHED
-[17:31:57] Level 470 - generating...
-[17:32:23] Level 470 - OK  263 arrows  34x34  26.5s
-[17:32:23] Level 471 - generating...
-[17:34:30] Level 471 - OK  256 arrows  34x34  126.9s
-[17:34:30] Level 472 - generating...
-[17:38:17] Level 472 - OK  242 arrows  40x40  226.7s
-[17:38:17] Level 473 - generating...
-[17:39:22] Level 473 - OK  265 arrows  34x34  64.7s
-[17:39:22] Level 474 - generating...
-[17:41:38] Level 474 - OK  258 arrows  34x34  135.9s
-[17:41:38] Level 475 - generating...
-[17:41:47] Level 475 - OK  263 arrows  34x34  9.4s
-[17:41:47] Level 476 - generating...
-[17:42:07] Level 476 - OK  187 arrows  40x40  19.7s
-[17:42:07] Level 477 - generating...
-[17:42:41] Level 477 - OK  230 arrows  35x35  34.0s
-[17:42:41] Level 478 - generating...
-[17:42:54] Level 478 - OK  276 arrows  35x35  12.8s
-[17:42:54] Level 479 - generating...
-[17:46:51] Level 479 - OK  276 arrows  40x40  236.8s
-[17:46:51] Level 480 - generating...
-[17:47:01] Level 480 - OK  242 arrows  35x35  9.9s
-[17:47:01] Level 481 - generating...
-[17:47:53] Level 481 - OK  270 arrows  35x35  52.7s
-[17:47:54] Level 482 - generating...
-[17:49:00] Level 482 - OK  263 arrows  35x35  66.8s
-[17:49:00] Level 483 - generating...
-[17:50:05] Level 483 - OK  175 arrows  40x40  64.6s
-[17:50:05] Level 484 - generating...
-[17:51:01] Level 484 - OK  261 arrows  35x35  55.9s
-[17:51:01] Level 485 - generating...
-[17:52:33] Level 485 - OK  274 arrows  35x35  92.2s
-[17:52:33] Level 486 - generating...
-[17:52:36] Level 486 - OK  160 arrows  40x40  2.7s
-[17:52:36] Level 487 - generating...
-[17:55:50] Level 487 - OK  246 arrows  35x35  193.8s
-[17:55:50] Level 488 - generating...
-[17:55:56] Level 488 - OK  221 arrows  35x35  6.3s
-[17:55:56] Level 489 - generating...
-[17:57:37] Level 489 - OK  284 arrows  35x35  100.2s
-[17:57:37] Level 490 - generating...
-[17:59:02] Level 490 - OK  189 arrows  40x40  85.5s
-[17:59:02] Level 491 - generating...
-[18:02:16] Level 491 - OK  272 arrows  35x35  194.0s
-[18:02:16] Level 492 - generating...
-[18:03:25] Level 492 - OK  258 arrows  35x35  68.8s
-[18:03:25] Level 493 - generating...
-[18:04:06] Level 493 - OK  176 arrows  40x40  40.5s
-[18:04:06] Level 494 - generating...
-[18:06:54] Level 494 - OK  231 arrows  35x35  168.5s
-[18:06:54] Level 495 - generating...
-[18:07:34] Level 495 - OK  255 arrows  35x35  39.3s
-[18:07:34] Level 496 - generating...
-[18:08:12] Level 496 - OK  281 arrows  35x35  38.6s
-[18:08:12] Level 497 - generating...
-[18:08:13] Level 497 - OK  100 arrows  40x40  836ms
-[18:08:13] Level 498 - generating...
-[18:08:28] Level 498 - OK  260 arrows  35x35  15.0s
-[18:08:28] Level 499 - generating...
-[18:11:12] Level 499 - OK  234 arrows  35x35  163.5s
-[18:11:12] Level 500 - generating...
-[18:14:01] Level 500 - OK  283 arrows  40x40  168.7s
-[18:14:01] 
-[18:14:01] === DONE: gen=44  skip=56  evicted=0  failed=0  total=100/100  time=3696s ===
+[20:42:33] === Chunk 401-500  (100 cached) ===
+[20:42:33] Level 401 - CACHED
+[20:42:33] Level 402 - CACHED
+[20:42:33] Level 403 - CACHED
+[20:42:33] Level 404 - CACHED
+[20:42:33] Level 405 - CACHED
+[20:42:33] Level 406 - CACHED
+[20:42:33] Level 407 - CACHED
+[20:42:33] Level 408 - CACHED
+[20:42:33] Level 409 - CACHED
+[20:42:33] Level 410 - CACHED
+[20:42:33] Level 411 - CACHED
+[20:42:33] Level 412 - CACHED
+[20:42:33] Level 413 - CACHED
+[20:42:33] Level 414 - CACHED
+[20:42:33] Level 415 - CACHED
+[20:42:33] Level 416 - CACHED
+[20:42:33] Level 417 - CACHED
+[20:42:33] Level 418 - CACHED
+[20:42:33] Level 419 - CACHED
+[20:42:33] Level 420 - CACHED
+[20:42:33] Level 421 - CACHED
+[20:42:33] Level 422 - CACHED
+[20:42:33] Level 423 - CACHED
+[20:42:33] Level 424 - CACHED
+[20:42:33] Level 425 - CACHED
+[20:42:33] Level 426 - CACHED
+[20:42:33] Level 427 - CACHED
+[20:42:33] Level 428 - CACHED
+[20:42:33] Level 429 - CACHED
+[20:42:33] Level 430 - CACHED
+[20:42:33] Level 431 - CACHED
+[20:42:33] Level 432 - CACHED
+[20:42:33] Level 433 - CACHED
+[20:42:33] Level 434 - CACHED
+[20:42:33] Level 435 - CACHED
+[20:42:33] Level 436 - CACHED
+[20:42:33] Level 437 - CACHED
+[20:42:33] Level 438 - CACHED
+[20:42:33] Level 439 - CACHED
+[20:42:33] Level 440 - CACHED
+[20:42:33] Level 441 - CACHED
+[20:42:33] Level 442 - CACHED
+[20:42:33] Level 443 - CACHED
+[20:42:33] Level 444 - CACHED
+[20:42:33] Level 445 - CACHED
+[20:42:33] Level 446 - CACHED
+[20:42:33] Level 447 - CACHED
+[20:42:33] Level 448 - CACHED
+[20:42:33] Level 449 - CACHED
+[20:42:33] Level 450 - CACHED
+[20:42:33] Level 451 - CACHED
+[20:42:33] Level 452 - CACHED
+[20:42:33] Level 453 - CACHED
+[20:42:33] Level 454 - CACHED
+[20:42:33] Level 455 - CACHED
+[20:42:33] Level 456 - CACHED
+[20:42:33] Level 457 - CACHED
+[20:42:33] Level 458 - CACHED
+[20:42:33] Level 459 - CACHED
+[20:42:33] Level 460 - CACHED
+[20:42:33] Level 461 - CACHED
+[20:42:33] Level 462 - CACHED
+[20:42:33] Level 463 - CACHED
+[20:42:33] Level 464 - CACHED
+[20:42:33] Level 465 - CACHED
+[20:42:33] Level 466 - CACHED
+[20:42:33] Level 467 - CACHED
+[20:42:33] Level 468 - CACHED
+[20:42:33] Level 469 - CACHED
+[20:42:33] Level 470 - CACHED
+[20:42:33] Level 471 - CACHED
+[20:42:33] Level 472 - CACHED
+[20:42:33] Level 473 - CACHED
+[20:42:33] Level 474 - CACHED
+[20:42:33] Level 475 - CACHED
+[20:42:33] Level 476 - CACHED
+[20:42:33] Level 477 - CACHED
+[20:42:33] Level 478 - CACHED
+[20:42:33] Level 479 - CACHED
+[20:42:33] Level 480 - CACHED
+[20:42:33] Level 481 - CACHED
+[20:42:33] Level 482 - CACHED
+[20:42:33] Level 483 - CACHED
+[20:42:33] Level 484 - CACHED
+[20:42:33] Level 485 - CACHED
+[20:42:33] Level 486 - CACHED
+[20:42:33] Level 487 - CACHED
+[20:42:33] Level 488 - CACHED
+[20:42:33] Level 489 - CACHED
+[20:42:33] Level 490 - CACHED
+[20:42:33] Level 491 - CACHED
+[20:42:33] Level 492 - CACHED
+[20:42:33] Level 493 - CACHED
+[20:42:33] Level 494 - CACHED
+[20:42:33] Level 495 - CACHED
+[20:42:33] Level 496 - CACHED
+[20:42:33] Level 497 - CACHED
+[20:42:33] Level 498 - CACHED
+[20:42:33] Level 499 - CACHED
+[20:42:33] Level 500 - CACHED
+[20:42:33] 
+[20:42:33] === DONE: gen=0  skip=100  evicted=0  failed=0  total=100/100  time=0s ===
