@@ -1092,9 +1092,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildColorLockAnimation() {
-    final Color lockColor = const Color(0xFFFF2D55);
+    // Color-pair tutorial: show two arrows in DIFFERENT colors so players
+    // understand that "matching colors = paired". Arrow 1 exits upward
+    // (coral/red), Arrow 2 exits rightward (cyan/teal) — both at the same time.
+    const Color color1 = Color(0xFFFF2D55); // coral-red pair
+    const Color color2 = Color(0xFF00BCD4); // cyan-teal pair
     return Container(
-      height: 100,
+      height: 110,
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -1107,63 +1111,100 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // First paired arrow
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: lockColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: lockColor, width: 1.5),
-                  ),
-                  child: Icon(Icons.arrow_upward_rounded,
-                      color: lockColor, size: 18),
-                )
-                    .animate(onPlay: (c) => c.repeat())
-                    .scale(
-                        begin: const Offset(0.9, 0.9),
-                        end: const Offset(1.03, 1.03),
-                        duration: 800.ms,
-                        curve: Curves.easeInOut)
-                    .slideY(begin: 0, end: -1.2, delay: 1000.ms, duration: 600.ms)
-                    .fadeOut(delay: 1000.ms, duration: 200.ms),
+                // ── Arrow 1 (color1, exits UP) ──────────────────────────────
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: color1.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: color1, width: 2),
+                      ),
+                      child: const Icon(Icons.arrow_upward_rounded, color: color1, size: 20),
+                    )
+                        .animate(onPlay: (c) => c.repeat())
+                        .scale(
+                            begin: const Offset(0.9, 0.9),
+                            end: const Offset(1.05, 1.05),
+                            duration: 700.ms,
+                            curve: Curves.easeInOut)
+                        .slideY(begin: 0, end: -1.4, delay: 900.ms, duration: 550.ms)
+                        .fadeOut(delay: 1000.ms, duration: 200.ms),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color1.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text('PAIR', style: TextStyle(fontSize: 9, color: color1, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                    ),
+                  ],
+                ),
 
-                const SizedBox(width: 32),
+                const SizedBox(width: 36),
 
-                // Second paired arrow (exits at the same time!)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: lockColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: lockColor, width: 1.5),
-                  ),
-                  child: Icon(Icons.arrow_upward_rounded,
-                      color: lockColor, size: 18),
-                )
-                    .animate(onPlay: (c) => c.repeat())
-                    .scale(
-                        begin: const Offset(0.9, 0.9),
-                        end: const Offset(1.03, 1.03),
-                        duration: 800.ms,
-                        curve: Curves.easeInOut)
-                    .slideY(begin: 0, end: -1.2, delay: 1000.ms, duration: 600.ms)
-                    .fadeOut(delay: 1000.ms, duration: 200.ms),
+                // ── A small link indicator ───────────────────────────────────
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.link_rounded, color: Color(0xFF888888), size: 18),
+                  ],
+                ),
+
+                const SizedBox(width: 36),
+
+                // ── Arrow 2 (color2, exits RIGHT) ────────────────────────────
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: color2.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: color2, width: 2),
+                      ),
+                      child: const Icon(Icons.arrow_forward_rounded, color: color2, size: 20),
+                    )
+                        .animate(onPlay: (c) => c.repeat())
+                        .scale(
+                            begin: const Offset(0.9, 0.9),
+                            end: const Offset(1.05, 1.05),
+                            duration: 700.ms,
+                            curve: Curves.easeInOut)
+                        .slideX(begin: 0, end: 1.4, delay: 900.ms, duration: 550.ms)
+                        .fadeOut(delay: 1000.ms, duration: 200.ms),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color2.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text('PAIR', style: TextStyle(fontSize: 9, color: color2, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                    ),
+                  ],
+                ),
               ],
             ),
+            // Tap hint — appears briefly then fades
             Positioned(
-              left: 110,
-              bottom: 12,
+              bottom: 10,
               child: Icon(
                 Icons.touch_app_rounded,
-                color: AppColors.textPrimary.withValues(alpha: 0.8),
-                size: 24,
+                color: AppColors.textPrimary.withValues(alpha: 0.7),
+                size: 22,
               )
                   .animate(onPlay: (c) => c.repeat())
                   .hide()
-                  .fadeIn(delay: 400.ms, duration: 200.ms)
-                  .scale(begin: const Offset(1.2, 1.2), end: const Offset(0.9, 0.9), delay: 400.ms, duration: 400.ms, curve: Curves.easeOutBack)
-                  .fadeOut(delay: 800.ms, duration: 200.ms),
+                  .fadeIn(delay: 300.ms, duration: 200.ms)
+                  .scale(begin: const Offset(1.2, 1.2), end: const Offset(0.9, 0.9), delay: 300.ms, duration: 400.ms, curve: Curves.easeOutBack)
+                  .fadeOut(delay: 750.ms, duration: 200.ms),
             ),
           ],
         ),
