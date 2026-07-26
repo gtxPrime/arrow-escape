@@ -30,7 +30,6 @@ class GameState extends ChangeNotifier {
   final void Function() onGameOver;
   final void Function() onLifeLost;
   final void Function() onDeadlock;
-  final bool isDevMode;
 
   GameState({
     required LevelModel level,
@@ -38,7 +37,6 @@ class GameState extends ChangeNotifier {
     required this.onGameOver,
     required this.onLifeLost,
     required this.onDeadlock,
-    this.isDevMode = false,
   }) {
     _currentLevel = level;
     _arrows = level.arrows.map((a) => a.copyWith()).toList();
@@ -79,6 +77,11 @@ class GameState extends ChangeNotifier {
   bool checkDeadlock() {
     if (_arrows.isEmpty) return false;
 
+    // Never trigger deadlock while any arrow is actively sliding/exiting
+    if (_arrows.any((a) => a.state == ArrowState.sliding)) {
+      return false;
+    }
+
     for (final arrow in _arrows) {
       final grp = arrow.colorGroup;
       if (grp != null) {
@@ -95,7 +98,7 @@ class GameState extends ChangeNotifier {
       } else {
         final exit = _computeExitInfo(arrow);
         if (!exit.blocked) {
-          return false; // Found a standard/ice arrow that can exit/crack
+          return false; // Found a standard arrow that can exit
         }
       }
     }
@@ -205,11 +208,9 @@ class GameState extends ChangeNotifier {
 
   TapResult _handleBlocked(int index, ArrowModel arrow, String arrowId) {
     _arrows[index] = arrow.copyWith(state: ArrowState.blocked);
-    if (!isDevMode) {
-      _lives--;
-      _livesLost++;
-      onLifeLost();
-    }
+    _lives--;
+    _livesLost++;
+    onLifeLost();
 
     // Reset arrow state after animation
     Future.delayed(AppConstants.arrowShakeDuration, () {
@@ -220,7 +221,7 @@ class GameState extends ChangeNotifier {
       }
     });
 
-    if (!isDevMode && _lives <= 0) {
+    if (_lives <= 0) {
       _isGameOver = true;
       onGameOver();
       notifyListeners();
@@ -239,11 +240,9 @@ class GameState extends ChangeNotifier {
         _arrows[index] = arrow.copyWith(state: ArrowState.blocked);
       }
     }
-    if (!isDevMode) {
-      _lives--;
-      _livesLost++;
-      onLifeLost();
-    }
+    _lives--;
+    _livesLost++;
+    onLifeLost();
 
     // Reset both after animation
     Future.delayed(AppConstants.arrowShakeDuration, () {
@@ -256,7 +255,7 @@ class GameState extends ChangeNotifier {
       notifyListeners();
     });
 
-    if (!isDevMode && _lives <= 0) {
+    if (_lives <= 0) {
       _isGameOver = true;
       onGameOver();
     }

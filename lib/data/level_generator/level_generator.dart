@@ -60,7 +60,10 @@ class LevelGenerator {
           col: 5,
           direction: ArrowDirection.right,
           isPartOfPattern: true,
-          path: [[4, 5]],
+          path: [
+            [4, 5],
+            [4, 4]
+          ],
           mechanic: SnakeMechanic.standard,
         ),
         ArrowModel(
@@ -69,16 +72,22 @@ class LevelGenerator {
           col: 5,
           direction: ArrowDirection.up,
           isPartOfPattern: true,
-          path: [[5, 5]],
+          path: [
+            [5, 5],
+            [6, 5]
+          ],
           mechanic: SnakeMechanic.standard,
         ),
         ArrowModel(
           id: 'a_1_3',
-          row: 6,
+          row: 7,
           col: 5,
           direction: ArrowDirection.up,
           isPartOfPattern: true,
-          path: [[6, 5]],
+          path: [
+            [7, 5],
+            [8, 5]
+          ],
           mechanic: SnakeMechanic.standard,
         ),
       ];
@@ -104,17 +113,23 @@ class LevelGenerator {
           col: 4,
           direction: ArrowDirection.up,
           isPartOfPattern: true,
-          path: [[5, 4]],
+          path: [
+            [5, 4],
+            [6, 4]
+          ],
           mechanic: SnakeMechanic.colorLock,
           colorGroup: 0,
         ),
         ArrowModel(
           id: 'a_2_2',
           row: 5,
-          col: 5,
+          col: 6,
           direction: ArrowDirection.right,
           isPartOfPattern: true,
-          path: [[5, 5]],
+          path: [
+            [5, 6],
+            [5, 5]
+          ],
           mechanic: SnakeMechanic.colorLock,
           colorGroup: 0,
         ),
@@ -124,7 +139,10 @@ class LevelGenerator {
           col: 4,
           direction: ArrowDirection.left,
           isPartOfPattern: true,
-          path: [[4, 4]],
+          path: [
+            [4, 4],
+            [4, 5]
+          ],
           mechanic: SnakeMechanic.standard,
         ),
       ];
@@ -150,7 +168,10 @@ class LevelGenerator {
           col: 4,
           direction: ArrowDirection.up,
           isPartOfPattern: true,
-          path: [[6, 4]],
+          path: [
+            [6, 4],
+            [7, 4]
+          ],
           mechanic: SnakeMechanic.standard,
         ),
         ArrowModel(
@@ -159,7 +180,10 @@ class LevelGenerator {
           col: 6,
           direction: ArrowDirection.down,
           isPartOfPattern: true,
-          path: [[4, 6]],
+          path: [
+            [4, 6],
+            [3, 6]
+          ],
           mechanic: SnakeMechanic.standard,
         ),
       ];
@@ -1401,6 +1425,7 @@ class LevelGenerator {
   /// recursive dependencies on all other arrows it hits.
   /// Returns true if it exits safely, false if blocked or a cyclic deadlock is found.
   /// Complexity: O(G × pathLength) — extremely fast.
+  // ignore: unused_element
   static bool _canExitWithDeflections(
     int headRow,
     int headCol,
@@ -1986,6 +2011,7 @@ class LevelGenerator {
     }
   }
 
+  // ignore: unused_element
   static int _countPathObstacles(
       int r, int c, ArrowDirection dir, Set<String> occupied, int gridSize) {
     final d = dir.delta;
@@ -2004,6 +2030,7 @@ class LevelGenerator {
 
   /// Anti-cluster helper: counts how many of the 4 orthogonal neighbours
   /// of (r,c) are occupied by 2-dot arrows (tracked in [twoDotPacked]).
+  // ignore: unused_element
   static int _countTwoDotNeighbors(int r, int c, Set<int> twoDotPacked) {
     int cnt = 0;
     for (final nb in [
