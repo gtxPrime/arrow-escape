@@ -1,5 +1,7 @@
 
 
+import 'ad_secrets.dart';
+
 // Core game constants
 class AppConstants {
   AppConstants._();
@@ -23,11 +25,11 @@ class AppConstants {
   static const int bossLevelEvery = 3;   // Every 3rd level is BOSS
   static const int godLevelEvery  = 5;   // Every 5th level is GOD (overrides boss)
 
-  // Ads (Test IDs — replace before publishing)
-  static const String admobAppIdAndroid    = 'ca-app-pub-3940256099942544~3347511713';
-  static const String admobBannerUnitId    = 'ca-app-pub-3940256099942544/6300978111';
-  static const String admobInterstitialUnitId = 'ca-app-pub-3940256099942544/1033173712';
-  static const String admobRewardedUnitId  = 'ca-app-pub-3940256099942544/5224354917';
+  // Ads
+  static const String admobAppIdAndroid    = AdSecrets.admobAppIdAndroid;
+  static const String admobBannerUnitId    = AdSecrets.admobBannerUnitId;
+  static const String admobInterstitialUnitId = AdSecrets.admobInterstitialUnitId;
+  static const String admobRewardedUnitId  = AdSecrets.admobRewardedUnitId;
 
   static const String unityGameId       = 'YOUR_UNITY_GAME_ID';
   static const String unityBannerAdId   = 'Banner_Android';
@@ -40,14 +42,9 @@ class AppConstants {
   // static const String applovinInterstitialAdId = 'YOUR_APPLOVIN_INTERSTITIAL_AD_UNIT_ID';
   // static const String applovinRewardedAdId = 'YOUR_APPLOVIN_REWARDED_AD_UNIT_ID';
 
-  // Dev Mode Feature Toggle
-  /// Set to [true] to allow long-pressing the game title on the main menu to
-  /// toggle Dev Mode (all levels unlocked, no life penalty).
-  /// Set to [false] to fully disable Dev Mode in production builds.
-  static const bool enableDevMode = true;
 
   // Ad Network Feature Toggles
-  static const bool enableAdMob = false;
+  static const bool enableAdMob = true;
   static const bool enableUnityAds = false;
   static const bool enableAppLovin = false;
 
@@ -56,9 +53,9 @@ class AppConstants {
   // Animation durations
   static const Duration arrowSlideDuration   = Duration(milliseconds: 220);
   // arrowExitDuration is now dynamic (based on path length) — this is the base
-  static const Duration arrowExitDuration    = Duration(milliseconds: 300);
+  static const Duration arrowExitDuration    = Duration(milliseconds: 400);
   static const Duration arrowShakeDuration   = Duration(milliseconds: 400);
-  static const Duration levelCompleteDuration = Duration(milliseconds: 600);
+  static const Duration levelCompleteDuration = Duration(milliseconds: 200);
 
   // Scoring
   static const int baseScore           = 100;

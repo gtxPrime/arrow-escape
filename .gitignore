@@ -103,4 +103,7 @@ test/merge_chunks_test.dart
 test/verify_all_levels_test.dart
 test/verify_bin_solvability_test.dart
 
+# Sensitive Local Secrets
+lib/core/ad_secrets.dart
+
 

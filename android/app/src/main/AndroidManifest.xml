@@ -14,10 +14,10 @@
         android:hardwareAccelerated="true"
         android:windowSoftInputMode="adjustResize">
 
-        <!-- AdMob App ID (replace with real ID before publishing) -->
+        <!-- AdMob App ID -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="${admobAppId}"/>
 
         <!-- AppLovin SDK Key (replace with your key before publishing) -->
         <meta-data
