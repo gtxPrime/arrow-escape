@@ -93,6 +93,12 @@ coverage/
 assets/generate_progress*.txt
 assets/generate_progress*.log
 assets/levels_*_*.bin
+*_log.txt
+*.log
+assets/verify_progress_chunk_*.json
+verify_progress_chunk_*.json
+verify_chunk*.txt
+attempt_log.txt
 
 # Local Generator & Parallel Execution Utilities
 bin/

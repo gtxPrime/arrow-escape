@@ -35,9 +35,6 @@ class ProgressRepository extends ChangeNotifier {
   // Zoom hint state
   bool _hasSeenZoomHint = false;
 
-  // Dev Mode
-  bool _isDevMode = false;
-
   // ── Getters ──────────────────────────────────────────────────────────────────
   int get lives => _lives;
   int get maxLives => AppConstants.maxLives;
@@ -56,22 +53,14 @@ class ProgressRepository extends ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   bool get hasSeen40x40Warning => _hasSeen40x40Warning;
   bool get hasSeenZoomHint => _hasSeenZoomHint;
-  bool get isDevMode => _isDevMode;
 
   int getStarsForLevel(int level) => _levelResults[level]?.stars ?? 0;
 
   bool isLevelUnlocked(int level) {
-    if (_isDevMode) return true;
     return level <= _highestUnlockedLevel;
   }
 
   bool isLevelCompleted(int level) => _levelResults.containsKey(level);
-
-  void toggleDevMode() {
-    _isDevMode = !_isDevMode;
-    _prefs.setBool('isDevMode', _isDevMode);
-    notifyListeners();
-  }
 
   ProgressRepository(this._prefs) {
     _load();
@@ -93,7 +82,6 @@ class ProgressRepository extends ChangeNotifier {
     _vibrationEnabled = _prefs.getBool('vibrationEnabled') ?? true;
     _hasSeen40x40Warning = _prefs.getBool('hasSeen40x40Warning') ?? false;
     _hasSeenZoomHint = _prefs.getBool('hasSeenZoomHint') ?? false;
-    _isDevMode = _prefs.getBool('isDevMode') ?? false;
 
     final themeStr = _prefs.getString('themeMode') ?? 'system';
     _themeMode = ThemeMode.values.firstWhere(

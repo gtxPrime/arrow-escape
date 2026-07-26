@@ -10,7 +10,7 @@ void main() {
     print('Grid size: ${level.gridSize}');
     print('Arrows count: ${level.arrows.length}');
     print('Orphan dots count: ${level.orphanDots.length}');
-    print('Solvable: ${level.solutionOrder != null}');
+    print('Solvable: ${level.solutionOrder.isNotEmpty}');
 
     // If it fell back to fallback, level.patternName will be 'fallback'
     expect(level.patternName, isNot('fallback'));

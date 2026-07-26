@@ -52,7 +52,6 @@ Arrow Escape is a grid-based puzzle game where players slide arrows out of the g
 | **Long-Tap Preview** | Hold an arrow to preview its full exit path |
 | **Lives System** | 3 lives per level; star rating based on lives remaining |
 | **Timed Challenges** | Boss and God levels have countdown timers |
-| **Dev Mode** | Unlock all levels instantly (disabled in production via `enableDevMode`) |
 | **Daily Streaks** | Consecutive-play rewards |
 | **Pinch-to-Zoom** | Zoom in/out on large grids |
 | **Deadlock Detection** | Detects unsolvable states and offers restart |
@@ -120,25 +119,7 @@ Type:     Norm Norm Norm BOSS Norm Norm  GOD
 ### Lives & Scoring
 
 - 3 lives per level. A life is lost on every blocked tap or blocked color-pair.
-- Dev Mode bypasses life loss (shakes still play).
 - Star rating: 0 lost = 3★, 1 lost = 2★, 2+ lost = 1★
-
-```
-Score = 100 + lives_remaining × 50
-Boss bonus: +200 pts   |   God bonus: +500 pts
-```
-
-### Dev Mode
-
-```dart
-// lib/core/constants.dart
-static const bool enableDevMode = true;
-```
-
-> [!CAUTION]
-> Set `enableDevMode = false` before any production release. When `true`, long-pressing the main menu title unlocks all 500 levels instantly.
-
-**To activate at runtime:** Long-press "Arrow Escape" on the main menu. Long-press again to disable. State persists via SharedPreferences.
 
 ---
 
@@ -287,8 +268,7 @@ Ad priority waterfall: **AdMob → Unity Ads**. All off by default.
 
 | Constant | Default | Purpose |
 |---|---|---|
-| `enableDevMode` | `true` | Long-press dev mode gesture (disable in production) |
-| `enableAdMob` | `false` | Google AdMob |
+| `enableAdMob` | `true` | Google AdMob |
 | `enableUnityAds` | `false` | Unity Ads |
 
 ### AdMob

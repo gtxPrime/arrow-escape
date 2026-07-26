@@ -23,10 +23,14 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  // Status bar style
+  // Edge-to-edge system UI
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarDividerColor: Colors.transparent,
   ));
 
   // Init AdMob only when enabled

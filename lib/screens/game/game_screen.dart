@@ -126,7 +126,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       onGameOver: _onGameOver,
       onLifeLost: _onLifeLost,
       onDeadlock: _onDeadlock,
-      isDevMode: context.read<ProgressRepository>().isDevMode,
     );
     _gameState!.addListener(_onGameStateChanged);
 
@@ -311,13 +310,20 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
   void _handleDoubleCoins() {
     final adManager = context.read<AdManager>();
+    Navigator.pop(context);
+    bool rewarded = false;
     adManager.showRewarded(
       onRewarded: () {
+        rewarded = true;
         context.read<ProgressRepository>().addCoins(AppConstants.baseScore +
             (_lives * AppConstants.bonusPerRemainingLife));
         _handleNextLevel();
       },
-      onDismissed: () => Navigator.pop(context),
+      onDismissed: () {
+        if (!rewarded) {
+          _handleNextLevel();
+        }
+      },
     );
   }
 
@@ -1557,7 +1563,7 @@ class _LevelCompleteDialog extends StatelessWidget {
     required this.onDoubleCoins,
   });
 
-  bool get _showAds => false;
+  bool get _showAds => AppConstants.enableAdMob || AppConstants.enableUnityAds || AppConstants.enableAppLovin;
 
   @override
   Widget build(BuildContext context) {
@@ -1751,7 +1757,7 @@ class _GameOverDialog extends StatelessWidget {
     required this.onMenu,
   });
 
-  bool get _showAds => false;
+  bool get _showAds => AppConstants.enableAdMob || AppConstants.enableUnityAds || AppConstants.enableAppLovin;
 
   @override
   Widget build(BuildContext context) {

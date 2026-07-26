@@ -227,90 +227,26 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               const Spacer(flex: 2),
 
               // ── Center Title "ARROW ESCAPE" ──
-              GestureDetector(
-                // Long-press toggles Dev Mode — only active when AppConstants.enableDevMode == true.
-                onLongPress: AppConstants.enableDevMode
-                    ? () {
-                        AudioManager.instance.playClick();
-                        progress.toggleDevMode();
-                        ScaffoldMessenger.of(context).clearSnackBars();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              progress.isDevMode
-                                  ? 'Dev Mode Enabled: All levels unlocked!'
-                                  : 'Dev Mode Disabled',
-                              style: GoogleFonts.nunito(
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                            backgroundColor: progress.isDevMode
-                                ? const Color(0xFF27AE60)
-                                : const Color(0xFFC0392B),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    : null,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      AppConstants.appName,
-                      style: GoogleFonts.nunito(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                        letterSpacing: 2,
-                        shadows: [
-                          Shadow(
-                            color: AppColors.accentGold.withValues(alpha: 0.15),
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                    ).animate().scale(
-                        begin: const Offset(0.9, 0.9),
-                        end: const Offset(1.0, 1.0),
-                        duration: 500.ms,
-                        curve: Curves.elasticOut),
-                    if (progress.isDevMode) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF1C40F), Color(0xFFF39C12)],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFF1C40F).withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          'DEV MODE',
-                          style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ).animate().fade(duration: 300.ms).scale(),
-                    ],
+              Text(
+                AppConstants.appName,
+                style: GoogleFonts.nunito(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: 2,
+                  shadows: [
+                    Shadow(
+                      color: AppColors.accentGold.withValues(alpha: 0.15),
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
                   ],
                 ),
-              ),
+              ).animate().scale(
+                  begin: const Offset(0.9, 0.9),
+                  end: const Offset(1.0, 1.0),
+                  duration: 500.ms,
+                  curve: Curves.elasticOut),
 
 
               const Spacer(flex: 2),
