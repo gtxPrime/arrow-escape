@@ -226,20 +226,67 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
               const Spacer(flex: 2),
 
-              // ── Center Title "ARROW ESCAPE" ──
-              Text(
-                AppConstants.appName,
-                style: GoogleFonts.nunito(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
-                  letterSpacing: 2,
-                  shadows: [
-                    Shadow(
-                      color: AppColors.accentGold.withValues(alpha: 0.15),
-                      offset: const Offset(0, 2),
-                      blurRadius: 4,
+              // ── Center Title "ARROW ESCAPE" (Long-press to toggle Demo Mode) ──
+              GestureDetector(
+                onLongPress: () {
+                  HapticFeedback.heavyImpact();
+                  progress.toggleDemoMode();
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        progress.isDemoMode
+                            ? '🚀 DEMO MODE ACTIVATED: Unlimited Lives, Unlimited Time & All Levels Unlocked!'
+                            : 'DEMO MODE DEACTIVATED',
+                        style: GoogleFonts.nunito(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: progress.isDemoMode
+                          ? const Color(0xFFE67E22)
+                          : Colors.grey[800],
+                      duration: const Duration(seconds: 3),
                     ),
+                  );
+                },
+                child: Column(
+                  children: [
+                    Text(
+                      AppConstants.appName,
+                      style: GoogleFonts.nunito(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 2,
+                        shadows: [
+                          Shadow(
+                            color: AppColors.accentGold.withValues(alpha: 0.15),
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (progress.isDemoMode)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE67E22),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'DEMO MODE ACTIVE',
+                          style: GoogleFonts.nunito(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ).animate().scale(

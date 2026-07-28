@@ -5,12 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/level.dart';
-import '../level_generator/level_generator.dart';
+import '../level_generator/level_generator_v2.dart';
 import '../level_binary_codec.dart';
 
 // Top-level function required by compute() to run in a background isolate.
 LevelModel _generateLevelIsolate(int levelNumber) {
-  return LevelGenerator.generateLevel(levelNumber);
+  return LevelGeneratorV2.generateLevel(levelNumber);
 }
 
 /// Caches generated levels and provides access by level number.
@@ -40,6 +40,15 @@ class LevelRepository {
           .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes);
       _binaryDecoder = LevelBinaryDecoder.fromBytes(bytes);
       _binaryLoaded = true;
+
+      // Wipe old memory & disk cache so updated pregenerated levels take effect!
+      _cache.clear();
+      if (_prefs != null) {
+        for (int i = 1; i <= 500; i++) {
+          _prefs!.remove('cached_level_$i');
+        }
+      }
+
       debugPrint(
           'Loaded levels.bin (${(bytes.length / 1024).toStringAsFixed(0)} KB, '
           '${_binaryDecoder!.levelCount} levels)');
@@ -50,10 +59,7 @@ class LevelRepository {
 
   /// Get a level synchronously. Always returns immediately.
   LevelModel getLevel(int levelNumber) {
-    // 1. In-memory cache
-    if (_cache.containsKey(levelNumber)) return _cache[levelNumber]!;
-
-    // 2. Binary decoder — O(1) seek, no parsing beyond this single level
+    // 1. Binary decoder — O(1) seek from levels.bin (pregenerated master levels)
     if (_binaryLoaded && _binaryDecoder != null) {
       try {
         final level = _binaryDecoder!.decodeLevelByNumber(levelNumber);
@@ -65,6 +71,9 @@ class LevelRepository {
         debugPrint('Error decoding binary level $levelNumber: $e');
       }
     }
+
+    // 2. In-memory cache
+    if (_cache.containsKey(levelNumber)) return _cache[levelNumber]!;
 
     // 3. Disk cache (SharedPreferences)
     if (_prefs != null) {
@@ -81,7 +90,7 @@ class LevelRepository {
     }
 
     // 4. Generate on-the-fly (fallback for levels beyond the binary asset)
-    final level = LevelGenerator.generateLevel(levelNumber);
+    final level = LevelGeneratorV2.generateLevel(levelNumber);
     _cache[levelNumber] = level;
     _saveToDisk(levelNumber, level);
     return level;

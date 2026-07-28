@@ -35,17 +35,21 @@ class ProgressRepository extends ChangeNotifier {
   // Zoom hint state
   bool _hasSeenZoomHint = false;
 
+  // Demo Mode
+  bool _isDemoMode = false;
+
   // ── Getters ──────────────────────────────────────────────────────────────────
-  int get lives => _lives;
+  bool get isDemoMode => _isDemoMode;
+  int get lives => _isDemoMode ? 999 : _lives;
   int get maxLives => AppConstants.maxLives;
   int get currentLevel => _currentLevel;
-  int get highestUnlockedLevel => _highestUnlockedLevel;
+  int get highestUnlockedLevel => _isDemoMode ? 500 : _highestUnlockedLevel;
   int get totalScore => _totalScore;
   int get coins => _coins;
   int get streakDays => _streakDays;
   DateTime? get lastPlayedDate => _lastPlayedDate;
-  bool get hasLives => _lives > 0;
-  bool get livesAreFull => _lives >= AppConstants.maxLives;
+  bool get hasLives => _isDemoMode ? true : _lives > 0;
+  bool get livesAreFull => _isDemoMode ? true : _lives >= AppConstants.maxLives;
 
   bool get soundEnabled => _soundEnabled;
   bool get musicEnabled => _musicEnabled;
@@ -57,7 +61,13 @@ class ProgressRepository extends ChangeNotifier {
   int getStarsForLevel(int level) => _levelResults[level]?.stars ?? 0;
 
   bool isLevelUnlocked(int level) {
+    if (_isDemoMode) return true;
     return level <= _highestUnlockedLevel;
+  }
+
+  void toggleDemoMode() {
+    _isDemoMode = !_isDemoMode;
+    notifyListeners();
   }
 
   bool isLevelCompleted(int level) => _levelResults.containsKey(level);
