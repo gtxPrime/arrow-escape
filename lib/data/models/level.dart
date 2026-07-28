@@ -36,14 +36,15 @@ class OrphanDot {
 enum MaskShape {
   // Standard
   square,
+  longRectangle,
   circle,
-  // Geometric (god levels)
+  // Geometric (god levels) — original set
   heart,
   star,
   diamond,
   hexagon,
   blob,
-  // Animals (boss levels)
+  // Animals (boss levels) — original set
   cat,
   dog,
   frog,
@@ -53,12 +54,52 @@ enum MaskShape {
   fish,
   bird,
   butterfly,
-  // Objects (boss levels)
+  // Objects (boss levels) — original set
   guitar,
   tree,
   house,
   crown,
   saturn,
+  // ── V2 Boss shapes — geometric/angular silhouettes ────────────────────────
+  plus,
+  tShape,
+  lShape,
+  hShape,
+  uShape,
+  zShape,
+  xCross,
+  arrowUp,
+  arrowRight,
+  chevron,
+  staircase,
+  trapezoid,
+  parallelogram,
+  pentagon,
+  octagon,
+  pinwheel,
+  gear,
+  lightningBolt,
+  star4,
+  ribbon,
+  // ── V2 God shapes — decorative/pictorial silhouettes ─────────────────────
+  flower,
+  spinningTop,
+  lollipop,
+  iceCream,
+  crescentMoon,
+  giftBox,
+  anchor,
+  shield,
+  rocket,
+  sun,
+  cloud,
+  umbrella,
+  key,
+  bowtie,
+  gem,
+  snowflake,
+  teddyBear,
+  globe,
 }
 
 // ─── Difficulty Enum ──────────────────────────────────────────────────────────

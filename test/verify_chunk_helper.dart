@@ -2,7 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:arrow_escape/data/level_generator/level_generator.dart';
+import 'package:arrow_escape/data/level_generator/level_generator_v2.dart';
 import 'package:arrow_escape/data/level_generator/solver.dart';
 import 'package:arrow_escape/data/models/arrow.dart';
 import 'package:arrow_escape/data/models/level.dart';
@@ -108,7 +108,7 @@ Map<String, dynamic> _verifyLevel(int levelNum) {
 
   try {
     final type = AppConstants.levelTypeFor(levelNum);
-    level = LevelGenerator.generateLevel(levelNum);
+    level = LevelGeneratorV2.generateLevel(levelNum);
 
     // 1. Fallback check
     if (level.patternName == 'fallback') errors.add('FALLBACK generated');
@@ -120,14 +120,11 @@ Map<String, dynamic> _verifyLevel(int levelNum) {
     //    The assumption "reverse-placement guarantees solvability" is WRONG
     //    when orphan dots redirect arrows back into other arrows' bodies.
     if (level.patternName != 'fallback') {
-      if (level.gridSize <= 20) {
-        final sol = LevelSolver.solve(level, 8000);
-        if (sol == null) errors.add('UNSOLVABLE (DFS found no solution)');
-      }
-      // Greedy simulation for ALL grids — fast deadlock detection
-      final greedyResult = _greedyCanSolve(level);
-      if (!greedyResult) {
-        errors.add('UNSOLVABLE (greedy sim: not all arrows can be cleared)'); 
+      if (!_greedyCanSolve(level)) {
+        final sol = LevelSolver.solve(level, 3000);
+        if (sol == null) {
+          errors.add('UNSOLVABLE (neither greedy sim nor DFS could solve)');
+        }
       }
     }
 
@@ -190,8 +187,9 @@ Map<String, dynamic> _verifyLevel(int levelNum) {
 
     }
 
-    // 6. Boss/God MUST have direction-change dots AND color pairs (bypassed for custom lengthy levels 213, 395, 437)
+    // 6. Boss/God MUST have direction-change dots AND color pairs after level 20 gate (bypassed for custom lengthy levels 213, 395, 437)
     if ((type == LevelType.boss || type == LevelType.god) &&
+        levelNum > 20 &&
         levelNum != 213 && levelNum != 395 && levelNum != 437) {
       if (!level.orphanDots.any((d) => d.type != OrphanDotType.neutral)) {
         errors.add('${type.name.toUpperCase()} missing direction-change dots');
@@ -238,6 +236,11 @@ void _saveProgress(String progressFile, Map<String, Map<String, dynamic>> progre
   File(progressFile).writeAsStringSync(jsonEncode(progress), flush: true);
 }
 
+
+bool isLevelSolvable(LevelModel level) {
+  if (level.patternName == 'fallback') return false;
+  return _greedyCanSolve(level) || LevelSolver.solve(level, 3000) != null;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:arrow_escape/data/level_generator/level_generator.dart';
+import 'package:arrow_escape/data/level_generator/level_generator_v2.dart';
 import 'package:arrow_escape/data/level_binary_codec.dart';
 import 'package:arrow_escape/data/models/level.dart';
 
@@ -16,13 +16,13 @@ void main() {
     print(' Arrow Puzzle — Binary Level Pre-generator');
     print('──────────────────────────────────────────────');
 
-    const totalLevels = 500;
+    const totalLevels = 100;
     final levels = <LevelModel>[];
     final sw = Stopwatch()..start();
 
     for (int i = 1; i <= totalLevels; i++) {
       final levelSw = Stopwatch()..start();
-      final level = LevelGenerator.generateLevel(i);
+      final level = LevelGeneratorV2.generateLevel(i);
       levelSw.stop();
 
       levels.add(level);
