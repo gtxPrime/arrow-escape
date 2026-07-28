@@ -37,7 +37,7 @@
 
 ## About
 
-Arrow Escape is a grid-based puzzle game where players slide arrows out of the grid. Each level is procedurally generated and deterministic — the same level number always produces the same puzzle on every device. The game ships with **500 pre-generated levels** across 7 difficulty tiers, with tutorial, Boss, and God level variants.
+Arrow Escape is a grid-based puzzle game where players slide arrows out of the grid. Each level is procedurally generated and deterministic — the same level number always produces the same puzzle on every device. The game ships with **500 pre-generated, 100% verified solvable levels** across 7 difficulty bands, powered by **LevelGeneratorV2** with tutorial, Boss, and God level variants.
 
 ---
 
@@ -45,17 +45,18 @@ Arrow Escape is a grid-based puzzle game where players slide arrows out of the g
 
 | Feature | Description |
 |---|---|
-| **Slide Mechanics** | Tap an arrow — if its path to the edge is clear, it exits |
-| **500 Levels** | Tutorial → Easy → Medium → Hard → Expert → Master → Legend |
-| **Deflector Dots** | Gold dots that redirect an arrow's exit direction |
-| **Color-Paired Arrows** | Two arrows of matching color must exit simultaneously |
-| **Long-Tap Preview** | Hold an arrow to preview its full exit path |
-| **Lives System** | 3 lives per level; star rating based on lives remaining |
-| **Timed Challenges** | Boss and God levels have countdown timers |
-| **Daily Streaks** | Consecutive-play rewards |
-| **Pinch-to-Zoom** | Zoom in/out on large grids |
-| **Deadlock Detection** | Detects unsolvable states and offers restart |
-| **Dark / Light Mode** | Sage-green earthy palette with full theme support |
+| **Slide Mechanics** | Tap an arrow — if its exit path to the canvas edge is clear, it slides out smoothly |
+| **500 Pregenerated Levels** | Fully verified, zero-deadlock levels precompiled into `assets/levels.bin` |
+| **LevelGeneratorV2** | Reverse-placement generator + DFS graph solver validation |
+| **Direction Deflector Dots** | Directional orphan dots (Up, Down, Left, Right, Neutral) that redirect exiting arrows |
+| **Color-Paired Arrows** | Matched color arrow pairs that must be cleared together |
+| **Clean Vector Arrows** | Border-stroke-free sleek arrow paths styled dynamically per theme |
+| **Dense Silhouette Boss/God Shapes** | Large, thick filled silhouettes (27×27 to 40×40 grids) |
+| **Fixed Overlay Shadow Edges** | Fixed `AppColors.background` gradient shadow overlays pinned at top & bottom edges |
+| **Level Timers** | Timed God levels (Level > 100) and Timed Boss levels (Level > 200) |
+| **Pinch-to-Zoom & Pan** | Smooth `InteractiveViewer` with hit-test margin scaling for edge arrows |
+| **Lives & Star System** | 3 hearts per level; star ratings based on remaining lives |
+| **Dark / Light Palette** | Sage-green earthy palette with full dark/light theme support |
 
 ---
 
@@ -78,103 +79,68 @@ Arrow Escape is a grid-based puzzle game where players slide arrows out of the g
 
 ### Grid & Level Types
 
-The grid is a square canvas — size scales with level number:
+The grid canvas size scales with level number and level type:
 
-| Level Range | Grid Size |
-|---|---|
-| Tutorial (1-3) | 10 x 10 |
-| Normal (4-19) | 15 x 15 to 24 x 24 |
-| Normal (20-500) | 25 x 25 to 35 x 35 |
-| Boss & God | 27 x 27 to 40 x 40 |
+| Level Range | Grid Size | Mask Shape / Style |
+|---|---|---|
+| Tutorial (1–3) | 10 × 10 | Square grid |
+| Normal (4–19) | 15 × 15 to 24 × 24 | Long rectangle / square grid |
+| Normal (20–500) | 25 × 25 to 35 × 35 | Long rectangle / square grid |
+| Boss & God | 27 × 27 to 40 × 40 | Large, dense filled silhouettes (animal, object, geometric) |
 
-After the 3 tutorial levels, every 7 levels follow this cycle:
+After the 3 tutorial levels, every 7 levels follow a repeating cycle:
 
 ```
 Position:  1    2    3   [4]   5    6   [7]
 Type:     Norm Norm Norm BOSS Norm Norm  GOD
 ```
 
-- **Normal** — Standard square grid puzzle
-- **Boss** — Shaped silhouette grid (animal/object shape), optional timer
-- **God** — Geometric silhouette grid, countdown timer always on
+- **Normal** — Long rectangular or square canvas layout
+- **Boss** — Dense filled shape silhouette (34 shape pool), timed for **Level > 200**
+- **God** — Complex dense shape silhouette (24 shape pool), timed for **Level > 100**
 
-### Difficulty Bands
+### Timer Rules & Duration Formulas
 
-| Level Range | Difficulty |
-|---|---|
-| 1 - 10 | Tutorial |
-| 11 - 30 | Easy |
-| 31 - 70 | Medium |
-| 71 - 150 | Hard |
-| 151 - 300 | Expert |
-| 301 - 500 | Master |
-| 500+ | Legend |
+Timer challenges add excitement on higher levels without being impossibly hard:
 
-### Arrow Mechanics
+- **God Levels (> 100)**: Active timer with **25s base buffer + 10–14s per arrow**.
+- **Boss Levels (> 200)**: Active timer with **30s base buffer + 12–16s per arrow**.
 
-- **standard** — Tap an arrow: path clear = exits, path blocked = shake + life lost
-- **colorLock** — Two matched-color arrows must exit simultaneously; either blocked = both shake + life lost
-- **Deflector Dots** — Gold dots redirect an exiting arrow and are consumed on use
+$$\text{Duration}_{\text{Boss}} = 30 + \text{clamp}\!\left(16 - \frac{(l-100)\times 4}{400}, 12, 16\right) \times N_{\text{arrows}}$$
 
-### Lives & Scoring
-
-- 3 lives per level. A life is lost on every blocked tap or blocked color-pair.
-- Star rating: 0 lost = 3★, 1 lost = 2★, 2+ lost = 1★
+$$\text{Duration}_{\text{God}} = 25 + \text{clamp}\!\left(14 - \frac{(l-200)\times 4}{300}, 10, 14\right) \times N_{\text{arrows}}$$
 
 ---
 
-## Level Generation
+## Level Generator V2
 
-Every level is generated deterministically from its level number:
+`LevelGeneratorV2` builds levels backwards from a cleared board to guarantee solvability, then runs double verification before accepting a level into `assets/levels.bin`.
 
 ```mermaid
 graph TD
-    A["Seed = levelNumber × 103 + 51"] --> B["Mask Shape Selection"]
-    B --> C["Phase 1: Place ≥3-cell arrows (Very Long / Long / Medium)"]
-    C --> D["Phase 2: Fill gaps with 2-cell arrows"]
-    D --> E["Phase 3: Assign deflector dots & directions"]
-    E --> F["Phase 4: Apply ColorLock pairs + safety audit"]
-    F --> G["DFS solver verification (small grids only)"]
+    A["Seed = levelNumber × 103 + 51"] --> B["Mask Generator V2 (min 27×27 shape bbox)"]
+    B --> C["Phase 1: Reverse Arrow Placement (Very Long → Long → Medium)"]
+    C --> D["Phase 2: Gap Fill with 2-Cell Arrows"]
+    D --> E["Phase 3: Directional Deflector Dots (Up, Down, Left, Right)"]
+    E --> F["Phase 4: Color-Locked Pair Coupling"]
+    F --> G["Greedy Sim & DFS Graph Solver Verification"]
     G -- "Fail" --> A
-    G -- "Pass" --> H["LevelModel accepted"]
+    G -- "Pass" --> H["Pack into assets/levels.bin"]
 ```
 
-### Key Formulas
+### Mask Generator V2 (Boss & God Silhouettes)
 
-**Grid size — Normal levels** (l = level number):
-
-$$\text{gridSize} = \begin{cases} 15 + \text{round}\!\left(\frac{(l-4)\times 9}{15}\right) & l < 20,\; [15,24] \\ 25 + \text{round}\!\left(\frac{(l-20)\times 10}{480}\right) & l \ge 20,\; [25,35] \end{cases}$$
-
-**Grid size — Boss/God** (k = cycle count):
-
-$$\text{gridSize} = 27 + \text{round}\!\left(\frac{(k-1)\times 13}{19}\right), \quad [27,40]$$
-
-**Arrow length tiers** (G = grid size):
-
-$$\text{veryLongMin} = 5 + \left\lfloor G/6 \right\rfloor \qquad \text{longMin} = 3 + \left\lfloor G/10 \right\rfloor$$
-
-**Tangle factor** (controls zig-zag vs straight):
-
-| Level Range | Base Tangle | Boss boost | God boost |
-|---|---|---|---|
-| 4 - 14 | 0.0 | +0.15 | +0.25 |
-| 15 - 60 | 0.10 - 0.30 | +0.15 | +0.25 |
-| 61 - 300 | 0.60 - 0.80 | +0.15 | +0.25 |
-| 300+ | 1.0 | — | — |
-
-$$\text{turnBias} = 0.65 + \text{tangleFactor} \times 0.20$$
-
-**Max deflector dots** (M = active mask cells):
-
-$$E_{\text{max}} = \text{clamp}\!\left(5,\;\lceil M \times P \rceil,\;150\right) \quad P = 22\% \text{ if } G \le 20, \text{ else } 16\%$$
+- **Boss Pool (34 Shapes)**: Cat, Dog, Frog, Fox, Tiger, Panda, Fish, Butterfly, House, Crown, Saturn, Trapezoid, Parallelogram, Pentagon, Octagon, Gear, Star4, Shield, Castle, and more.
+- **God Pool (24 Shapes)**: Heart, Star, Diamond, Hexagon, Blob, Circle, Flower, GiftBox, Shield, Rocket, Sun, Cloud, Gem, Snowflake, TeddyBear, Globe, Cat, Crown, Castle.
+- **Dense Fill Requirement**: All Boss & God shapes enforce `w >= 27` and `h >= 27` active bounding box thresholds on grids $\ge 27\times 27$.
 
 ### Level Binary Asset (`assets/levels.bin`)
 
-All 500 levels are pre-generated and shipped as a single **887 KB** binary to avoid on-device generation lag on large grids.
+All 500 levels are pre-compiled and shipped in a single **741 KB** binary file:
 
 ```
-[HEADER]      8 bytes      magic 'LVLB' + version + level count
-[INDEX]       N × 4 bytes  byte offset per level (O(1) seek)
+[HEADER]      8 bytes      magic 'LVLB' + version + level count (500)
+[INDEX]       500 × 4B     O(1) byte offset per level lookup
 [DATA]        gridSize, maskShape, arrows (delta-encoded paths),
               mask bitmask, deflector dots
 ```
