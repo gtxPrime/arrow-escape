@@ -105,22 +105,20 @@ class GridComponent extends PositionComponent {
     final cs = cellSize;
     final baseDot = (cs * 0.045).clamp(0.6, 1.6);
     final inR = baseDot;
-    final outR = inR * 0.55;
 
     final inPaint = Paint()
       ..color = AppColors.isDark ? const Color(0x3CFFFFFF) : const Color(0xFFC8BFB0)
-      ..style = PaintingStyle.fill;
-    final outPaint = Paint()
-      ..color = AppColors.isDark ? const Color(0x11FFFFFF) : const Color(0x1EBBBBBB)
       ..style = PaintingStyle.fill;
 
     for (int r = 0; r < gridSize; r++) {
       for (int c = 0; c < gridSize; c++) {
         final inMask = _mask.contains('$r,$c');
+        if (!inMask) continue; // Only render active grid dots inside the mask!
+
         canvas.drawCircle(
           Offset((c + 0.5) * cs, (r + 0.5) * cs),
-          inMask ? inR : outR,
-          inMask ? inPaint : outPaint,
+          inR,
+          inPaint,
         );
       }
     }

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
-import 'package:flame/game.dart';
+import 'package:flame/game.dart' hide Matrix4;
 import 'package:provider/provider.dart';
 import '../../widgets/unified_banner_ad.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -52,12 +52,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   bool _isGamePaused = false;
   bool _isAppBackgrounded = false;
 
+  late final TransformationController _transformationController;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 4));
+    _transformationController = TransformationController();
   }
 
   @override
@@ -119,6 +122,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _showingGameOver = false;
     _showingDeadlock = false;
     _inspectingDeadlock = false;
+    _transformationController.value = Matrix4.identity();
     _gameState?.removeListener(_onGameStateChanged);
     _gameState = GameState(
       level: _level,
@@ -477,6 +481,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _transformationController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _levelTimer?.cancel();
     _gameState?.removeListener(_onGameStateChanged);
@@ -542,6 +547,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   void _resetTimerForLevel() {
     _levelTimer?.cancel();
     _isTimeoutState = false;
+
+    final progress = context.read<ProgressRepository>();
+    if (progress.isDemoMode) {
+      _totalTime = 0;
+      _timeRemaining = 0;
+      return;
+    }
 
     final levelType = AppConstants.levelTypeFor(_level.levelNumber);
     final hasTimer = (levelType == LevelType.god && _level.levelNumber > 100) ||
@@ -654,44 +666,80 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Measure the real screen area BEFORE entering InteractiveViewer
-                    // (InteractiveViewer gives unbounded constraints to its children,
-                    // so LayoutBuilder must be OUTSIDE to get finite values).
-                    final boardSize =
-                        min(constraints.maxWidth, constraints.maxHeight - 16);
-                    return ShaderMask(
-                      shaderCallback: (Rect bounds) {
-                        return const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black,
-                            Colors.black,
-                            Colors.transparent,
-                          ],
-                          stops: [
-                            0.0,
-                            0.08,
-                            0.92,
-                            1.0,
-                          ],
-                        ).createShader(bounds);
-                      },
-                      blendMode: BlendMode.dstIn,
-                      child: InteractiveViewer(
-                        minScale: 0.8,
-                        maxScale: 4.0,
-                        boundaryMargin: const EdgeInsets.all(60),
-                        clipBehavior: Clip.hardEdge,
-                        child: Center(
-                          child: SizedBox(
-                            width: boardSize,
-                            height: boardSize,
-                            child: GameWidget(game: _game),
+                    // Measure the real screen area BEFORE entering InteractiveViewer.
+                    // InteractiveViewer gives unbounded constraints to its children,
+                    // so LayoutBuilder must be OUTSIDE to get finite values.
+                    // Use the full available rect — Flame's _calcLayout already
+                    // handles non-square grids by fitting activeCols × activeRows.
+                    final boardW = constraints.maxWidth;
+                    final boardH = constraints.maxHeight;
+                    final fadeH = boardH * 0.10;
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Canvas — fills the Expanded bounds, clipped hard
+                        Positioned.fill(
+                          child: ClipRect(
+                            child: InteractiveViewer(
+                              transformationController:
+                                  _transformationController,
+                              minScale: 0.8,
+                              maxScale: 4.0,
+                              boundaryMargin: const EdgeInsets.all(180),
+                              clipBehavior: Clip.none,
+                              child: Center(
+                                child: SizedBox(
+                                  width: boardW,
+                                  height: boardH,
+                                  child: GameWidget(game: _game),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        // Top fade — fixed overlay, non-interactive
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: IgnorePointer(
+                            child: Container(
+                              height: fadeH,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    AppColors.background,
+                                    AppColors.background.withOpacity(0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Bottom fade — fixed overlay, non-interactive
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: IgnorePointer(
+                            child: Container(
+                              height: fadeH,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    AppColors.background,
+                                    AppColors.background.withOpacity(0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -800,7 +848,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             ),
             backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -925,7 +974,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             decoration: BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: iconColor.withValues(alpha: 0.25), width: 2),
+              border: Border.all(
+                  color: iconColor.withValues(alpha: 0.25), width: 2),
               boxShadow: [
                 BoxShadow(
                   color: iconColor.withValues(alpha: 0.15),
@@ -939,11 +989,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               children: [
                 // Tutorial Step Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: iconColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: iconColor.withValues(alpha: 0.3), width: 1),
+                    border: Border.all(
+                        color: iconColor.withValues(alpha: 0.3), width: 1),
                   ),
                   child: Text(
                     'TUTORIAL STEP $stepText',
@@ -956,7 +1008,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Pulsing Icon
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -965,15 +1017,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: iconColor, size: 28),
-                )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scale(
-                        begin: const Offset(0.92, 0.92),
-                        end: const Offset(1.08, 1.08),
-                        duration: 1000.ms,
-                        curve: Curves.easeInOut),
+                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                    begin: const Offset(0.92, 0.92),
+                    end: const Offset(1.08, 1.08),
+                    duration: 1000.ms,
+                    curve: Curves.easeInOut),
                 const SizedBox(height: 16),
-                
+
                 Text(
                   title,
                   textAlign: TextAlign.center,
@@ -1088,7 +1138,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   .animate(onPlay: (c) => c.repeat())
                   .hide()
                   .fadeIn(delay: 400.ms, duration: 200.ms)
-                  .scale(begin: const Offset(1.2, 1.2), end: const Offset(0.9, 0.9), delay: 400.ms, duration: 400.ms, curve: Curves.easeOutBack)
+                  .scale(
+                      begin: const Offset(1.2, 1.2),
+                      end: const Offset(0.9, 0.9),
+                      delay: 400.ms,
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack)
                   .fadeOut(delay: 800.ms, duration: 200.ms),
             ),
           ],
@@ -1124,13 +1179,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: color1.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: color1, width: 2),
                       ),
-                      child: const Icon(Icons.arrow_upward_rounded, color: color1, size: 20),
+                      child: const Icon(Icons.arrow_upward_rounded,
+                          color: color1, size: 20),
                     )
                         .animate(onPlay: (c) => c.repeat())
                         .scale(
@@ -1138,16 +1195,26 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                             end: const Offset(1.05, 1.05),
                             duration: 700.ms,
                             curve: Curves.easeInOut)
-                        .slideY(begin: 0, end: -1.4, delay: 900.ms, duration: 550.ms)
+                        .slideY(
+                            begin: 0,
+                            end: -1.4,
+                            delay: 900.ms,
+                            duration: 550.ms)
                         .fadeOut(delay: 1000.ms, duration: 200.ms),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: color1.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('PAIR', style: TextStyle(fontSize: 9, color: color1, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                      child: const Text('PAIR',
+                          style: TextStyle(
+                              fontSize: 9,
+                              color: color1,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1)),
                     ),
                   ],
                 ),
@@ -1158,7 +1225,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.link_rounded, color: Color(0xFF888888), size: 18),
+                    const Icon(Icons.link_rounded,
+                        color: Color(0xFF888888), size: 18),
                   ],
                 ),
 
@@ -1169,13 +1237,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: color2.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: color2, width: 2),
                       ),
-                      child: const Icon(Icons.arrow_forward_rounded, color: color2, size: 20),
+                      child: const Icon(Icons.arrow_forward_rounded,
+                          color: color2, size: 20),
                     )
                         .animate(onPlay: (c) => c.repeat())
                         .scale(
@@ -1183,16 +1253,23 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                             end: const Offset(1.05, 1.05),
                             duration: 700.ms,
                             curve: Curves.easeInOut)
-                        .slideX(begin: 0, end: 1.4, delay: 900.ms, duration: 550.ms)
+                        .slideX(
+                            begin: 0, end: 1.4, delay: 900.ms, duration: 550.ms)
                         .fadeOut(delay: 1000.ms, duration: 200.ms),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: color2.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('PAIR', style: TextStyle(fontSize: 9, color: color2, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                      child: const Text('PAIR',
+                          style: TextStyle(
+                              fontSize: 9,
+                              color: color2,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1)),
                     ),
                   ],
                 ),
@@ -1209,7 +1286,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   .animate(onPlay: (c) => c.repeat())
                   .hide()
                   .fadeIn(delay: 300.ms, duration: 200.ms)
-                  .scale(begin: const Offset(1.2, 1.2), end: const Offset(0.9, 0.9), delay: 300.ms, duration: 400.ms, curve: Curves.easeOutBack)
+                  .scale(
+                      begin: const Offset(1.2, 1.2),
+                      end: const Offset(0.9, 0.9),
+                      delay: 300.ms,
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack)
                   .fadeOut(delay: 750.ms, duration: 200.ms),
             ),
           ],
@@ -1563,7 +1645,10 @@ class _LevelCompleteDialog extends StatelessWidget {
     required this.onDoubleCoins,
   });
 
-  bool get _showAds => AppConstants.enableAdMob || AppConstants.enableUnityAds || AppConstants.enableAppLovin;
+  bool get _showAds =>
+      AppConstants.enableAdMob ||
+      AppConstants.enableUnityAds ||
+      AppConstants.enableAppLovin;
 
   @override
   Widget build(BuildContext context) {
@@ -1757,7 +1842,10 @@ class _GameOverDialog extends StatelessWidget {
     required this.onMenu,
   });
 
-  bool get _showAds => AppConstants.enableAdMob || AppConstants.enableUnityAds || AppConstants.enableAppLovin;
+  bool get _showAds =>
+      AppConstants.enableAdMob ||
+      AppConstants.enableUnityAds ||
+      AppConstants.enableAppLovin;
 
   @override
   Widget build(BuildContext context) {
@@ -2343,7 +2431,8 @@ class _BouncingDotsState extends State<_BouncingDots>
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: (widget.color ?? AppColors.primary).withValues(alpha: 0.5 + 0.5 * t),
+                  color: (widget.color ?? AppColors.primary)
+                      .withValues(alpha: 0.5 + 0.5 * t),
                   shape: BoxShape.circle,
                 ),
               ),

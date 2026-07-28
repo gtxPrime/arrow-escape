@@ -38,13 +38,14 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
   double _longPressAccum = 0.0;
   bool _isTouchDown = false;
   bool _isPreviewMode = false;
-  List<Offset>? _previewPath;   // pixel coords from head-step-1 → off-screen
-  double _previewPhase = 0.0;   // marching-ants animation phase (0–1)
+  List<Offset>? _previewPath; // pixel coords from head-step-1 → off-screen
+  double _previewPhase = 0.0; // marching-ants animation phase (0–1)
 
   // ── Exit state ──────────────────────────────────────────────────────────────────
   bool _isExiting = false;
   double _exitProgress = 0.0;
   double _exitDuration = 0.35;
+
   /// Pre-built deflected exit track (farthest → head), null = straight exit
   List<Offset>? _deflectedExtension;
 
@@ -75,16 +76,18 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     return true;
   }
 
-  // ── Color palette for colorLock / colorKey groups ─────────────────────────
+  // ── Color palette for colorLock / colorKey groups (High-Contrast Rich Pastels) ─────
   static const List<Color> _groupColors = [
-    Color(0xFF4FC3F7),
-    Color(0xFF81C784),
-    Color(0xFFFFB74D),
-    Color(0xFFBA68C8),
-    Color(0xFFFF8A65),
-    Color(0xFF4DB6AC),
-    Color(0xFFF06292),
-    Color(0xFFAED581),
+    Color(0xFFFF5252), // High-Contrast Coral Red
+    Color(0xFF2979FF), // High-Contrast Electric Blue
+    Color(0xFF00E676), // High-Contrast Mint Green
+    Color(0xFFA000FF), // High-Contrast Deep Purple
+    Color(0xFFFF9100), // High-Contrast Warm Amber
+    Color(0xFF00E5FF), // High-Contrast Cyan / Aqua
+    Color(0xFFFF4081), // High-Contrast Pink
+    Color(0xFFFFD600), // High-Contrast Golden Yellow
+    Color(0xFF7C4DFF), // High-Contrast Violet
+    Color(0xFF1DE9B6), // High-Contrast Seafoam
   ];
 
   ArrowComponent({
@@ -105,9 +108,18 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
   @override
   bool containsLocalPoint(Vector2 point) {
     if (_isExiting) return false;
-    final col = (point.x / cellSize).floor();
-    final row = (point.y / cellSize).floor();
-    return arrowModel.path.any((pt) => pt[0] == row && pt[1] == col);
+    final margin = cellSize * 0.25;
+    for (final pt in arrowModel.path) {
+      final cellLeft = pt[1] * cellSize - margin;
+      final cellRight = (pt[1] + 1) * cellSize + margin;
+      final cellTop = pt[0] * cellSize - margin;
+      final cellBottom = (pt[0] + 1) * cellSize + margin;
+      if (point.x >= cellLeft && point.x <= cellRight &&
+          point.y >= cellTop && point.y <= cellBottom) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
@@ -219,8 +231,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
 
     // Pad a few off-screen cells in the final direction so the tail fully exits
     for (int i = 0; i <= 5; i++) {
-      pts.add(Offset((nc + d[1] * i + 0.5) * cellSize,
-                     (nr + d[0] * i + 0.5) * cellSize));
+      pts.add(Offset(
+          (nc + d[1] * i + 0.5) * cellSize, (nr + d[0] * i + 0.5) * cellSize));
     }
 
     return pts.reversed.toList(); // farthest → closest to head
@@ -282,10 +294,11 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     }
 
     // Always add overshoot in final direction
-    final lastPoint = pts.isNotEmpty 
-        ? pts.last 
+    final lastPoint = pts.isNotEmpty
+        ? pts.last
         : Offset((head[1] + 0.5) * cellSize, (head[0] + 0.5) * cellSize);
-    final overshootPoint = lastPoint + Offset(d[1] * cellSize * 0.25, d[0] * cellSize * 0.25);
+    final overshootPoint =
+        lastPoint + Offset(d[1] * cellSize * 0.25, d[0] * cellSize * 0.25);
     pts.add(overshootPoint);
 
     return pts.reversed.toList();
@@ -296,7 +309,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
 
     if (_cachedPathPx == null) {
       _cachedPathPx = arrowModel.path
-          .map((pt) => Offset((pt[1] + 0.5) * cellSize, (pt[0] + 0.5) * cellSize))
+          .map((pt) =>
+              Offset((pt[1] + 0.5) * cellSize, (pt[0] + 0.5) * cellSize))
           .toList();
     }
     final pathPx = _cachedPathPx!;
@@ -417,7 +431,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     // ── 1. Resolve pathPx ─────────────────────────────────────────────────────
     if (_cachedPathPx == null) {
       _cachedPathPx = arrowModel.path
-          .map((pt) => Offset((pt[1] + 0.5) * cellSize, (pt[0] + 0.5) * cellSize))
+          .map((pt) =>
+              Offset((pt[1] + 0.5) * cellSize, (pt[0] + 0.5) * cellSize))
           .toList();
     }
     final pathPx = _cachedPathPx!;
@@ -439,7 +454,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
         } else {
           extCount = gameState.level.gridSize + 2;
           for (int i = extCount; i >= 1; i--) {
-            track.add(headPx + Offset(delta[1] * i * cellSize, delta[0] * i * cellSize));
+            track.add(headPx +
+                Offset(delta[1] * i * cellSize, delta[0] * i * cellSize));
           }
         }
         track.addAll(pathPx);
@@ -478,7 +494,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
       if (_isExiting) {
         final consumedDots = gameState.getConsumedDotsForArrow(arrowModel.id);
         for (final dot in consumedDots) {
-          final dotPx = Offset((dot.col + 0.5) * cellSize, (dot.row + 0.5) * cellSize);
+          final dotPx =
+              Offset((dot.col + 0.5) * cellSize, (dot.row + 0.5) * cellSize);
           double? dotDist;
           for (int i = 0; i < track.length; i++) {
             if ((track[i] - dotPx).distanceSquared < 0.01) {
@@ -500,7 +517,7 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
 
     // ── 5. Resolve color and stroke width ─────────────────────────────────────────────
     final mainColor = _color();
-    final sw = cellSize * 0.13; // Sleek but solid aesthetic
+    final sw = cellSize * 0.2; // Slightly sleek & clean arrow body thickness
 
     canvas.save();
 
@@ -508,7 +525,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     final Path bodyPath;
     if (isAnimatingNow) {
       bodyPath = Path()..moveTo(pts.first.dx, pts.first.dy);
-      for (int i = 1; i < pts.length; i++) bodyPath.lineTo(pts[i].dx, pts[i].dy);
+      for (int i = 1; i < pts.length; i++)
+        bodyPath.lineTo(pts[i].dx, pts[i].dy);
     } else {
       if (_cachedBodyPath == null) {
         final path = Path()..moveTo(pts.first.dx, pts.first.dy);
@@ -560,11 +578,27 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
       caretPath,
       Paint()
         ..color = mainColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = sw
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
+        ..style = PaintingStyle.fill,
     );
+
+    // ── Color Lock Partner Ring Indicator at Tail Node ─────────────────────
+    if (arrowModel.mechanic == SnakeMechanic.colorLock && pts.isNotEmpty) {
+      final tailPx = pts.last;
+      canvas.drawCircle(
+        tailPx,
+        sw * 0.70,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawCircle(
+        tailPx,
+        sw * 0.45,
+        Paint()
+          ..color = mainColor
+          ..style = PaintingStyle.fill,
+      );
+    }
   }
 
   Path _buildCaretPath(List<Offset> pts, double sw) {
@@ -577,10 +611,10 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     final dy = len > 0.01 ? dv.dy / len : d[0].toDouble();
 
     // The head tip position
-    final tip = pts.first + Offset(dx * cellSize * 0.3, dy * cellSize * 0.3);
+    final tip = pts.first + Offset(dx * cellSize * 0.46, dy * cellSize * 0.46);
 
-    final hd = cellSize * 0.25; // depth
-    final hw = cellSize * 0.18; // half-width
+    final hd = cellSize * 0.44; // depth
+    final hw = cellSize * 0.34; // half-width
 
     final base = tip - Offset(dx * hd, dy * hd);
     final px = -dy, py = dx; // perpendicular
@@ -588,9 +622,9 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     return Path()
       ..moveTo(base.dx + px * hw, base.dy + py * hw)
       ..lineTo(tip.dx, tip.dy)
-      ..lineTo(base.dx - px * hw, base.dy - py * hw);
+      ..lineTo(base.dx - px * hw, base.dy - py * hw)
+      ..close();
   }
-
 
   // ── Long-press preview path builder & renderer ──────────────────────────────
 
@@ -607,7 +641,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     final pts = <Offset>[];
 
     // Start directly from the center of the arrow head
-    final headPx = Offset((head[1] + 0.5) * cellSize, (head[0] + 0.5) * cellSize);
+    final headPx =
+        Offset((head[1] + 0.5) * cellSize, (head[0] + 0.5) * cellSize);
     pts.add(headPx);
 
     var d = currentDir.delta;
@@ -624,11 +659,20 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
       if (orphanDots.containsKey(key)) {
         final dotType = orphanDots[key]!;
         switch (dotType) {
-          case OrphanDotType.up:    currentDir = ArrowDirection.up;    break;
-          case OrphanDotType.down:  currentDir = ArrowDirection.down;  break;
-          case OrphanDotType.left:  currentDir = ArrowDirection.left;  break;
-          case OrphanDotType.right: currentDir = ArrowDirection.right; break;
-          default: break;
+          case OrphanDotType.up:
+            currentDir = ArrowDirection.up;
+            break;
+          case OrphanDotType.down:
+            currentDir = ArrowDirection.down;
+            break;
+          case OrphanDotType.left:
+            currentDir = ArrowDirection.left;
+            break;
+          case OrphanDotType.right:
+            currentDir = ArrowDirection.right;
+            break;
+          default:
+            break;
         }
       }
 
@@ -639,8 +683,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
 
     // Add 2 off-screen points so the line fades cleanly past the border.
     for (int i = 1; i <= 2; i++) {
-      pts.add(Offset((nc + d[1] * i + 0.5) * cellSize,
-                     (nr + d[0] * i + 0.5) * cellSize));
+      pts.add(Offset(
+          (nc + d[1] * i + 0.5) * cellSize, (nr + d[0] * i + 0.5) * cellSize));
     }
 
     return pts.isEmpty ? null : pts;
@@ -736,7 +780,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
 
   static void _drawOrphanDot(
       Canvas canvas, Offset center, OrphanDotType type, double cs) {
-    if (type == OrphanDotType.neutral) return; // Neutral empty dots can be left empty
+    if (type == OrphanDotType.neutral)
+      return; // Neutral empty dots can be left empty
 
     const Color baseColor = Color(0xFFFFAA00); // Gold/orange redirect plate
 

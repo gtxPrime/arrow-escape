@@ -1,5 +1,3 @@
-
-
 import 'ad_secrets.dart';
 
 // Core game constants
@@ -22,26 +20,26 @@ class AppConstants {
   static const int maxLives = 3;
 
   // Special level cadence
-  static const int bossLevelEvery = 3;   // Every 3rd level is BOSS
-  static const int godLevelEvery  = 5;   // Every 5th level is GOD (overrides boss)
+  static const int bossLevelEvery = 3; // Every 3rd level is BOSS
+  static const int godLevelEvery = 5; // Every 5th level is GOD (overrides boss)
 
   // Ads
-  static const String admobAppIdAndroid    = AdSecrets.admobAppIdAndroid;
-  static const String admobBannerUnitId    = AdSecrets.admobBannerUnitId;
-  static const String admobInterstitialUnitId = AdSecrets.admobInterstitialUnitId;
-  static const String admobRewardedUnitId  = AdSecrets.admobRewardedUnitId;
+  static const String admobAppIdAndroid = AdSecrets.admobAppIdAndroid;
+  static const String admobBannerUnitId = AdSecrets.admobBannerUnitId;
+  static const String admobInterstitialUnitId =
+      AdSecrets.admobInterstitialUnitId;
+  static const String admobRewardedUnitId = AdSecrets.admobRewardedUnitId;
 
-  static const String unityGameId       = 'YOUR_UNITY_GAME_ID';
-  static const String unityBannerAdId   = 'Banner_Android';
+  static const String unityGameId = 'YOUR_UNITY_GAME_ID';
+  static const String unityBannerAdId = 'Banner_Android';
   static const String unityInterstitialAdId = 'Interstitial_Android';
   static const String unityRewardedAdId = 'Rewarded_Android';
-  static const bool   unityTestMode     = true;
+  static const bool unityTestMode = true;
 
   // static const String applovinSdkKey = 'YOUR_APPLOVIN_SDK_KEY';
   // static const String applovinBannerAdId = 'YOUR_APPLOVIN_BANNER_AD_UNIT_ID';
   // static const String applovinInterstitialAdId = 'YOUR_APPLOVIN_INTERSTITIAL_AD_UNIT_ID';
   // static const String applovinRewardedAdId = 'YOUR_APPLOVIN_REWARDED_AD_UNIT_ID';
-
 
   // Ad Network Feature Toggles
   static const bool enableAdMob = true;
@@ -51,17 +49,17 @@ class AppConstants {
   static const int interstitialEveryNLevels = 4;
 
   // Animation durations
-  static const Duration arrowSlideDuration   = Duration(milliseconds: 220);
+  static const Duration arrowSlideDuration = Duration(milliseconds: 220);
   // arrowExitDuration is now dynamic (based on path length) — this is the base
-  static const Duration arrowExitDuration    = Duration(milliseconds: 400);
-  static const Duration arrowShakeDuration   = Duration(milliseconds: 400);
+  static const Duration arrowExitDuration = Duration(milliseconds: 400);
+  static const Duration arrowShakeDuration = Duration(milliseconds: 400);
   static const Duration levelCompleteDuration = Duration(milliseconds: 200);
 
   // Scoring
-  static const int baseScore           = 100;
+  static const int baseScore = 100;
   static const int bonusPerRemainingLife = 50;
-  static const int bossBonus           = 200;
-  static const int godBonus            = 500;
+  static const int bossBonus = 200;
+  static const int godBonus = 500;
 
   // Streak milestones
   static const int streakMilestone1 = 7;
@@ -125,7 +123,6 @@ class AppConstants {
     }
   }
 
-
   /// Returns the level type: tutorial, god, boss, or normal.
   ///
   /// Post-tutorial pattern repeats every 7 levels:
@@ -149,12 +146,15 @@ class AppConstants {
   /// True for god levels.
   static bool isGodLevel(int n) => levelTypeFor(n) == LevelType.god;
 
-  /// Canvas scale factor: boss/god levels use more screen space for larger canvases.
+  /// Canvas scale factor: higher scale factor zooms in default game canvas area.
   static double canvasScaleForType(LevelType type) {
     switch (type) {
-      case LevelType.god:  return 0.93;
-      case LevelType.boss: return 0.93;
-      default:             return 0.90;
+      case LevelType.god:
+        return 0.97;
+      case LevelType.boss:
+        return 0.97;
+      default:
+        return 1.2;
     }
   }
 }
@@ -167,10 +167,14 @@ enum LevelType {
 
   String get label {
     switch (this) {
-      case LevelType.tutorial: return 'Tutorial';
-      case LevelType.normal:   return '';
-      case LevelType.boss:     return 'Boss';
-      case LevelType.god:      return 'God';
+      case LevelType.tutorial:
+        return 'Tutorial';
+      case LevelType.normal:
+        return '';
+      case LevelType.boss:
+        return 'Boss';
+      case LevelType.god:
+        return 'God';
     }
   }
 
