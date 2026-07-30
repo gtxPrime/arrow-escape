@@ -88,10 +88,35 @@ class GameOverScreen extends StatelessWidget {
                   subtitle: 'Watch an ad to get 1 more life',
                   gradient: AppColors.successGradient,
                   onTap: () {
+                    bool rewarded = false;
                     adManager.showRewarded(
                       onRewarded: () {
+                        rewarded = true;
+                        if (!context.mounted) return;
                         Navigator.pushReplacementNamed(context, '/game',
                             arguments: {'level': levelNumber, 'revived': true});
+                      },
+                      onDismissed: () {
+                        if (!rewarded && context.mounted) {
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Ad not completed. Try watching again or restart level.',
+                                style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFFC0392B),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
                       },
                     );
                   },

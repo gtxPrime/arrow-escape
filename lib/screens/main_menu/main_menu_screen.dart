@@ -371,7 +371,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
             Color bubbleColor;
             Color textColor;
-            double size = isCurrent ? 46.0 : 34.0;
+            double size = isCurrent ? 48.0 : 38.0;
             final isDark = AppColors.isDark;
 
             if (!isUnlocked) {
@@ -477,12 +477,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             : null,
                       ),
                       child: Center(
-                        child: Text(
-                          '$lvl',
-                          style: GoogleFonts.nunito(
-                            fontSize: isCurrent ? 18 : 14,
-                            fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w700,
-                            color: textColor,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '$lvl',
+                              style: GoogleFonts.nunito(
+                                fontSize: isCurrent
+                                    ? (lvl >= 100 ? 14 : 18)
+                                    : (lvl >= 100 ? 11 : 14),
+                                fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w700,
+                                color: textColor,
+                              ),
+                            ),
                           ),
                         ),
                       ),

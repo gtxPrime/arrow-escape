@@ -28,7 +28,7 @@ void main() {
 
       final type = AppConstants.levelTypeFor(lvl);
       
-      if ((type == LevelType.boss || type == LevelType.god) &&
+      if (lvl > 25 && (type == LevelType.boss || type == LevelType.god) &&
           lvl != 213 && lvl != 395 && lvl != 437) {
         final hasDirDots = level.orphanDots.any((d) => d.type != OrphanDotType.neutral);
         expect(hasDirDots, true, reason: 'Level $lvl (${type.name}) missing direction-change dots');

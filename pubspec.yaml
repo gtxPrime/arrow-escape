@@ -1,7 +1,7 @@
 name: arrow_escape
 description: Arrow Escape - A casual grid puzzle game where you slide arrows out of the grid.
 publish_to: 'none'
-version: 1.2.0+13
+version: 1.3.1+15
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

@@ -76,19 +76,8 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
     return true;
   }
 
-  // ── Color palette for colorLock / colorKey groups (High-Contrast Rich Pastels) ─────
-  static const List<Color> _groupColors = [
-    Color(0xFFFF5252), // High-Contrast Coral Red
-    Color(0xFF2979FF), // High-Contrast Electric Blue
-    Color(0xFF00E676), // High-Contrast Mint Green
-    Color(0xFFA000FF), // High-Contrast Deep Purple
-    Color(0xFFFF9100), // High-Contrast Warm Amber
-    Color(0xFF00E5FF), // High-Contrast Cyan / Aqua
-    Color(0xFFFF4081), // High-Contrast Pink
-    Color(0xFFFFD600), // High-Contrast Golden Yellow
-    Color(0xFF7C4DFF), // High-Contrast Violet
-    Color(0xFF1DE9B6), // High-Contrast Seafoam
-  ];
+  // Group colors for colorLock / colorKey pairs are retrieved dynamically from AppColors.getGroupColor
+
 
   ArrowComponent({
     required this.arrowModel,
@@ -739,7 +728,7 @@ class ArrowComponent extends PositionComponent with TapCallbacks, HasPaint {
       return const Color(0xFFCC2200); // Vibrant red error color on block
     }
     if (arrowModel.colorGroup != null) {
-      return _groupColors[arrowModel.colorGroup! % _groupColors.length];
+      return AppColors.getGroupColor(arrowModel.colorGroup!);
     }
     return AppColors.arrowUp;
   }

@@ -165,17 +165,22 @@ class _LevelCell extends StatelessWidget {
             else if (levelType == LevelType.tutorial)
               Icon(LucideIcons.bookOpen, color: AppColors.accentGreen, size: 12),
 
-            // Lock or number
             if (!isUnlocked)
               Icon(Icons.lock_outline_rounded,
                   color: AppColors.textMuted, size: 20)
             else
-              Text('$levelNumber',
-                  style: GoogleFonts.nunito(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  )),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('$levelNumber',
+                      style: GoogleFonts.nunito(
+                        fontSize: levelNumber >= 100 ? 13 : 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      )),
+                ),
+              ),
 
             // Stars
             if (isUnlocked && stars > 0) ...[

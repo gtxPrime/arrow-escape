@@ -449,8 +449,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           // Watch rewarded ad to restore 1 life or add extra time
           final adManager = context.read<AdManager>();
           Navigator.pop(context);
+          bool rewarded = false;
           adManager.showRewarded(
             onRewarded: () {
+              rewarded = true;
+              if (!mounted) return;
               setState(() {
                 _showingGameOver = false;
                 if (_isTimeoutState) {
@@ -464,7 +467,30 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 }
               });
             },
-            onDismissed: () {},
+            onDismissed: () {
+              if (!rewarded && mounted) {
+                _showingGameOver = false;
+                _showGameOverDialog(); // Re-open game over dialog so player can try again or restart
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Ad not completed. Try watching again or restart.',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    backgroundColor: const Color(0xFFC0392B),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
           );
         },
         onRestart: () {
@@ -1156,8 +1182,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     // Color-pair tutorial: show two arrows in DIFFERENT colors so players
     // understand that "matching colors = paired". Arrow 1 exits upward
     // (coral/red), Arrow 2 exits rightward (cyan/teal) — both at the same time.
-    const Color color1 = Color(0xFFFF2D55); // coral-red pair
-    const Color color2 = Color(0xFF00BCD4); // cyan-teal pair
+    final Color color1 = AppColors.getGroupColor(0); // group 0 pair color
+    final Color color2 = AppColors.getGroupColor(1); // group 1 pair color
     return Container(
       height: 110,
       width: double.infinity,
@@ -1186,7 +1212,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: color1, width: 2),
                       ),
-                      child: const Icon(Icons.arrow_upward_rounded,
+                      child: Icon(Icons.arrow_upward_rounded,
                           color: color1, size: 20),
                     )
                         .animate(onPlay: (c) => c.repeat())
@@ -1209,7 +1235,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         color: color1.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('PAIR',
+                      child: Text('PAIR',
                           style: TextStyle(
                               fontSize: 9,
                               color: color1,
@@ -1244,7 +1270,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: color2, width: 2),
                       ),
-                      child: const Icon(Icons.arrow_forward_rounded,
+                      child: Icon(Icons.arrow_forward_rounded,
                           color: color2, size: 20),
                     )
                         .animate(onPlay: (c) => c.repeat())
@@ -1264,7 +1290,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         color: color2.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('PAIR',
+                      child: Text('PAIR',
                           style: TextStyle(
                               fontSize: 9,
                               color: color2,

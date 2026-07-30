@@ -114,4 +114,11 @@ test/verify_bin_solvability_test.dart
 # Sensitive Local Secrets
 lib/core/ad_secrets.dart
 
+# Brag & HyperFrames Output
+brag-output/
+.hyperframes/
+*.mp4
+
+# Agents Folder
+.agents/
 
