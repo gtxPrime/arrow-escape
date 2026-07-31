@@ -316,7 +316,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final adManager = context.read<AdManager>();
     Navigator.pop(context);
     bool rewarded = false;
-    adManager.showRewarded(
+    adManager.showRewardedWithLoader(
+      context,
       onRewarded: () {
         rewarded = true;
         context.read<ProgressRepository>().addCoins(AppConstants.baseScore +
@@ -450,7 +451,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           final adManager = context.read<AdManager>();
           Navigator.pop(context);
           bool rewarded = false;
-          adManager.showRewarded(
+          adManager.showRewardedWithLoader(
+            context,
             onRewarded: () {
               rewarded = true;
               if (!mounted) return;
@@ -737,7 +739,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     AppColors.background,
-                                    AppColors.background.withOpacity(0),
+                                    AppColors.background.withValues(alpha: 0),
                                   ],
                                 ),
                               ),
@@ -758,7 +760,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                   end: Alignment.topCenter,
                                   colors: [
                                     AppColors.background,
-                                    AppColors.background.withOpacity(0),
+                                    AppColors.background.withValues(alpha: 0),
                                   ],
                                 ),
                               ),

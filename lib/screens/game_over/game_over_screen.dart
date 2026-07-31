@@ -89,7 +89,8 @@ class GameOverScreen extends StatelessWidget {
                   gradient: AppColors.successGradient,
                   onTap: () {
                     bool rewarded = false;
-                    adManager.showRewarded(
+                    adManager.showRewardedWithLoader(
+                      context,
                       onRewarded: () {
                         rewarded = true;
                         if (!context.mounted) return;

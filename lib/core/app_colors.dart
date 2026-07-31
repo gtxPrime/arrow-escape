@@ -50,45 +50,38 @@ class AppColors {
   static Color get starYellow => isDark ? const Color(0xFFA8B5A2) : const Color(0xFF5E6B56);
   static Color get borderGlow => isDark ? const Color(0xFF829079) : const Color(0xFF5E6B56);
 
-  // ── Theme-aware Arrow Pair / Group Colors (15 100% visually distinct color categories) ───
-  // Ordered so that pairs 0..N in any level receive maximally distant, unconfusable colors:
-  // 0: Red, 1: Cobalt Blue, 2: Emerald Green (Only 1 green), 3: Royal Purple, 4: Tangerine Orange, 5: Aqua Cyan,
-  // 6: Light Bubblegum Pink (100% distinct from Red), 7: Sunflower Yellow (Only 1 Yellow/Gold), 8: Espresso Brown,
-  // 9: Charcoal Black / Pure White, 10: Frost Ice Blue, 11: Midnight Navy, 12: Soft Lavender, 13: Slate Steel Gray, 14: Dark Velvet Plum
+  // ── Theme-aware Arrow Pair / Group Colors (12 Maximally Distant, Unconfusable Colors) ───
+  // Ordered around the color wheel with max hue separation so pairs 0..N receive zero-confusion colors:
+  // 0: Crimson Red, 1: Cobalt Blue, 2: Emerald Green, 3: Royal Purple, 4: Tangerine Orange, 5: Aqua Cyan,
+  // 6: Hot Pink, 7: Sunflower Yellow, 8: Neon Lime Green, 9: Vibrant Teal, 10: Deep Indigo, 11: Rose Magenta
   static const List<Color> _groupColorsLight = [
-    Color(0xFFE50914), // 0: Pure Crimson Red
-    Color(0xFF0055FF), // 1: Electric Cobalt Blue
-    Color(0xFF00A859), // 2: Emerald Mint Green (ONLY GREEN SHADE)
-    Color(0xFF7B1FA2), // 3: Deep Royal Purple
-    Color(0xFFFF5500), // 4: Pure Tangerine Orange
-    Color(0xFF00B4D8), // 5: Bright Aqua Cyan
-    Color(0xFFFF66C4), // 6: Light Bright Bubblegum Pink (0% dark red, 100% distinct from Red)
-    Color(0xFFFFC107), // 7: Golden Sunflower Yellow (ONLY YELLOW/GOLD SHADE)
-    Color(0xFF5D4037), // 8: Dark Espresso Brown
-    Color(0xFF212121), // 9: Jet Charcoal Black
-    Color(0xFF0288D1), // 10: Frost Ice Blue
-    Color(0xFF1A237E), // 11: Midnight Navy Indigo
-    Color(0xFF9C27B0), // 12: Soft Lavender Violet
-    Color(0xFF455A64), // 13: Slate Steel Gray
-    Color(0xFF4A148C), // 14: Dark Velvet Berry Plum
+    Color(0xFFE50914), // 0: Pure Crimson Red (Hue 0°)
+    Color(0xFF0055FF), // 1: Electric Cobalt Blue (Hue 215°)
+    Color(0xFF00A859), // 2: Emerald Mint Green (Hue 140°)
+    Color(0xFF8E24AA), // 3: Deep Royal Purple (Hue 285°)
+    Color(0xFFFF6D00), // 4: Pure Tangerine Orange (Hue 30°)
+    Color(0xFF00B4D8), // 5: Bright Aqua Cyan (Hue 175°)
+    Color(0xFFFF2A8D), // 6: Hot Bubblegum Pink (Hue 320°)
+    Color(0xFFFFA000), // 7: Golden Sunflower Yellow (Hue 55°)
+    Color(0xFF558B2F), // 8: Neon Lime Green (Hue 90°)
+    Color(0xFF00897B), // 9: Vibrant Teal (Hue 160°)
+    Color(0xFF3D5AFE), // 10: Deep Indigo Periwinkle (Hue 250°)
+    Color(0xFFC2185B), // 11: Rose Magenta (Hue 345°)
   ];
 
   static const List<Color> _groupColorsDark = [
-    Color(0xFFFF2A4B), // 0: Pure Crimson Red
-    Color(0xFF2979FF), // 1: Electric Cobalt Blue
-    Color(0xFF00E676), // 2: Emerald Mint Green (ONLY GREEN SHADE)
-    Color(0xFFB358FF), // 3: Deep Royal Purple
-    Color(0xFFFF7A00), // 4: Pure Tangerine Orange
-    Color(0xFF00E5FF), // 5: Bright Aqua Cyan
-    Color(0xFFFF80AB), // 6: Light Bright Bubblegum Pink (0% dark red, 100% distinct from Red)
-    Color(0xFFFFD600), // 7: Bright Sunflower Yellow (ONLY YELLOW/GOLD SHADE)
-    Color(0xFFBCAAA4), // 8: Warm Cocoa Brown
-    Color(0xFFFFFFFF), // 9: Pure Platinum White
-    Color(0xFF80D8FF), // 10: Frost Ice Blue
-    Color(0xFF7986CB), // 11: Soft Navy Indigo
-    Color(0xFFE1BEE7), // 12: Soft Lavender Periwinkle
-    Color(0xFFCFD8DC), // 13: Light Steel Silver
-    Color(0xFFEA80FC), // 14: Electric Orchid Plum
+    Color(0xFFFF2A4B), // 0: Pure Crimson Red (Hue 0°)
+    Color(0xFF2979FF), // 1: Electric Cobalt Blue (Hue 215°)
+    Color(0xFF00E676), // 2: Emerald Mint Green (Hue 140°)
+    Color(0xFFD500F9), // 3: Deep Royal Purple (Hue 285°)
+    Color(0xFFFF8B00), // 4: Pure Tangerine Orange (Hue 30°)
+    Color(0xFF00E5FF), // 5: Bright Aqua Cyan (Hue 175°)
+    Color(0xFFFF52A1), // 6: Hot Bubblegum Pink (Hue 320°)
+    Color(0xFFFFD600), // 7: Bright Sunflower Yellow (Hue 55°)
+    Color(0xFFAEEA00), // 8: Neon Lime Green (Hue 90°)
+    Color(0xFF1DE9B6), // 9: Vibrant Teal (Hue 160°)
+    Color(0xFF7575FF), // 10: Deep Indigo Periwinkle (Hue 250°)
+    Color(0xFFFF4081), // 11: Rose Magenta (Hue 345°)
   ];
 
   static Color getGroupColor(int groupIndex) {

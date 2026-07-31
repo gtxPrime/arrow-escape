@@ -1,8 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import '../core/constants.dart';
+import '../core/app_colors.dart';
 
 /// Central ad orchestrator — manages banner, interstitial, and rewarded ads.
 /// Uses a waterfall fallback strategy: AdMob (Priority 1) -> Unity Ads (Priority 2).
@@ -245,6 +247,86 @@ class AdManager {
     return AppConstants.enableAdMob || AppConstants.enableUnityAds;
   }
 
+  /// Displays a non-intrusive loading spinner dialog while fetching and preparing the rewarded ad.
+  Future<void> showRewardedWithLoader(
+    BuildContext context, {
+    required void Function() onRewarded,
+    void Function()? onDismissed,
+  }) async {
+    bool loaderOpen = true;
+
+    // Show loading overlay
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogCtx) => PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.surfaceLight, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 24,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading Ad...',
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    void closeLoader() {
+      if (loaderOpen && context.mounted) {
+        loaderOpen = false;
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+
+    await showRewarded(
+      onAdOpened: closeLoader,
+      onRewarded: () {
+        closeLoader();
+        onRewarded();
+      },
+      onDismissed: () {
+        closeLoader();
+        onDismissed?.call();
+      },
+    );
+  }
+
   /// Shows a rewarded ad with a robust multi-tier fallback mechanism:
   /// 1. Pre-loaded AdMob Rewarded Ad
   /// 2. Fast On-Demand AdMob Rewarded Ad load
@@ -255,6 +337,7 @@ class AdManager {
   Future<void> showRewarded({
     required void Function() onRewarded,
     void Function()? onDismissed,
+    void Function()? onAdOpened,
   }) async {
     void handleSuccess() {
       onRewarded();
@@ -271,6 +354,9 @@ class AdManager {
       _isAdmobRewardedLoaded = false;
 
       ad.fullScreenContentCallback = FullScreenContentCallback(
+        onAdShowedFullScreenContent: (ad) {
+          onAdOpened?.call();
+        },
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
           _loadAdmobRewarded();
@@ -279,7 +365,7 @@ class AdManager {
         onAdFailedToShowFullScreenContent: (ad, error) async {
           ad.dispose();
           _loadAdmobRewarded();
-          await _showRewardedFallback(handleSuccess: handleSuccess, handleFinish: handleFinish);
+          await _showRewardedFallback(handleSuccess: handleSuccess, handleFinish: handleFinish, onAdOpened: onAdOpened);
         },
       );
 
@@ -296,6 +382,9 @@ class AdManager {
       final onDemandAd = await _loadAdmobRewardedOnDemand(const Duration(seconds: 3));
       if (onDemandAd != null) {
         onDemandAd.fullScreenContentCallback = FullScreenContentCallback(
+          onAdShowedFullScreenContent: (ad) {
+            onAdOpened?.call();
+          },
           onAdDismissedFullScreenContent: (ad) {
             ad.dispose();
             _loadAdmobRewarded();
@@ -304,7 +393,7 @@ class AdManager {
           onAdFailedToShowFullScreenContent: (ad, error) async {
             ad.dispose();
             _loadAdmobRewarded();
-            await _showRewardedFallback(handleSuccess: handleSuccess, handleFinish: handleFinish);
+            await _showRewardedFallback(handleSuccess: handleSuccess, handleFinish: handleFinish, onAdOpened: onAdOpened);
           },
         );
 
@@ -318,12 +407,13 @@ class AdManager {
     }
 
     // Tier 3 & beyond: Fallback cascade
-    await _showRewardedFallback(handleSuccess: handleSuccess, handleFinish: handleFinish);
+    await _showRewardedFallback(handleSuccess: handleSuccess, handleFinish: handleFinish, onAdOpened: onAdOpened);
   }
 
   Future<void> _showRewardedFallback({
     required VoidCallback handleSuccess,
     required VoidCallback handleFinish,
+    VoidCallback? onAdOpened,
   }) async {
     // Fallback 1: Pre-loaded AdMob Interstitial
     if (AppConstants.enableAdMob && _isAdmobInterstitialLoaded && _admobInterstitial != null) {
@@ -333,6 +423,9 @@ class AdManager {
       _levelsSinceLastInterstitial = 0;
 
       ad.fullScreenContentCallback = FullScreenContentCallback(
+        onAdShowedFullScreenContent: (ad) {
+          onAdOpened?.call();
+        },
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
           _loadAdmobInterstitial();
@@ -342,7 +435,7 @@ class AdManager {
         onAdFailedToShowFullScreenContent: (ad, error) async {
           ad.dispose();
           _loadAdmobInterstitial();
-          await _showUnityOrDirectFallback(handleSuccess: handleSuccess, handleFinish: handleFinish);
+          await _showUnityOrDirectFallback(handleSuccess: handleSuccess, handleFinish: handleFinish, onAdOpened: onAdOpened);
         },
       );
 
@@ -355,6 +448,9 @@ class AdManager {
       final onDemandInter = await _loadAdmobInterstitialOnDemand(const Duration(seconds: 3));
       if (onDemandInter != null) {
         onDemandInter.fullScreenContentCallback = FullScreenContentCallback(
+          onAdShowedFullScreenContent: (ad) {
+            onAdOpened?.call();
+          },
           onAdDismissedFullScreenContent: (ad) {
             ad.dispose();
             _loadAdmobInterstitial();
@@ -364,7 +460,7 @@ class AdManager {
           onAdFailedToShowFullScreenContent: (ad, error) async {
             ad.dispose();
             _loadAdmobInterstitial();
-            await _showUnityOrDirectFallback(handleSuccess: handleSuccess, handleFinish: handleFinish);
+            await _showUnityOrDirectFallback(handleSuccess: handleSuccess, handleFinish: handleFinish, onAdOpened: onAdOpened);
           },
         );
 
@@ -374,14 +470,16 @@ class AdManager {
     }
 
     // Fallback 3: Unity Ads / Direct Reward
-    await _showUnityOrDirectFallback(handleSuccess: handleSuccess, handleFinish: handleFinish);
+    await _showUnityOrDirectFallback(handleSuccess: handleSuccess, handleFinish: handleFinish, onAdOpened: onAdOpened);
   }
 
   Future<void> _showUnityOrDirectFallback({
     required VoidCallback handleSuccess,
     required VoidCallback handleFinish,
+    VoidCallback? onAdOpened,
   }) async {
     if (AppConstants.enableUnityAds && _isUnityInitialized && _isUnityRewardedLoaded) {
+      onAdOpened?.call();
       _showUnityRewarded(
         onRewarded: () {
           handleSuccess();
@@ -394,6 +492,7 @@ class AdManager {
 
     // Final Fallback: Network/Ad Inventory failed — grant reward so 2x button always works for user!
     debugPrint('AdMob & Unity ads unavailable. Granting reward fallback.');
+    onAdOpened?.call();
     handleSuccess();
     handleFinish();
   }

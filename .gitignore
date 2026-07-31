@@ -113,6 +113,10 @@ test/verify_bin_solvability_test.dart
 
 # Sensitive Local Secrets
 lib/core/ad_secrets.dart
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+**/GoogleService-Info.plist
 
 # Brag & HyperFrames Output
 brag-output/

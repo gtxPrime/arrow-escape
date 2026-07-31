@@ -7,7 +7,7 @@ import '../../core/constants.dart';
 import '../../core/audio_manager.dart';
 
 class ProgressRepository extends ChangeNotifier {
-  final SharedPreferences _prefs;
+  final SharedPreferences? _prefs;
 
   // ── State fields ────────────────────────────────────────────────────────────
   int _lives = AppConstants.maxLives;
@@ -72,7 +72,7 @@ class ProgressRepository extends ChangeNotifier {
 
   bool isLevelCompleted(int level) => _levelResults.containsKey(level);
 
-  ProgressRepository(this._prefs) {
+  ProgressRepository([this._prefs]) {
     _load();
   }
 
@@ -80,69 +80,80 @@ class ProgressRepository extends ChangeNotifier {
   // ── Load / Save ──────────────────────────────────────────────────────────────
 
   void _load() {
-    _lives = _prefs.getInt('lives') ?? AppConstants.maxLives;
-    _currentLevel = _prefs.getInt('currentLevel') ?? 1;
-    _highestUnlockedLevel = _prefs.getInt('highestUnlockedLevel') ?? 1;
-    _totalScore = _prefs.getInt('totalScore') ?? 0;
-    _coins = _prefs.getInt('coins') ?? 0;
-    _streakDays = _prefs.getInt('streakDays') ?? 0;
+    if (_prefs == null) return;
+    try {
+      _lives = _prefs!.getInt('lives') ?? AppConstants.maxLives;
+      _currentLevel = _prefs!.getInt('currentLevel') ?? 1;
+      _highestUnlockedLevel = _prefs!.getInt('highestUnlockedLevel') ?? 1;
+      _totalScore = _prefs!.getInt('totalScore') ?? 0;
+      _coins = _prefs!.getInt('coins') ?? 0;
+      _streakDays = _prefs!.getInt('streakDays') ?? 0;
 
-    _soundEnabled = _prefs.getBool('soundEnabled') ?? true;
-    _musicEnabled = _prefs.getBool('musicEnabled') ?? true;
-    _vibrationEnabled = _prefs.getBool('vibrationEnabled') ?? true;
-    _hasSeen40x40Warning = _prefs.getBool('hasSeen40x40Warning') ?? false;
-    _hasSeenZoomHint = _prefs.getBool('hasSeenZoomHint') ?? false;
+      _soundEnabled = _prefs!.getBool('soundEnabled') ?? true;
+      _musicEnabled = _prefs!.getBool('musicEnabled') ?? true;
+      _vibrationEnabled = _prefs!.getBool('vibrationEnabled') ?? true;
+      _hasSeen40x40Warning = _prefs!.getBool('hasSeen40x40Warning') ?? false;
+      _hasSeenZoomHint = _prefs!.getBool('hasSeenZoomHint') ?? false;
 
-    final themeStr = _prefs.getString('themeMode') ?? 'system';
-    _themeMode = ThemeMode.values.firstWhere(
-      (e) => e.name == themeStr,
-      orElse: () => ThemeMode.system,
-    );
+      final themeStr = _prefs!.getString('themeMode') ?? 'system';
+      _themeMode = ThemeMode.values.firstWhere(
+        (e) => e.name == themeStr,
+        orElse: () => ThemeMode.system,
+      );
 
+      // Synchronize to AudioManager
+      AudioManager.instance.setSoundEnabled(_soundEnabled);
+      AudioManager.instance.setMusicEnabled(_musicEnabled);
 
-    // Synchronize to AudioManager
-    AudioManager.instance.setSoundEnabled(_soundEnabled);
-    AudioManager.instance.setMusicEnabled(_musicEnabled);
+      final lastPlayedStr = _prefs!.getString('lastPlayedDate');
+      if (lastPlayedStr != null) {
+        _lastPlayedDate = DateTime.tryParse(lastPlayedStr);
+      }
 
-    final lastPlayedStr = _prefs.getString('lastPlayedDate');
-    if (lastPlayedStr != null) {
-      _lastPlayedDate = DateTime.tryParse(lastPlayedStr);
-    }
-
-    final resultsJson = _prefs.getString('levelResults');
-    if (resultsJson != null) {
-      final Map<String, dynamic> map = jsonDecode(resultsJson);
-      for (final entry in map.entries) {
-        final level = int.tryParse(entry.key);
-        if (level != null) {
-          _levelResults[level] =
-              LevelResult.fromJson(entry.value as Map<String, dynamic>);
+      final resultsJson = _prefs!.getString('levelResults');
+      if (resultsJson != null) {
+        final Map<String, dynamic> map = jsonDecode(resultsJson);
+        for (final entry in map.entries) {
+          final level = int.tryParse(entry.key);
+          if (level != null) {
+            _levelResults[level] =
+                LevelResult.fromJson(entry.value as Map<String, dynamic>);
+          }
         }
       }
-    }
 
-    // Check streak
-    _updateStreak();
+      // Check streak
+      _updateStreak();
+    } catch (e) {
+      debugPrint('Error loading progress from SharedPreferences: $e');
+    }
   }
 
   Future<void> _save() async {
-    await Future.wait([
-      _prefs.setInt('lives', _lives),
-      _prefs.setInt('currentLevel', _currentLevel),
-      _prefs.setInt('highestUnlockedLevel', _highestUnlockedLevel),
-      _prefs.setInt('totalScore', _totalScore),
-      _prefs.setInt('coins', _coins),
-      _prefs.setInt('streakDays', _streakDays),
-      if (_lastPlayedDate != null)
-        _prefs.setString('lastPlayedDate', _lastPlayedDate!.toIso8601String()),
-    ]);
+    if (_prefs == null) return;
+    try {
+      await Future.wait([
+        _prefs!.setInt('lives', _lives),
+        _prefs!.setInt('currentLevel', _currentLevel),
+        _prefs!.setInt('highestUnlockedLevel', _highestUnlockedLevel),
+        _prefs!.setInt('totalScore', _totalScore),
+        _prefs!.setInt('coins', _coins),
+        _prefs!.setInt('streakDays', _streakDays),
+        if (_lastPlayedDate != null)
+          _prefs!.setString('lastPlayedDate', _lastPlayedDate!.toIso8601String()),
+      ]);
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
 
     // Save level results
-    final Map<String, dynamic> resultsMap = {};
-    for (final entry in _levelResults.entries) {
-      resultsMap[entry.key.toString()] = entry.value.toJson();
+    if (_prefs != null) {
+      final Map<String, dynamic> resultsMap = {};
+      for (final entry in _levelResults.entries) {
+        resultsMap[entry.key.toString()] = entry.value.toJson();
+      }
+      await _prefs?.setString('levelResults', jsonEncode(resultsMap));
     }
-    await _prefs.setString('levelResults', jsonEncode(resultsMap));
   }
 
   // ── Lives — restored only via rewarded ad or level restart ─────────────────
@@ -249,38 +260,38 @@ class ProgressRepository extends ChangeNotifier {
   Future<void> setSoundEnabled(bool value) async {
     _soundEnabled = value;
     AudioManager.instance.setSoundEnabled(value);
-    await _prefs.setBool('soundEnabled', value);
+    await _prefs?.setBool('soundEnabled', value);
     notifyListeners();
   }
 
   Future<void> setMusicEnabled(bool value) async {
     _musicEnabled = value;
     AudioManager.instance.setMusicEnabled(value);
-    await _prefs.setBool('musicEnabled', value);
+    await _prefs?.setBool('musicEnabled', value);
     notifyListeners();
   }
 
   Future<void> setVibrationEnabled(bool value) async {
     _vibrationEnabled = value;
-    await _prefs.setBool('vibrationEnabled', value);
+    await _prefs?.setBool('vibrationEnabled', value);
     notifyListeners();
   }
 
   Future<void> setThemeMode(ThemeMode value) async {
     _themeMode = value;
-    await _prefs.setString('themeMode', value.name);
+    await _prefs?.setString('themeMode', value.name);
     notifyListeners();
   }
 
   Future<void> setHasSeen40x40Warning(bool value) async {
     _hasSeen40x40Warning = value;
-    await _prefs.setBool('hasSeen40x40Warning', value);
+    await _prefs?.setBool('hasSeen40x40Warning', value);
     notifyListeners();
   }
 
   Future<void> setHasSeenZoomHint(bool value) async {
     _hasSeenZoomHint = value;
-    await _prefs.setBool('hasSeenZoomHint', value);
+    await _prefs?.setBool('hasSeenZoomHint', value);
     notifyListeners();
   }
 
